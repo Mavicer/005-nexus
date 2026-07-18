@@ -18,7 +18,7 @@
  *   （DROP 列 + RECREATE with pg_jieba ts_config + 重建 GIN + 全表重 tokenize，
  *    非零成本；架构上仍平滑，只动 search 模块 + 一个 migration）。
  */
-import { sql, and, eq, or, ilike, desc, asc, type SQL } from "drizzle-orm";
+import { sql, and, eq, or, ilike, type SQL } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { infoItems, competitions } from "@/db/schema";
@@ -216,7 +216,3 @@ function buildOrderBy(
       `;
   }
 }
-
-// 抑制未使用导入告警（desc/asc 预留给后续扩展排序）
-void desc;
-void asc;
