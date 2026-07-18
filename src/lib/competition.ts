@@ -1,6 +1,10 @@
 /**
  * 查询信息详情（含来源、轮次、经验、竞赛明细）
  * 护栏2：业务查询封装在 lib 模块内，页面/路由只调用
+ *
+ * PERF: 3 round-trips（sources/rounds/experiences 各一条独立查询）。
+ *       MVP 种子数据量小可接受；未来一条信息挂几十条来源/经验时，
+ *       应考虑合并查询或 Promise.all 并发，以减少 round-trip。nit-2（Agent B 第 8 条）。
  */
 import { eq, and } from "drizzle-orm";
 

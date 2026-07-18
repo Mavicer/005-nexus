@@ -30,18 +30,11 @@ export function CredibilityBadge({
 /**
  * 级别标签
  */
-const LEVEL_LABEL: Record<string, string> = {
-  school: "校级",
-  provincial: "省级",
-  national: "国家级",
-  international: "国际",
-};
-
 export function LevelTag({ level }: { level: string | null }) {
   if (!level) return null;
   return (
     <span className="inline-flex items-center rounded border border-neutral-200 px-2 py-0.5 text-xs text-neutral-600">
-      {LEVEL_LABEL[level] ?? level}
+      {level}
     </span>
   );
 }
@@ -71,4 +64,4 @@ export function DeadlineTag({ date }: { date: Date | null }) {
   return <span className="text-xs text-neutral-500">报名截止 {text}</span>;
 }
 
-export { LEVEL_LABEL, Link };
+export { Link };

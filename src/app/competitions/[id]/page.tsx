@@ -3,28 +3,19 @@ import { notFound } from "next/navigation";
 
 import { getCompetitionDetail } from "@/lib/competition";
 import { CredibilityBadge, DeadlineTag, LevelTag } from "@/components/competition-card";
+import { FavoriteButton } from "@/components/favorite-button";
+import { getCurrentUser } from "@/lib/auth";
+import { isFavorited } from "@/lib/favorites";
+import {
+  LEVEL_LABEL,
+  RECOGNITION_LABEL,
+  FREQUENCY_LABEL,
+  TEAM_LABEL,
+  SOURCE_TYPE_LABEL,
+  OFFICIAL_SOURCE_TYPES,
+} from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
-
-/**
- * 来源类型中文标签
- */
-const SOURCE_TYPE_LABEL: Record<string, string> = {
-  official_doc: "官方文件",
-  inst_notice: "机构通知",
-  authority_list: "权威榜单",
-  official_site: "官方网站",
-  student_exp: "学生经验",
-  community: "社区内容",
-};
-
-/** 官方/权威来源（与 student_exp/community 分层展示，R6 合规） */
-const OFFICIAL_SOURCE_TYPES = new Set([
-  "official_doc",
-  "inst_notice",
-  "authority_list",
-  "official_site",
-]);
 
 /**
  * 竞赛详情页（SSR）
@@ -44,6 +35,10 @@ export default async function CompetitionDetailPage({
   }
 
   const c = detail.competition;
+  // 收藏状态：登录用户 SSR 预取，未登录为 false
+  const user = await getCurrentUser();
+  const favorited = user ? await isFavorited(user.userId, id) : false;
+
   const officialSources = detail.sources.filter((s) =>
     OFFICIAL_SOURCE_TYPES.has(s.sourceType),
   );
@@ -65,7 +60,7 @@ export default async function CompetitionDetailPage({
       {/* 标题与标签 */}
       <header className="mb-8 border-b border-neutral-100 pb-6">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          {c && <LevelTag level={c.level} />}
+          {c && <LevelTag level={c.level ? (LEVEL_LABEL[c.level] ?? c.level) : null} />}
           <DeadlineTag date={c?.signUpEnd ?? null} />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
@@ -92,17 +87,17 @@ export default async function CompetitionDetailPage({
           <Section title="核心信息">
             <Grid>
               <Field label="主办方" value={c.organizer} />
-              <Field label="认可度" value={recognitionLabel(c.recognition)} />
+              <Field label="认可度" value={RECOGNITION_LABEL[c.recognition ?? ""] ?? c.recognition} />
               <Field
                 label="举办频率"
-                value={frequencyLabel(c.frequency)}
+                value={FREQUENCY_LABEL[c.frequency ?? ""] ?? c.frequency}
               />
               {c.validYear && (
                 <Field label="本届年度" value={String(c.validYear)} />
               )}
               <Field
                 label="参赛形式"
-                value={teamLabel(c.teamOrSolo)}
+                value={TEAM_LABEL[c.teamOrSolo ?? ""] ?? c.teamOrSolo}
               />
               {c.teamSize && <Field label="队伍规模" value={c.teamSize} />}
               <Field
@@ -251,9 +246,9 @@ export default async function CompetitionDetailPage({
         )}
       </Section>
 
-      {/* 官网入口 */}
-      {c?.officialUrl && (
-        <div className="mt-8">
+      {/* 官网入口 + 收藏 */}
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        {c?.officialUrl && (
           <a
             href={c.officialUrl}
             target="_blank"
@@ -262,8 +257,9 @@ export default async function CompetitionDetailPage({
           >
             前往官网报名 →
           </a>
-        </div>
-      )}
+        )}
+        <FavoriteButton infoItemId={detail.id} initialFavorited={favorited} />
+      </div>
 
       <footer className="mt-12 border-t border-neutral-100 pt-4 text-xs text-neutral-400">
         最后更新：{fmtDate(detail.lastUpdatedAt)} ·
@@ -342,30 +338,4 @@ function SourceItem({
 function fmtDate(d: Date | null): string | null {
   if (!d) return null;
   return d.toLocaleDateString("zh-CN");
-}
-
-function recognitionLabel(v: string | null): string | null {
-  if (!v) return null;
-  return (
-    { official_A: "A 类（官方认定）", leaderboard_listed: "榜单收录", normal: "普通" } as Record<string, string>
-  )[v] ?? v;
-}
-
-function frequencyLabel(v: string | null): string | null {
-  if (!v) return null;
-  return (
-    {
-      annual: "每年一届",
-      biennial: "两年一届",
-      irregular: "不定期",
-      once: "一次性",
-    } as Record<string, string>
-  )[v] ?? v;
-}
-
-function teamLabel(v: string | null): string | null {
-  if (!v) return null;
-  return (
-    { team: "组队", solo: "个人", both: "组队/个人均可" } as Record<string, string>
-  )[v] ?? v;
 }

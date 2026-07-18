@@ -4,7 +4,8 @@ import {
   DeadlineTag,
   LevelTag,
 } from "@/components/competition-card";
-import { Link } from "@/components/competition-card";
+import Link from "next/link";
+import { LEVEL_LABEL } from "@/lib/labels";
 
 /**
  * 搜索结果卡片
@@ -17,7 +18,7 @@ export function SearchCard({ hit }: { hit: SearchHit }) {
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-base font-medium text-neutral-900">{hit.title}</h3>
-        <LevelTag level={hit.level} />
+        <LevelTag level={hit.level ? (LEVEL_LABEL[hit.level] ?? hit.level) : null} />
       </div>
       {hit.summary && (
         <p className="mt-1.5 line-clamp-2 text-sm text-neutral-600">
