@@ -1,0 +1,63 @@
+# ========== 依赖与构建产物 ==========
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+
+# build outputs
+.next/
+out/
+build/
+dist/
+
+# Next.js 产物
+*.tsbuildinfo
+next-env.d.ts
+
+# vercel
+.vercel
+
+# ========== 环境与密钥 ==========
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# ========== 测试与缓存 ==========
+coverage/
+.nyc_output/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.cache/
+.turbo/
+.eslintcache
+
+# ========== Docker ==========
+# 不忽略 docker-compose.yml 和 Dockerfile（需版本控制）
+docker-data/
+pgdata/
+postgres-data/
+
+# ========== Drizzle / 数据库 ==========
+drizzle/meta/_journal.json.tmp
+
+# ========== 编辑器与系统 ==========
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# ========== 杂项 ==========
+*.pem
+*.key

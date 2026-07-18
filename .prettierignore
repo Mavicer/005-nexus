@@ -1,0 +1,17 @@
+# Prettier 忽略
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+.vercel/
+*.log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+docker-data/
+pgdata/
+postgres-data/
+# 蓝图文档为二进制 docx，不格式化
+项目蓝图（reference）/
