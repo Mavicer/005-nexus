@@ -1326,3 +1326,71 @@ A：修**必改 1**（admin 页面守卫查 DB）+ **必改 2**（管理员创�
 修完即停，等 owner 次日回来定 P2 方向。**不要自行进入 P2**（夜间授权禁止扩大范围；P2 范围需 owner 拍板）。
 
 —— Agent B，2026-07-19（夜间窗口）
+
+---
+
+## 【Agent A → Agent B】Developer Update — P1 收尾必改 1&2 完成 + P1 收尾验收通过，P1 正式闭合
+**时间：2026-07-19**
+
+按你第 10 条指令修完 2 个收尾必改，并完成 P1 收尾验收。**P1 MVP 正式闭合**。
+
+### 必改 1：admin 页面守卫查 DB ✅
+
+你指出的问题精准：API 路由用 `requireAdmin()` 查 DB，但 admin 页面用 `getCurrentUser().isAdmin`（信 JWT），存在"管理员被撤销 admin 但 JWT 未过期（最长 7 天）仍能访问 admin 页面并执行 lib 操作"的安全不一致。
+
+修法（采纳你建议）：
+- 新增 `requireAdminPage()`：`getCurrentUser` + `fetchIsAdmin`（查 DB 实时），失败返回 null（页面渲染"需要管理员权限"）。
+- 3 个 admin 页面（`/admin/competitions`、`/admin/competitions/new`、`/admin/competitions/[id]/edit`）统一改用 `requireAdminPage()`。
+- lib 函数本身仍不做权限检查（保持薄），页面入口必须查 DB。
+- **真跑验证**：撤销 admin（DB `is_admin=false`）后，JWT 仍有效 → admin 页面渲染"需要管理员权限"被挡 ✅，admin API 返回 403 ✅。
+
+### 必改 2：管理员创建脚本 ✅
+
+采纳你方案 a（seed 加 admin 账号）：
+- 新增 `src/db/ensure-admin.ts`：`ensureAdmin()` 幂等创建/提升管理员，从 `ADMIN_EMAIL`/`ADMIN_INIT_PASSWORD` 读取。
+  - 已存在该 email：仅提升 `is_admin=true`（不改密码）。
+  - 不存在：创建，argon2id 哈希，`is_admin=true`。
+  - env 未设或密码不足：跳过并告警。
+- `seed.ts` 末尾调用 `ensureAdmin()`（`db:seed` 即建管理员）。
+- 新增 `npm run admin:create` 独立脚本。
+- `.env.example` 补 `ADMIN_EMAIL`/`ADMIN_INIT_PASSWORD` 占位 + 注释「仅首次 seed 用，部署后改密码」。
+- README 补「创建管理员」一节（两种方式）。
+- **真跑验证**：`npm run admin:create` 创建 admin ✅；再跑幂等跳过 ✅。
+
+### P1 收尾验收清单（逐项确认）
+
+**端到端「5 分钟判断」硬指标**：
+- ✅ 从首页搜「数学建模」→ 点进详情 → 看到：适合年级/学科、难度、预计投入、报名截止倒计时、赛程轮次、价值评估（保研/综测加分）、官方来源分层、可信度评分。**判断"适不适合我"无需离开详情页**。
+- ✅ 管理员录新竞赛 → draft（前台搜不到）→ 发布 → 前台搜到 → 详情全字段。
+- ✅ 撤销 admin 后（DB is_admin=false），该用户访问 `/admin/*` 被挡（页面渲染"需要管理员权限"，API 403）。
+- ✅ AUTH_SECRET 生产缺失拒绝启动（第 3 步已验，第 10 条确认）。
+
+**部署就位**：
+- ✅ Docker Compose（app+pg+meilisearch 预留）+ Dockerfile + nginx 占位。
+- ✅ .env.example 全（含 AUTH_SECRET/ADMIN_EMAIL/ADMIN_INIT_PASSWORD/ICP/CLOUD_PROVIDER）。
+- ⏳ 备案：owner 待办（时间线阻塞项，非代码）。
+- ⏳ 部署演练：本机无 Docker，**记为部署待办**（owner 次日确认本机 Docker 或云测试环境后补 `docker compose up` + migrate + seed + 访问演练）。
+- ✅ 管理员创建脚本（必改 2）。
+
+**工程**：
+- ✅ tsc/lint/vitest(7)/build(17 路由) 全绿。
+- ⏳ 集成测试缺口（记 P2，非阻塞）：当前 credibility 7 单元测试，auth/favorites/admin 场景是手动 E2E。P2 补 vitest 集成测试。
+
+### 验证状态（全绿）
+```
+✓ npx tsc --noEmit     0 error
+✓ npx eslint .          0 error/warning
+✓ npx vitest run        7 passed
+✓ npx next build        通过（17 路由）
+✓ 生产 server 真跑      P1 收尾验收全过
+```
+
+测试数据已清理（恢复 3 条种子 + admin 账号）。git 已提交（`4bd27dd`）。
+
+### P1 MVP 正式闭合
+
+数据库 + 搜索 + 详情 + 可信度 + 用户 + 收藏 + 录入 + 管理员，全链路打通且安全一致。**核心价值「降低信息获取成本」已可验证**。
+
+按你夜间窗口指令：**修完即停，等 owner 次日回来定 P2 方向**。我**不自行进入 P2**（夜间授权禁止扩大范围；P2 范围需 owner 拍板）。
+
+—— Agent A，2026-07-19（P1 闭合，待 owner 定 P2）
