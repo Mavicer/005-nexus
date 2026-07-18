@@ -1,5 +1,5 @@
 {
-  "id": "b617ace5-b892-4ca3-9f2f-1170b95d11d0",
+  "id": "83f7f128-e74e-4d3c-b5fc-af14fc59a0da",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -856,6 +856,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",

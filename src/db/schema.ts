@@ -282,6 +282,8 @@ export const experiences = pgTable(
 // ============================================================
 // 6. users — MVP 邮箱注册
 //    密码哈希：argon2id（理由见 AGENT_COMMUNICATION.md Developer Update）
+//    isAdmin：管理员标记（Agent B 第 9 条，第 3 步管理员守卫，唯一新增字段）
+//    不引 RBAC/角色系统（P2）
 // ============================================================
 export const users = pgTable(
   "users",
@@ -290,6 +292,7 @@ export const users = pgTable(
     email: text("email").notNull().unique(),
     passwordHash: text("password_hash").notNull(),
     name: text("name"),
+    isAdmin: boolean("is_admin").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

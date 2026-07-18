@@ -26,8 +26,14 @@ export async function POST(req: NextRequest) {
   if (!isEmailValid(email)) {
     return NextResponse.json({ error: "邮箱格式不正确" }, { status: 400 });
   }
+  if (email.length > 254) {
+    return NextResponse.json({ error: "邮箱过长" }, { status: 400 });
+  }
   if (!isPasswordValid(password)) {
     return NextResponse.json({ error: "密码至少 8 位" }, { status: 400 });
+  }
+  if (password.length > 1024) {
+    return NextResponse.json({ error: "密码过长" }, { status: 400 });
   }
 
   // 邮箱唯一（DB unique 兜底，这里先查给友好提示）
@@ -44,12 +50,16 @@ export async function POST(req: NextRequest) {
   const [created] = await db
     .insert(users)
     .values({ email, passwordHash })
-    .returning({ id: users.id, email: users.email });
+    .returning({ id: users.id, email: users.email, isAdmin: users.isAdmin });
 
   if (!created) {
     return NextResponse.json({ error: "注册失败" }, { status: 500 });
   }
 
-  await createSession({ userId: created.id, email: created.email });
+  await createSession({
+    userId: created.id,
+    email: created.email,
+    isAdmin: created.isAdmin,
+  });
   return NextResponse.json({ user: { id: created.id, email: created.email } });
 }

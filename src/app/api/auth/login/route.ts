@@ -22,12 +22,17 @@ export async function POST(req: NextRequest) {
     // 统一错误：不泄露邮箱是否存在
     return NextResponse.json({ error: "邮箱或密码不正确" }, { status: 401 });
   }
+  // 长度上限（nit-3，防 argon2 超大输入 DoS）
+  if (email.length > 254 || password.length > 1024) {
+    return NextResponse.json({ error: "邮箱或密码不正确" }, { status: 401 });
+  }
 
   const [row] = await db
     .select({
       id: users.id,
       email: users.email,
       passwordHash: users.passwordHash,
+      isAdmin: users.isAdmin,
     })
     .from(users)
     .where(eq(users.email, email))
@@ -41,6 +46,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "邮箱或密码不正确" }, { status: 401 });
   }
 
-  await createSession({ userId: row.id, email: row.email });
+  await createSession({
+    userId: row.id,
+    email: row.email,
+    isAdmin: row.isAdmin,
+  });
   return NextResponse.json({ user: { id: row.id, email: row.email } });
 }
