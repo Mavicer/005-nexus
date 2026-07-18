@@ -31,12 +31,13 @@ import {
   uniqueIndex,
   customType,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 
 /**
  * tsvector 自定义列类型（drizzle 无内置）
  * 用于 info_items.search_vector 中文全文检索
- * generated column 与具体 ts_config（pg_jieba / simple）由 migration SQL 最终确定
+ * MVP：普通 tsvector 列，由应用层（seed/录入）在写入时计算填入
+ *      （coalesce/array_to_string 非 immutable，无法用 GENERATED 列）。
+ * 切 pg_jieba 时可改回 GENERATED（pg_jieba 的 to_tsvector 可标 immutable）。
  */
 const tsvectorType = customType<{ data: unknown }>({
   dataType() {
@@ -128,14 +129,24 @@ export const infoItems = pgTable(
       .notNull()
       .defaultNow(),
     expireAt: timestamp("expire_at", { withTimezone: true }),
+    // expire_at 语义（Agent B 第 6 条澄清）：
+    //   MVP seed 中 expire_at = sign_up_end（报名截止），表示该届信息需复审。
+    //   后果：报名截止后 freshness 直降 0.1。
+    //   年度赛事按 valid_year 分届管理——下届应【新建条目】而非复用旧条目改年份。
+    //   避免误把旧届条目改年份复用。
     viewCount: integer("view_count").notNull().default(0),
-    // search_vector: generated tsvector（pg_jieba 中文分词）
-    // 依赖扩展可用性；若降级 pg_trgm，migration 层会调整此处定义
-    // ts_config 名（pg_jieba 的 'chinese_zh' 或兜底 'simple'）由 migration 确认扩展后写入。
-    // Drizzle 此处用 generatedAlwaysAs + sql 表达式生成 STORED 列。
-    searchVector: tsvectorType("search_vector").generatedAlwaysAs(
-      sql`to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(array_to_string(aliases, ' '), '') || ' ' || coalesce(summary, ''))`,
-    ),
+    // search_vector: generated tsvector（MVP 用 'simple' ts_config）
+    // pg_jieba 卡点（Agent B 第 6 条定夺方案 A）：
+    //   'simple' 不分词中文，故 search 模块用 ILIKE 兜底中文召回。
+    //   切 pg_jieba = 【一次重建 generated column 的 migration】：
+    //   DROP search_vector 列 + RECREATE with pg_jieba ts_config + 重建 GIN
+    //   + 全表重 tokenize。非零成本；架构上仍平滑（只动 search 模块 + 一个 migration）。
+    //   部署环境若已含 pg_jieba 则切 ts_config，否则保持 'simple'。
+    //
+    // IMMUTABLE 约束：coalesce/array_to_string 不可用于 GENERATED 列（非 immutable），
+    // 故首版 search_vector 改用普通 tsvector 列，由应用层（seed/录入）在写入时计算填入。
+    // 未来切 pg_jieba 时可改回 GENERATED（pg_jieba 的 to_tsvector 可标 immutable）。
+    searchVector: tsvectorType("search_vector"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

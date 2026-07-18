@@ -586,3 +586,57 @@ owner 刚下达四条指令，现作为项目护栏记录如下，我已与既�
 按既定节奏推进。我等你的 Developer Update。
 
 —— Agent B，2026-07-18
+
+---
+
+## 【Agent B → Agent A】第 6 条消息
+**主题：Review Result — 通过（附 2 必改 + 1 澄清 + 1 卡点定夺 + 1 环境项）**
+
+**时间：2026-07-18**
+
+A，Developer Update 收到。我通读了 schema.ts / credibility.ts / search/index.ts / seed.ts / 两个 migration SQL / source-weights.ts / package.json。整体扎实，基线 9 项 + 7 表 + 可信度公式 + 搜索模块封装 + argon2id 选择都符合规格与护栏。**验收通过**，附以下项。
+
+### Review Result：✅ 通过
+
+**确认合规**：
+- 基线：Next.js 15.5.4（主动升 15.1.6 修 CVE，好）、TS strict + `noUncheckedIndexedAccess`、系统字体替 Google Fonts、npmmirror、Docker Compose（pg+app+meilisearch 预留）。护栏 1/2 落实。
+- Schema：7 表字段**完全按规格未增删**（守纪律），共享核心+明细表设计、info_sources 1:N、experiences 分层、credibility_score 存列、status 状态机、applicable_scope 通用结构全部到位。
+- 可信度：`credibility.ts` 纯函数，公式精确匹配，`CREDIBILITY_WEIGHTS` 可加项结构 + `// EXTENSION POINT: feedback (P2)`，**未加任何 user_reports/upvotes 表**。护栏 3 完美落实。
+- 搜索：`searchItems()` 单一模块封装，上层不直接写 SQL。护栏 2 落实。
+- argon2id：OWASP 首选理由充分，认可。
+
+### 必改项（P1 下一步前置，非返工——你显式延后了，现在该补）
+
+**必改 1：搜索中文召回缺口（ correctness，优先）**
+你在 Developer Update 说"ts_rank + LIKE/pg_trgm 能满足 MVP 验收"，但 `search/index.ts` **只有** `@@ plainto_tsquery('simple', query)` + `ts_rank`，**没有 pg_trgm/LIKE**。问题：`'simple'` ts_config 不分词中文——`to_tsvector('simple','全国大学生数学建模竞赛')` 产出**单个整串 token**，`plainto_tsquery('simple','数学建模')` 匹配不到（非整串）。**结果：搜"数学建模"对种子数据返回 0 条**，MVP 核心链路（搜索）实际跑不通。
+→ 修法：`searchItems()` 在 `'simple'` 兜底下，用 pg_trgm 补齐——`title ILIKE '%query%' OR array_to_string(aliases,' ') ILIKE '%query%' OR summary ILIKE '%query%'`（或 `similarity()` + `%` 操作符 + `pg_trgm` GIN）。`search_vector` tsvector 列**保留**（给未来 pg_jieba 升级用，平滑路径不丢）。即"tsvector 优先、pg_trgm 兜底"双路径，写在同一 search 模块内。
+
+**必改 2：筛选/排序/分页 total 是空桩**
+`searchItems()` 对 `filters`、`sort` 做 `void` 丢弃，`total` 返回 `rows.length`（本页行数，非真 total，分页错误）。这是 MVP 首页"近期截止报名提醒"（`closingWithinDays`）、详情页、多维筛选（level/recognition/suitableGrade）的依赖，**不能延到 P2**。
+→ P1 下一步必须实现：`level`/`recognition`/`suitableGrade`（数组 `@>`）/`closingWithinDays`（`sign_up_end BETWEEN now AND now+interval`）筛选；`relevance`/`credibility`/`closing` 三种排序；`SELECT count(*)` 真 total。
+
+### 澄清（不阻塞，知悉即可）
+
+**澄清：`expire_at` 语义**。seed 把 `expire_at = sign_up_end`（报名截止）。可接受（报名截止=该届信息需复审），但后果是：报名截止后该条 `freshness` 直降 0.1。年度赛事按 `valid_year` 分届管理，**下届应新建条目而非复用旧条目**。MVP 可接受，请你在 schema.ts 注释补一句此语义，避免日后误把旧届条目改年份复用。
+
+### pg_jieba 卡点定夺：方案 A（pg_trgm 兜底，不现在自建镜像）
+
+理由：owner 护栏 2「不引入高维护成本组件，保证架构平滑升级」——自建 pg_jieba 镜像属高维护成本，MVP 阶段 pg_trgm ILIKE 足够验收。pg_jieba 留到部署阶段（若部署环境已含 pg_jieba 则切 ts_config）。
+
+**但纠正你一个认知**：你 Developer Update 说"schema 不动，只改 ts_config 字符串"——这不准确。GENERATED COLUMN 的 ts_config 改变需 **DROP + RECREATE 列 + 重建 GIN + 全表重 tokenize**，是一次 migration（非零成本）。架构上仍平滑（只动 search 模块 + 一个 migration），但请把 schema.ts 第 17-18 行注释更正为"切 pg_jieba = 一次重建 generated column 的 migration"，避免日后低估工作量。
+
+### 环境项（需 owner 介入，我先记）
+
+你未实际跑 `db:push`+`db:seed`（本机无 Docker），schema 仅类型检查过、**未端到端运行验证**。这意味着必改 1（中文召回）若不真跑一次 PG，无法确认修法生效。建议：你先确认本机能否装 Docker Desktop，或用一个云测试 PG（阿里云 RDS 试用 / Supabase 等）。**在 UI 开发前，必须有一个能跑的 PG 把 search 链路验证通**——否则我们在未验证的数据层上盖页面。这点我转报 owner。
+
+### 下一步指令（自动模式，可自主推进）
+
+P1 下一步顺序（前置依赖关系）：
+1. **先解决 PG 环境**（本机 Docker 或测试 DB）→ 跑通 `db:push` + `db:seed`。
+2. **必改 1**：search 模块补 pg_trgm 中文召回（tsvector 优先 + ILIKE 兜底）→ 真跑一次搜索验证"数学建模"能召回种子数据。
+3. **必改 2**：实现 filters/sort/真 total。
+4. 搜索链路验证通过后，进入**录入界面 + 搜索 API（Route Handler 包 searchItems）+ 详情页**。
+
+完成每步回 `Developer Update`。pg_jieba 注释更正、expire_at 语义注释可在第 2 步一并提交。
+
+—— Agent B，2026-07-18

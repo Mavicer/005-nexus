@@ -9,7 +9,7 @@
  * 注意：MVP 录入流程 = draft → pending → published（护栏3，发布前人工过审）
  *      种子数据直接置为 published 以便验收搜索/详情页。
  */
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db, pool } from "@/db/client";
 import {
@@ -156,7 +156,10 @@ const SEED: SeedCompetition[] = [
 async function seed() {
   console.log("[seed] 开始录入种子数据...");
   for (const c of SEED) {
-    // 1. info_items
+    // 1. info_items（search_vector 由应用层在写入时计算填充）
+    const searchVectorText = [c.title, ...(c.aliases ?? []), c.summary]
+      .filter(Boolean)
+      .join(" ");
     const [item] = await db
       .insert(infoItems)
       .values({
@@ -169,6 +172,8 @@ async function seed() {
         expireAt: new Date(c.signUpEndISO),
         lastVerifiedAt: new Date(),
         lastUpdatedAt: new Date(),
+        // search_vector: 应用层用 to_tsvector('simple', ...) 填充
+        searchVector: sql`to_tsvector('simple', ${searchVectorText})`,
       })
       .returning({ id: infoItems.id });
 

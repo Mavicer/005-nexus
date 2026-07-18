@@ -71,7 +71,7 @@ CREATE TABLE "info_items" (
 	"last_updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"expire_at" timestamp with time zone,
 	"view_count" integer DEFAULT 0 NOT NULL,
-	"search_vector" "tsvector" GENERATED ALWAYS AS (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(array_to_string(aliases, ' '), '') || ' ' || coalesce(summary, ''))) STORED,
+	"search_vector" "tsvector",
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"created_by" uuid

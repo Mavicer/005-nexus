@@ -26,6 +26,7 @@ const eslintConfig = [
       "*.config.mjs",
       "*.config.ts",
       ".prettierrc.mjs",
+      "vitest.config.ts",
       "项目蓝图（reference）/**",
     ],
   },

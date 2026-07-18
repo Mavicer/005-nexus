@@ -1,5 +1,5 @@
 {
-  "id": "5123f317-d4d1-4ca1-a7b3-f376f992be07",
+  "id": "b617ace5-b892-4ca3-9f2f-1170b95d11d0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -622,11 +622,7 @@
           "name": "search_vector",
           "type": "tsvector",
           "primaryKey": false,
-          "notNull": false,
-          "generated": {
-            "as": "to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(array_to_string(aliases, ' '), '') || ' ' || coalesce(summary, ''))",
-            "type": "stored"
-          }
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
