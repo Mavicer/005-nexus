@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/auth";
 import { listAdminCompetitions } from "@/lib/admin/competitions";
 import { LEVEL_LABEL } from "@/lib/labels";
 import { AdminActions } from "@/components/admin-actions";
@@ -31,8 +31,8 @@ export default async function AdminCompetitionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const user = await getCurrentUser();
-  if (!user || !user.isAdmin) {
+  const user = await requireAdminPage();
+  if (!user) {
     return <Forbidden />;
   }
 

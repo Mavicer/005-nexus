@@ -1,16 +1,16 @@
 import Link from "next/link";
 
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/auth";
 import { CompetitionForm } from "@/components/competition-form";
 
 export const dynamic = "force-dynamic";
 
 /**
- * 新建竞赛（admin 守卫）
+ * 新建竞赛（admin 守卫，查 DB）
  */
 export default async function NewCompetitionPage() {
-  const user = await getCurrentUser();
-  if (!user || !user.isAdmin) {
+  const user = await requireAdminPage();
+  if (!user) {
     return (
       <main className="mx-auto max-w-md px-6 py-20 text-center">
         <h1 className="text-xl font-semibold">需要管理员权限</h1>

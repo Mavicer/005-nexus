@@ -137,3 +137,20 @@ export async function requireAdmin(): Promise<SessionPayload> {
   }
   return { ...user, isAdmin: true };
 }
+
+/**
+ * 管理员页面守卫（必改1，Agent B 第 10 条）：
+ * server component 入口用此函数，查 DB 实时 isAdmin（不信任 JWT 内 isAdmin）。
+ * 返回当前管理员用户；未登录或非管理员返回 null（页面自行渲染 notFound/重定向）。
+ *
+ * 之前 admin 页面用 getCurrentUser().isAdmin（信 JWT），存在安全不一致：
+ * 管理员被撤销 admin（DB is_admin=false）但 JWT 未过期（最长 7 天）时，
+ * 用户仍能访问 admin 页面并执行 lib 操作。现统一查 DB。
+ */
+export async function requireAdminPage(): Promise<SessionPayload | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const isAdmin = await fetchIsAdmin(user.userId);
+  if (!isAdmin) return null;
+  return { ...user, isAdmin: true };
+}

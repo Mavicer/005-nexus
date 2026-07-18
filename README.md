@@ -106,8 +106,27 @@ npm run dev
 | `npm run db:generate` | 生成 Drizzle migration |
 | `npm run db:push` | 推送 schema 到数据库（开发用） |
 | `npm run db:migrate` | 执行 migration |
-| `npm run db:seed` | 录入种子数据（3 个全国通用竞赛） |
+| `npm run db:seed` | 录入种子数据（3 个全国通用竞赛）+ 创建管理员 |
+| `npm run admin:create` | 单独创建/确保管理员账号（幂等） |
 | `npm run db:studio` | Drizzle Studio 可视化 |
+
+## 创建管理员
+
+后台 `/admin/*` 需管理员账号。两种方式（幂等，已存在则提升权限不改密码）：
+
+**方式 1（推荐，随 seed）：** 在 `.env.local` 设置 `ADMIN_EMAIL` / `ADMIN_INIT_PASSWORD`，运行 `npm run db:seed` 即顺带创建。
+
+**方式 2（独立）：** 设置 env 后运行 `npm run admin:create`。
+
+```bash
+# .env.local
+ADMIN_EMAIL=admin@example.com
+ADMIN_INIT_PASSWORD=change-me-now  # 仅首次用，部署后请改密码
+
+npm run admin:create
+```
+
+> ⚠️ `ADMIN_INIT_PASSWORD` 仅首次创建用，**部署后请尽快登录并修改密码**（改密功能 P2 提供；MVP 可直接 DB 重置）。
 
 ## 协作模型
 

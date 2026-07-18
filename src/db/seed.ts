@@ -21,6 +21,7 @@ import {
 } from "@/db/schema";
 import { SOURCE_AUTHORITY_WEIGHT, type SourceType } from "@/lib/source-weights";
 import { computeCredibilityScore } from "@/lib/credibility";
+import { ensureAdmin } from "@/db/ensure-admin";
 
 interface SeedCompetition {
   title: string;
@@ -246,7 +247,11 @@ async function seed() {
 
     console.log(`[seed] ✓ ${c.title} (credibility=${score.toFixed(2)})`);
   }
-  console.log("[seed] 完成");
+  console.log("[seed] 竞赛种子完成");
+
+  // 管理员账号（必改2：从 ADMIN_EMAIL/ADMIN_INIT_PASSWORD 创建，幂等）
+  await ensureAdmin();
+  console.log("[seed] 全部完成");
 }
 
 seed()

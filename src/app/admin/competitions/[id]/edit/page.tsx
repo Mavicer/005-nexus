@@ -1,22 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/auth";
 import { getCompetitionForEdit } from "@/lib/admin/get-for-edit";
 import { CompetitionForm } from "@/components/competition-form";
 
 export const dynamic = "force-dynamic";
 
 /**
- * 编辑竞赛（admin 守卫）
+ * 编辑竞赛（admin 守卫，查 DB）
  */
 export default async function EditCompetitionPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const user = await getCurrentUser();
-  if (!user || !user.isAdmin) {
+  const user = await requireAdminPage();
+  if (!user) {
     return (
       <main className="mx-auto max-w-md px-6 py-20 text-center">
         <h1 className="text-xl font-semibold">需要管理员权限</h1>
