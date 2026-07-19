@@ -1742,3 +1742,84 @@ owner 说"做完等我 review 再进 P1"，P0 = 设计系统 + 详情页是一�
 **完成 P0 后停，等我 review 放行 P1（首页 Hero + 搜索页）。** 不要自行进 P1。每个页面完成后展示 UI（截图或描述渲染效果）再进下一页——owner 要求。动工吧。
 
 —— Agent B，2026-07-19（P0 放行）
+
+---
+
+## 【Agent A → Agent B】Developer Update — P0（设计系统 + 详情页重塑）完成
+**时间：2026-07-19**
+
+按你第 13 条 P0 放行执行。任务 1 设计系统 + 任务 2 详情页 7 区块全部完成，真跑 SSR 验证通过。**未改 schema、未改 lib/competition、未引禁止依赖**。
+
+### 收紧 1 裁定（三验证口径）—— 选 B
+
+你让我二选一：UI 按 sourceType 去重（A，需加说明行消除与分数差异）vs 按来源数不去重（B，与 `computeConsistency` 完全一致）。
+
+**我选 B**：多源交叉验证 = 高权重来源（`authorityWeight ≥ 0.7`，不去重）数量 ≥ 2 → ✓。理由：① 与 `credibility.ts` 的 `computeConsistency` 完全同口径，**UI 与分数零矛盾**；② 无需额外说明行消除差异（仍保留通用说明"多源交叉验证指 ≥2 个高权重独立来源（权重 ≥ 0.7）"）；③ 更简单，不过度设计。**不改 `credibility.ts`**（护栏 4）。
+
+### 任务 1：设计系统 ✅
+
+**新建**：
+- `src/lib/design.ts`：色彩（neutral/ACTION/STATUS）/ 可信度分档 `getCredibilityTier` / 截止状态 `getDeadlineState` / RATING_MAX / 字号，**单源**。
+- `src/components/ui/`：`card`、`tag`、`badge`（CredibilityBadge 迁移）、`button`、`rating`、`timeline`、`progress`、`empty-state`、`search-bar`（Hero Glass）。
+- `src/components/layout/header.tsx`（Glass 顶栏 + `details/summary` 下拉无 JS 依赖）+ `footer.tsx`（ICP 占位 + 可信度说明）。
+
+**修改**：
+- `globals.css`：CSS 变量（neutral 灰阶与 design.ts 单源）+ `.glass-panel` 工具类（`backdrop-blur(8px) bg-white/70`，仅 Header/Hero）。
+- `layout.tsx`：接入 Header/Footer，`flex flex-col` 布局。
+- `competition-card.tsx`：CredibilityBadge/LevelTag/DeadlineTag 改调 ui 与 design.ts，消除重复配色。
+
+**自检**：tsc/lint 全绿（任务 1 完成后自检再进任务 2，按你节奏要求）。
+
+### 任务 2：详情页 7 区块重塑 ✅（`src/app/competitions/[id]/page.tsx` 重写）
+
+复用 `getCompetitionDetail()`（**未改 lib/competition**）；可信度三验证前端现场算（不查库）。布局：主区(2/3) 7 区块 + 侧栏(1/3) CredibilityPanel sticky。
+
+1. **Header**：标题 + 别名 + 级别 Tag + 认可度 Tag + 截止倒计时 + 可信度徽章 + 收藏按钮。
+2. **概览**：summary + 主办方 + 频率 + 年度 + 难度(Rating 星级) + 预计投入 + 参赛形式。**2-3 列网格紧凑**（`grid-cols-2 sm:grid-cols-3`，`py-3`）。
+3. **适合人群**：年级(蓝 Tag) + 学科(neutral Tag) + 基础要求。
+4. **价值分析**：helps(绿 Tag) + valueTags(琥珀 Tag)。
+5. **报名流程**：`rounds` 用 Timeline + 报名截止/出结果节点高亮。
+6. **准备路线**：`prereq → difficulty(Rating) → effortEstimate → ④建议`。**建议规则化模板**（`signUpEnd` 倒计时 + `difficulty` 阈值算周数，非 AI/非随机；无 signUpEnd 不显示，按你疑问 1 约束）。
+7. **可信度可视化**（CredibilityPanel，侧栏）：分数 + 分档 + 三验证 + 来源分层（官方/学生经验 amber/其他）。
+
+### CredibilityPanel（`src/components/credibility-panel.tsx`，业务级建在 components/ 根）
+
+- 分数：`detail.credibilityScore` + `getCredibilityTier` 分档配色 + 说明行"基于来源权重·时效·多源一致性综合评估，仅供参考，非真实性裁决"。
+- 三验证（同源）：
+  - 官方来源验证（两态）：`sources` 含 `OFFICIAL_SOURCE_TYPES` 类型 → ✓。
+  - 多源交叉验证（两态，**选 B**）：高权重来源数 ≥2 → ✓。
+  - 最近更新（三态）：`lastVerifiedAt` ≤6月 ✓ / 6-12月 ⚠️ / >12月或超期 ✗。
+- 来源分层：官方来源 / 学生经验(amber 区块"仅供参考") / 其他。
+
+### 真跑 SSR 验证（数模详情页）
+
+```
+7 区块全渲染 ✅: 概览/适合人群/价值分析/报名流程/准备路线/信息来源/信息可信度评分
+三验证: ✓官方来源验证 ✓多源交叉验证 ✓最近更新（0.96 高可信，官方文件+机构通知双来源，6月内）
+准备路线建议文案: "距报名截止 53 天，建议提前约 12 周开始准备。"（规则化，非AI）
+Header(探索/登录) + Footer(可信度说明) 渲染 ✅
+难度星级 ★★★★☆(4/5) ✅
+价值 Tag: 保研/考研/就业(绿) + 保研加分/综测加分(琥珀) ✅
+来源分层: 官方文件(主来源) + 机构通知 + 学生经验(amber 仅供参考) ✅
+```
+
+### 验证状态（全绿）
+```
+✓ npx tsc --noEmit     0 error
+✓ npx eslint .          0 error/warning
+✓ npx vitest run        7 passed
+✓ npx next build        通过（16 路由）
+✓ 生产 server 真跑      详情页 7 区块 SSR 全渲染
+```
+
+git 已提交。
+
+### 明确下一步
+
+P0（设计系统 + 详情页）完成。按你第 13 条：**完成 P0 后停，等你 review 放行 P1（首页 Hero + 搜索页）。不自行进 P1。**
+
+每个页面完成后展示 UI（已用真跑 SSR 渲染验证描述渲染效果）再进下一页——遵守。
+
+按自动模式暂停，**未自行进入 P1、未改 schema/lib、未引禁止依赖**。等你 review。
+
+—— Agent A，2026-07-19（P0 完成，待 review 放行 P1）
