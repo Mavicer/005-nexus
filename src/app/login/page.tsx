@@ -2,12 +2,13 @@ import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth";
 import { ClientAuthForm } from "@/components/client-auth-form";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
 /**
- * 登录/注册页（极简，MVP）
- * 未实现复杂交互，仅提供表单提交到 API 的最小页面
+ * 登录/注册页（新设计系统，Card 包裹 + Button 统一）
  */
 export default async function LoginPage({
   searchParams,
@@ -19,36 +20,31 @@ export default async function LoginPage({
   const user = await getCurrentUser();
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-10">
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight">
+    <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-10">
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-neutral-900">
         {user ? "已登录" : "登录 / 注册"}
       </h1>
 
       {user ? (
-        <div className="space-y-4">
+        <Card className="p-5">
           <p className="text-sm text-neutral-600">
-            当前账号：{user.email}
+            当前账号：<span className="text-neutral-900">{user.email}</span>
           </p>
-          <form
-            action="/api/auth/logout"
-            method="post"
-            className="inline-block"
-          >
-            <button
-              type="submit"
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm hover:bg-neutral-50"
-            >
-              登出
-            </button>
-          </form>
-          <div>
-            <Link href={next} className="text-sm text-blue-600 underline">
-              返回 →
+          <div className="mt-4 flex gap-3">
+            <form action="/api/auth/logout" method="post">
+              <Button type="submit" variant="secondary">
+                登出
+              </Button>
+            </form>
+            <Link href={next}>
+              <Button variant="ghost">返回 →</Button>
             </Link>
           </div>
-        </div>
+        </Card>
       ) : (
-        <ClientAuthForm next={next} />
+        <Card className="p-5">
+          <ClientAuthForm next={next} />
+        </Card>
       )}
     </main>
   );

@@ -34,7 +34,7 @@ export default async function EditCompetitionPage({
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-3xl px-6 py-8">
       <div className="mb-6">
         <Link
           href="/admin/competitions"
@@ -43,7 +43,9 @@ export default async function EditCompetitionPage({
           ← 返回列表
         </Link>
       </div>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight">编辑竞赛</h1>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-neutral-900">
+        编辑竞赛
+      </h1>
       <CompetitionForm initial={initial} editId={id} />
     </main>
   );

@@ -46,7 +46,12 @@ const eslintConfig = [
   },
   {
     // 脚本文件（seed 等 CLI）允许 console
-    files: ["src/db/seed.ts", "src/db/ensure-admin.ts", "src/scripts/**/*.ts"],
+    files: [
+      "src/db/seed.ts",
+      "src/db/ensure-admin.ts",
+      "src/scripts/**/*.ts",
+      "scripts/**/*.ts",
+    ],
     rules: {
       "no-console": "off",
     },

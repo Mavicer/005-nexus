@@ -39,18 +39,26 @@ export function ClientAuthForm({ next }: { next: string }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="flex gap-2 text-sm">
+      <div className="flex gap-2 border-b border-neutral-100 pb-3">
         <button
           type="button"
           onClick={() => setMode("login")}
-          className={`rounded-md px-3 py-1.5 ${mode === "login" ? "bg-neutral-900 text-white" : "text-neutral-500"}`}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            mode === "login"
+              ? "bg-neutral-900 text-white"
+              : "text-neutral-500 hover:text-neutral-900"
+          }`}
         >
           登录
         </button>
         <button
           type="button"
           onClick={() => setMode("register")}
-          className={`rounded-md px-3 py-1.5 ${mode === "register" ? "bg-neutral-900 text-white" : "text-neutral-500"}`}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            mode === "register"
+              ? "bg-neutral-900 text-white"
+              : "text-neutral-500 hover:text-neutral-900"
+          }`}
         >
           注册
         </button>
@@ -63,7 +71,7 @@ export function ClientAuthForm({ next }: { next: string }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+          className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
         />
       </div>
       <div>
@@ -75,18 +83,16 @@ export function ClientAuthForm({ next }: { next: string }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+          className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50"
       >
         {loading ? "处理中…" : mode === "login" ? "登录" : "注册"}
       </button>

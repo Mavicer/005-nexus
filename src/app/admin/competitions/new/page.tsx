@@ -22,7 +22,7 @@ export default async function NewCompetitionPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-3xl px-6 py-8">
       <div className="mb-6">
         <Link
           href="/admin/competitions"
@@ -31,7 +31,9 @@ export default async function NewCompetitionPage() {
           ← 返回列表
         </Link>
       </div>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight">新建竞赛</h1>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-neutral-900">
+        新建竞赛
+      </h1>
       <CompetitionForm />
     </main>
   );
