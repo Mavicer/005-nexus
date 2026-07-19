@@ -2,8 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getCompetitionDetail } from "@/lib/competition";
-import { CredibilityBadge, DeadlineTag, LevelTag } from "@/components/competition-card";
-import { FavoriteButton } from "@/components/favorite-button";
 import { getCurrentUser } from "@/lib/auth";
 import { isFavorited } from "@/lib/favorites";
 import {
@@ -11,16 +9,22 @@ import {
   RECOGNITION_LABEL,
   FREQUENCY_LABEL,
   TEAM_LABEL,
-  SOURCE_TYPE_LABEL,
-  OFFICIAL_SOURCE_TYPES,
 } from "@/lib/labels";
+import { CredibilityBadge, DeadlineTag } from "@/components/competition-card";
+import { CredibilityPanel } from "@/components/credibility-panel";
+import { FavoriteButton } from "@/components/favorite-button";
+import { Card } from "@/components/ui/card";
+import { Tag } from "@/components/ui/tag";
+import { Rating } from "@/components/ui/rating";
+import { Timeline } from "@/components/ui/timeline";
 
 export const dynamic = "force-dynamic";
 
 /**
- * 竞赛详情页（SSR）
- * 护栏3：可信度措辞「信息可信度评分」
- * 护栏6：来源分层展示，学生经验明确标注"仅供参考"
+ * 竞赛详情页（产品化重塑，7 区块）
+ * 护栏2：复用 getCompetitionDetail()，不写 SQL；不改 lib/competition
+ * 护栏3：可信度措辞「信息可信度评分」，三验证同源
+ * 信息密度优先：紧凑 2-3 列网格，非大留白
  */
 export default async function CompetitionDetailPage({
   params,
@@ -29,39 +33,39 @@ export default async function CompetitionDetailPage({
 }) {
   const { id } = await params;
   const detail = await getCompetitionDetail(id);
-
-  if (!detail) {
-    notFound();
-  }
+  if (!detail) notFound();
 
   const c = detail.competition;
-  // 收藏状态：登录用户 SSR 预取，未登录为 false
   const user = await getCurrentUser();
   const favorited = user ? await isFavorited(user.userId, id) : false;
 
-  const officialSources = detail.sources.filter((s) =>
-    OFFICIAL_SOURCE_TYPES.has(s.sourceType),
-  );
-  const otherSources = detail.sources.filter(
-    (s) => !OFFICIAL_SOURCE_TYPES.has(s.sourceType),
-  );
+  const deadlineState = detail.expireAt ?? c?.signUpEnd ?? null;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <div className="mb-6">
+    <main className="mx-auto max-w-3xl px-6 py-8">
+      <div className="mb-4">
         <Link
-          href="/"
+          href="/explore"
           className="text-sm text-neutral-400 hover:text-neutral-600"
         >
-          ← 返回搜索
+          ← 返回探索
         </Link>
       </div>
 
-      {/* 标题与标签 */}
-      <header className="mb-8 border-b border-neutral-100 pb-6">
+      {/* 区块 1：Header */}
+      <section className="mb-6 border-b border-neutral-100 pb-5">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          {c && <LevelTag level={c.level ? (LEVEL_LABEL[c.level] ?? c.level) : null} />}
-          <DeadlineTag date={c?.signUpEnd ?? null} />
+          {c?.level && (
+            <Tag variant="neutral">
+              {LEVEL_LABEL[c.level] ?? c.level}
+            </Tag>
+          )}
+          {c?.recognition && (
+            <Tag variant="neutral">
+              {RECOGNITION_LABEL[c.recognition] ?? c.recognition}
+            </Tag>
+          )}
+          <DeadlineTag date={deadlineState} />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
           {detail.title}
@@ -72,224 +76,251 @@ export default async function CompetitionDetailPage({
           </p>
         )}
         {detail.summary && (
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600">
+          <p className="mt-3 text-sm leading-relaxed text-neutral-600">
             {detail.summary}
           </p>
         )}
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <CredibilityBadge score={detail.credibilityScore} />
+          <FavoriteButton infoItemId={detail.id} initialFavorited={favorited} />
         </div>
-      </header>
+      </section>
 
-      {c && (
-        <>
-          {/* 核心信息网格 */}
-          <Section title="核心信息">
-            <Grid>
-              <Field label="主办方" value={c.organizer} />
-              <Field label="认可度" value={RECOGNITION_LABEL[c.recognition ?? ""] ?? c.recognition} />
-              <Field
-                label="举办频率"
-                value={FREQUENCY_LABEL[c.frequency ?? ""] ?? c.frequency}
-              />
-              {c.validYear && (
-                <Field label="本届年度" value={String(c.validYear)} />
-              )}
-              <Field
-                label="参赛形式"
-                value={TEAM_LABEL[c.teamOrSolo ?? ""] ?? c.teamOrSolo}
-              />
-              {c.teamSize && <Field label="队伍规模" value={c.teamSize} />}
-              <Field
-                label="难度"
-                value={`${c.difficulty ?? "-"}/5`}
-              />
-              {c.effortEstimate && (
-                <Field label="预计投入" value={c.effortEstimate} />
-              )}
-            </Grid>
-          </Section>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-5">
+          {c && (
+            <>
+              {/* 区块 2：概览 */}
+              <Card>
+                <div className="border-b border-neutral-100 px-4 py-2.5">
+                  <h2 className="text-sm font-medium text-neutral-900">概览</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-3 sm:grid-cols-3">
+                  <Field label="主办方" value={c.organizer} />
+                  <Field
+                    label="举办频率"
+                    value={FREQUENCY_LABEL[c.frequency ?? ""] ?? c.frequency}
+                  />
+                  {c.validYear && (
+                    <Field label="本届年度" value={String(c.validYear)} />
+                  )}
+                  <Field
+                    label="难度"
+                    value={
+                      c.difficulty != null ? (
+                        <Rating value={c.difficulty} />
+                      ) : null
+                    }
+                  />
+                  <Field label="预计投入" value={c.effortEstimate} />
+                  <Field
+                    label="参赛形式"
+                    value={TEAM_LABEL[c.teamOrSolo ?? ""] ?? c.teamOrSolo}
+                  />
+                </div>
+              </Card>
 
-          {/* 时间节点 */}
-          <Section title="时间节点">
-            <Grid>
-              <Field
-                label="报名开始"
-                value={fmtDate(c.signUpStart)}
-              />
-              <Field
-                label="报名截止"
-                value={fmtDate(c.signUpEnd)}
-              />
-              <Field
-                label="出结果"
-                value={fmtDate(c.resultDate)}
-              />
-            </Grid>
-          </Section>
+              {/* 区块 3：适合人群 */}
+              <Card>
+                <div className="border-b border-neutral-100 px-4 py-2.5">
+                  <h2 className="text-sm font-medium text-neutral-900">适合人群</h2>
+                </div>
+                <div className="space-y-3 px-4 py-3">
+                  {c.suitableGrades && c.suitableGrades.length > 0 && (
+                    <FieldRow label="适合年级">
+                      <div className="flex flex-wrap gap-1.5">
+                        {c.suitableGrades.map((g) => (
+                          <Tag key={g} variant="blue">{g}</Tag>
+                        ))}
+                      </div>
+                    </FieldRow>
+                  )}
+                  {c.suitableMajors && c.suitableMajors.length > 0 && (
+                    <FieldRow label="适合学科">
+                      <div className="flex flex-wrap gap-1.5">
+                        {c.suitableMajors.map((m) => (
+                          <Tag key={m} variant="neutral">{m}</Tag>
+                        ))}
+                      </div>
+                    </FieldRow>
+                  )}
+                  {c.prereq && <FieldRow label="基础要求" value={c.prereq} />}
+                </div>
+              </Card>
 
-          {/* 适合人群 */}
-          <Section title="适合人群">
-            <Grid>
-              {c.suitableGrades && c.suitableGrades.length > 0 && (
-                <Field label="适合年级" value={c.suitableGrades.join("、")} />
-              )}
-              {c.suitableMajors && c.suitableMajors.length > 0 && (
-                <Field label="适合学科" value={c.suitableMajors.join("、")} />
-              )}
-              {c.prereq && <Field label="基础要求" value={c.prereq} />}
-            </Grid>
-          </Section>
-
-          {/* 价值评估 */}
-          {(c.valueTags?.length || c.helps?.length) ? (
-            <Section title="价值评估">
-              <Grid>
-                {c.valueTags && c.valueTags.length > 0 && (
-                  <Field label="加分项" value={c.valueTags.join("、")} />
-                )}
-                {c.helps && c.helps.length > 0 && (
-                  <Field label="有助于" value={c.helps.join("、")} />
-                )}
-              </Grid>
-            </Section>
-          ) : null}
-
-          {/* 轮次时间线 */}
-          {detail.rounds.length > 0 && (
-            <Section title="赛程轮次">
-              <ol className="space-y-3">
-                {detail.rounds.map((r) => (
-                  <li key={r.id} className="flex gap-3">
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-neutral-300" />
-                    <div>
-                      <p className="text-sm font-medium text-neutral-800">
-                        {r.name}
-                      </p>
-                      <p className="text-xs text-neutral-400">
-                        {[fmtDate(r.startAt), fmtDate(r.endAt)]
-                          .filter(Boolean)
-                          .join(" — ") || "时间待定"}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </Section>
-          )}
-        </>
-      )}
-
-      {/* 来源分层展示（R6 合规） */}
-      <Section title="信息来源">
-        <p className="mb-3 text-xs text-neutral-400">
-          官方与权威来源为主依据；学生经验仅供参考，与官方信息分层展示。
-        </p>
-        <ul className="space-y-2">
-          {officialSources.map((s) => (
-            <SourceItem
-              key={s.id}
-              label={SOURCE_TYPE_LABEL[s.sourceType] ?? s.sourceType}
-              title={s.title}
-              url={s.url}
-              isPrimary={s.isPrimary}
-            />
-          ))}
-        </ul>
-
-        {detail.experiences.length > 0 && (
-          <div className="mt-6 rounded-lg border border-amber-100 bg-amber-50/50 p-4">
-            <h3 className="mb-2 text-sm font-medium text-amber-800">
-              学生经验（仅供参考）
-            </h3>
-            <ul className="space-y-3">
-              {detail.experiences.map((e) => (
-                <li key={e.id} className="text-sm text-neutral-700">
-                  <p className="leading-relaxed">{e.content}</p>
-                  <p className="mt-1 text-xs text-neutral-400">
-                    — {e.author ?? "匿名"}
-                    {e.sourceUrl && (
-                      <>
-                        {" · "}
-                        <a
-                          href={e.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-neutral-500 underline"
-                        >
-                          来源
-                        </a>
-                      </>
+              {/* 区块 4：价值分析 */}
+              {(c.helps?.length || c.valueTags?.length) ? (
+                <Card>
+                  <div className="border-b border-neutral-100 px-4 py-2.5">
+                    <h2 className="text-sm font-medium text-neutral-900">价值分析</h2>
+                  </div>
+                  <div className="space-y-3 px-4 py-3">
+                    {c.helps && c.helps.length > 0 && (
+                      <FieldRow label="有助于">
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.helps.map((h) => (
+                            <Tag key={h} variant="green">{h}</Tag>
+                          ))}
+                        </div>
+                      </FieldRow>
                     )}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                    {c.valueTags && c.valueTags.length > 0 && (
+                      <FieldRow label="加分项">
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.valueTags.map((v) => (
+                            <Tag key={v} variant="amber">{v}</Tag>
+                          ))}
+                        </div>
+                      </FieldRow>
+                    )}
+                  </div>
+                </Card>
+              ) : null}
 
-        {otherSources.length > 0 && (
-          <div className="mt-4">
-            <p className="mb-2 text-xs text-neutral-400">其他来源</p>
-            <ul className="space-y-2">
-              {otherSources.map((s) => (
-                <SourceItem
-                  key={s.id}
-                  label={SOURCE_TYPE_LABEL[s.sourceType] ?? s.sourceType}
-                  title={s.title}
-                  url={s.url}
-                  isPrimary={s.isPrimary}
-                />
-              ))}
-            </ul>
-          </div>
-        )}
-      </Section>
+              {/* 区块 5：报名流程（rounds Timeline） */}
+              {detail.rounds.length > 0 && (
+                <Card>
+                  <div className="border-b border-neutral-100 px-4 py-2.5">
+                    <h2 className="text-sm font-medium text-neutral-900">报名流程</h2>
+                  </div>
+                  <div className="px-4 py-3">
+                    <Timeline
+                      items={detail.rounds.map((r) => ({
+                        id: r.id,
+                        name: r.name,
+                        startAt: r.startAt,
+                        endAt: r.endAt,
+                      }))}
+                    />
+                    {(c.signUpEnd || c.resultDate) && (
+                      <div className="mt-3 flex flex-wrap gap-3 border-t border-neutral-100 pt-3 text-xs text-neutral-500">
+                        {c.signUpEnd && (
+                          <span>
+                            报名截止：<span className="text-neutral-800">{fmt(c.signUpEnd)}</span>
+                          </span>
+                        )}
+                        {c.resultDate && (
+                          <span>
+                            出结果：<span className="text-neutral-800">{fmt(c.resultDate)}</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
 
-      {/* 官网入口 + 收藏 */}
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        {c?.officialUrl && (
-          <a
-            href={c.officialUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-700"
-          >
-            前往官网报名 →
-          </a>
-        )}
-        <FavoriteButton infoItemId={detail.id} initialFavorited={favorited} />
+              {/* 区块 6：准备路线（现有字段重组，零新增） */}
+              <Card>
+                <div className="border-b border-neutral-100 px-4 py-2.5">
+                  <h2 className="text-sm font-medium text-neutral-900">准备路线</h2>
+                </div>
+                <div className="px-4 py-3">
+                  <PreparationSteps
+                    prereq={c.prereq}
+                    difficulty={c.difficulty}
+                    effortEstimate={c.effortEstimate}
+                    signUpEnd={c.signUpEnd}
+                  />
+                </div>
+              </Card>
+            </>
+          )}
+
+          {/* 官网入口 */}
+          {c?.officialUrl && (
+            <div>
+              <a
+                href={c.officialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-700"
+              >
+                前往官网报名 →
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* 区块 7：可信度可视化（侧栏，核心特色） */}
+        <aside className="lg:col-span-1">
+          <div className="lg:sticky lg:top-20">
+            <CredibilityPanel detail={detail} />
+            <footer className="mt-4 text-xs text-neutral-400">
+              最后更新：{fmt(detail.lastUpdatedAt)} ·
+              最后核验：{fmt(detail.lastVerifiedAt) ?? "—"}
+            </footer>
+          </div>
+        </aside>
       </div>
-
-      <footer className="mt-12 border-t border-neutral-100 pt-4 text-xs text-neutral-400">
-        最后更新：{fmtDate(detail.lastUpdatedAt)} ·
-        最后核验：{fmtDate(detail.lastVerifiedAt) ?? "—"}
-      </footer>
     </main>
   );
 }
 
-function Section({
-  title,
-  children,
+// ---------- 准备路线步骤（规则化模板，非 AI） ----------
+
+function PreparationSteps({
+  prereq,
+  difficulty,
+  effortEstimate,
+  signUpEnd,
 }: {
-  title: string;
-  children: React.ReactNode;
+  prereq?: string | null;
+  difficulty?: number | null;
+  effortEstimate?: string | null;
+  signUpEnd?: Date | null;
 }) {
+  const steps: { title: string; content: React.ReactNode }[] = [];
+  if (prereq) steps.push({ title: "① 基础要求", content: prereq });
+  if (difficulty != null) {
+    steps.push({
+      title: "② 难度评估",
+      content: <Rating value={difficulty} />,
+    });
+  }
+  if (effortEstimate) {
+    steps.push({ title: "③ 预计投入", content: effortEstimate });
+  }
+  // 规则化建议（护栏：非 AI、非随机；无 signUpEnd 不显示）
+  if (signUpEnd) {
+    const days = Math.ceil(
+      (signUpEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    );
+    if (days > 0) {
+      const suggestWeeks = Math.max(2, Math.ceil((difficulty ?? 3) * 3));
+      steps.push({
+        title: "④ 建议",
+        content: `距报名截止 ${days} 天，建议提前约 ${suggestWeeks} 周开始准备。`,
+      });
+    }
+  }
+
+  if (!steps.length) {
+    return <p className="text-xs text-neutral-400">暂无准备路线信息</p>;
+  }
+
   return (
-    <section className="mb-8">
-      <h2 className="mb-3 text-sm font-medium text-neutral-900">{title}</h2>
-      {children}
-    </section>
+    <ol className="space-y-2.5">
+      {steps.map((s, i) => (
+        <li key={i} className="flex gap-2 text-sm">
+          <span className="font-medium text-neutral-900">{s.title}</span>
+          <span className="text-neutral-600">{s.content}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
-function Grid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>;
-}
+// ---------- 通用字段 ----------
 
-function Field({ label, value }: { label: string; value?: string | null }) {
-  if (!value) return null;
+function Field({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null | React.ReactNode;
+}) {
+  if (value == null || value === "") return null;
   return (
     <div>
       <dt className="text-xs text-neutral-400">{label}</dt>
@@ -298,44 +329,24 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-function SourceItem({
+function FieldRow({
   label,
-  title,
-  url,
-  isPrimary,
+  value,
+  children,
 }: {
   label: string;
-  title: string | null;
-  url: string | null;
-  isPrimary: boolean;
+  value?: string | null;
+  children?: React.ReactNode;
 }) {
   return (
-    <li className="flex items-start gap-2 text-sm">
-      <span className="inline-flex shrink-0 items-center rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500">
-        {label}
-      </span>
-      <div className="min-w-0">
-        {url ? (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-neutral-700 underline hover:text-neutral-900"
-          >
-            {title ?? url}
-          </a>
-        ) : (
-          <span className="text-neutral-700">{title ?? "未命名来源"}</span>
-        )}
-        {isPrimary && (
-          <span className="ml-2 text-xs text-neutral-400">主来源</span>
-        )}
-      </div>
-    </li>
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+      <span className="shrink-0 text-xs text-neutral-400">{label}</span>
+      <div className="text-sm text-neutral-700">{value ?? children}</div>
+    </div>
   );
 }
 
-function fmtDate(d: Date | null): string | null {
+function fmt(d: Date | null): string | null {
   if (!d) return null;
   return d.toLocaleDateString("zh-CN");
 }

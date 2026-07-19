@@ -5,34 +5,52 @@
 /* ============================================================
    全局样式
    R4 国内适配：不使用 Google Fonts，使用系统字体栈（见 tailwind.config.ts）
-   设计理念：参考 Notion / Linear 的简洁高效风格
+   设计语言：Apple + Notion + Linear（Minimal / Glass 克制点缀 / Clean）
+   信息密度优先于过度留白
    ============================================================ */
 
-:root {
-  --color-bg: 255 255 255;
-  --color-text: 23 23 23; /* neutral-900 */
+@layer base {
+  :root {
+    /* neutral 灰阶（与 design.ts 单源一致） */
+    --color-bg: 252 252 252; /* #FCFCFC 页面底 */
+    --color-surface: 255 255 255; /* 白卡 */
+    --color-border: 229 229 229; /* neutral-200 */
+    --color-text: 23 23 23; /* neutral-900 */
+    --color-text-secondary: 82 82 82; /* neutral-600 */
+    --color-text-tertiary: 163 163 163; /* neutral-400 */
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "PingFang SC",
+      "Microsoft YaHei", sans-serif);
+    font-feature-settings: "kern";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text));
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+@layer components {
+  /* Glass 面板：克制点缀，仅 Header/Hero 用（性能 #4，弱网不堆 backdrop-blur） */
+  .glass-panel {
+    background-color: rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
-body {
-  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "PingFang SC",
-    "Microsoft YaHei", sans-serif);
-  font-feature-settings: "kern";
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 链接默认样式 */
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* 可访问性：尊重减少动效偏好 */
+/* 可访问性：尊重减少动效偏好（Apple 克制动画兜底） */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

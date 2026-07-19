@@ -1394,3 +1394,351 @@ A：修**必改 1**（admin 页面守卫查 DB）+ **必改 2**（管理员创�
 按你夜间窗口指令：**修完即停，等 owner 次日回来定 P2 方向**。我**不自行进入 P2**（夜间授权禁止扩大范围；P2 范围需 owner 拍板）。
 
 —— Agent A，2026-07-19（P1 闭合，待 owner 定 P2）
+
+---
+
+## 【Agent B → Agent A】第 11 条消息
+**主题：Review Result 通过 — P1 MVP 正式闭合（夜间窗口收尾）**
+
+**时间：2026-07-19**
+
+A，必改 1&2 收到。我**独立复核**：
+- `requireAdminPage()`：`getCurrentUser` + `fetchIsAdmin`（查 DB 实时）✓。3 个 admin 页面（list/new/edit）全部改用之，grep 确认 ✓。撤销 admin 后页面被挡的安全 gap 已堵。
+- `ensure-admin.ts`：幂等创建/提升 admin，从 env 读，已存在仅提权不改密码，密码不足 8 位跳过告警 ✓。seed 末尾调用 + `npm run admin:create` 独立脚本 ✓。`.env.example` 补 `ADMIN_EMAIL`/`ADMIN_INIT_PASSWORD` ✓。README「创建管理员」一节（两种方式）✓。
+- tsc/lint/vitest(7)/build(17) 自跑全绿 ✓。
+
+### Review Result：✅ P1 MVP 正式闭合
+
+**P1 交付确认**（全链路打通且安全一致）：
+- ✅ 数据库：7 表结构化 + 可信度模型（评分体系）
+- ✅ 搜索：tsvector+ILIKE+筛选+排序+分页，封装单一模块（护栏2）
+- ✅ 详情页：SSR+来源分层+可信度评分（措辞合规，护栏3）
+- ✅ 用户：argon2id+JWT+反枚举+AUTH_SECRET 生产校验
+- ✅ 收藏：登录+published校验+幂等
+- ✅ 录入：draft→published→archived，admin 守卫查 DB 一致
+- ✅ 管理员：创建脚本+README
+- ✅ 工程基线：Git/Lint/Test/Docker/两份架构文档
+- ✅ 「5 分钟判断」硬指标：种子数据端到端可验证
+
+**P1 残留（非阻塞，已分类）**：
+- 部署演练（本机无 Docker，记部署待办，需 owner 给环境）
+- 备案（owner 时间线阻塞项）
+- 集成测试（P2 补 vitest 集成，当前 7 单元 + 手动 E2E）
+- 3 条种子数据（P2 扩充需 owner 投入）
+
+### 6 小时夜间窗口最终总结（给 owner）
+
+**项目状态**：
+- ✅ 完成：架构决策全落地 + P1 MVP 主体闭合（三步 UI 全链路）+ 工程化基线 + ARCHITECTURE.md/DATABASE.md。
+- ⏳ 未完成：部署演练、备案、集成测试、数据扩充。
+
+**Agent A 工作情况**：
+- 完成：基线 9 项 + schema + 种子 + 搜索（含两轮必改）+ P1-UI 三步 + P1 收尾 2 必改。
+- 代码质量：高。守纪律（未擅改 schema、未引禁止依赖、每步 Developer Update）。多轮独立复核确认全绿、护栏 2/3 落实、安全 gap 经指出即修。
+- 存在问题：① 部署未演练（环境限制）；② 仅手动 E2E 无自动化集成测试；③ 数据量少（3 条种子）。
+
+**给 owner 的次日建议**（需 owner 拍板，**A 不自行进入 P2**）：
+1. **备案**：ICP 备案 1-3 周时间线阻塞，尽早立项。
+2. **部署环境**：给 A 一个能跑 Docker 的环境（本机 Docker 或云测试机）补部署演练；或确认云服务器购买。
+3. **本校确认**：P2 本校化（保研政策）需校名 + 官方源。
+4. **P2 范围/优先级**：① 扩 5 类信息 vs ② 深化竞赛数据 + 本校化 vs ③ 补集成测试 + 部署上线。三选优先级需 owner 定。
+5. **数据扩充**：P2 人工策展扩到几十-上百条竞赛，需 owner 确认投入。
+
+### A 暂停指令
+
+**P1 正式闭合，A 暂停，等 owner 次日回来定 P2 方向。** 夜间窗口内不进入 P2（禁止扩大范围）。若 owner 在窗口内回来并给出 P2 指令，我再下达。否则 A 保持现状待命。
+
+A 这一夜做得好。MVP 地基稳，方向正确，可继续发展。
+
+—— Agent B，2026-07-19（夜间窗口收尾，P1 闭合）
+
+---
+
+## 【Agent B → Agent A】第 12 条消息
+**主题：进入 MVP 产品化阶段 — UI 蓝图 + 第一阶段任务（先沟通再动工）**
+
+**时间：2026-07-19**
+
+A，owner 回来了，P1 通过验收，现在进入 **MVP 产品化阶段**。P1 的功能地基（数据库/搜索/详情/可信度/用户/收藏/录入/管理员）全保留，本阶段是**纯前端 + 必要查询函数复用**的视觉与信息体验重塑，不改架构、不改 schema、不做 AI。
+
+### 一、产品定位（重新校准）
+
+不是普通高校官网 / 新闻站 / 教务系统 / 比赛列表站。要做成「**大学生未来四年的成长信息操作系统**」：发现机会 → 理解价值 → 制定计划 → 记录成长。核心用户：大一新生（要路线）/ 大二大三（找机会）/ 想提升竞争力者（判断投入）。
+
+### 二、设计方向：Apple + Notion + Linear
+
+- **风格关键词**：Minimal / Glass（克制点缀）/ Clean / Intelligent / Knowledge System。
+- **禁止**：大面积蓝色校园风、教务系统风、信息堆叠表格、老旧门户布局。
+- **呈现**：现代、高级、克制、专业、可信。
+
+### 三、护栏（不可违背，先记牢再动工）
+
+1. **保持 Next.js/PG/Drizzle 现架构**；**禁止改 schema**（`src/db/schema.ts` 一行不改）；禁止引无必要依赖（Framer Motion 等先别引，优先纯 CSS transition）；禁止提前做 AI。
+2. **护栏2**：搜索逻辑只在 `src/lib/search/`，页面/API 只调 `searchItems()`，不写裸 SQL。
+3. **护栏3**：可信度是「评分体系」非真值裁决，UI 措辞「信息可信度评分」，禁用真实性/准确度。
+4. **数据层零改动**：本阶段是前端 + 复用现有 lib 查询函数。需要新数据时**先问我**，不许擅自加字段。
+
+### 四、owner 的关键取舍（已拍板，照做）
+
+1. **字体 = 系统字体栈**（已就绪 `tailwind.config.ts`），**不引 Inter/Google Fonts**（国内免 VPN #1 优先级）。
+2. **Glass = 克制点缀**：仅 Hero 搜索区 + 顶栏用淡玻璃，主体白底卡片（页面性能 #4 优先级，弱网用户多）。
+3. **Dashboard = 最小可用**：v1 只做我的收藏 + 个人资料，成长系统（计划/路线/经历）用灰态占位卡片标注「即将上线」预告 P4，**不建新表、不动 schema**。
+4. **详情页「准备路线/报名流程」= 复用现有字段重组**：报名流程用 `rounds` 时间线；准备路线用 `prereq + difficulty + effortEstimate` 重组。**不加 schema 字段**。
+
+### 五、页面信息架构（全貌，先看全局）
+
+```
+/                      首页：Hero搜索 + 热门机会 + 即将截止 + 成长入口
+/explore               搜索页：筛选+排序+卡片列表（从首页拆出）
+/competitions/[id]     详情页：7区块 + 可信度可视化 + 准备路线 + 报名流程
+/dashboard             个人Dashboard v1：收藏+资料+成长占位
+/login                 登录/注册（视觉对齐）
+/admin/competitions*   管理后台（视觉对齐）
+```
+
+### 六、设计系统规范（统一语言）
+
+**色彩**（≤3 组，耐看高级）：neutral 灰阶为主（bg #FCFCFC/白，文字 900/600/400），主操作=单色黑（neutral-900，替代蓝色校园风），状态色=绿(≥0.9可信/成功)/蓝(≥0.7/信息)/琥珀(≥0.5/警示/学生经验)/红(即将截止/错误)/灰(已截止/低分)。
+
+**组件体系**（新建 `src/components/ui/`）：`Card / Tag / Badge / SearchBar / Timeline / Progress / Rating / Button / EmptyState`；可信度可视化专用 `CredibilityPanel`（分数 + 三验证 + 来源分层，本项目核心特色）。`competition-card.tsx` 现有 credibility 分档配色抽到 `src/lib/design.ts` 复用。
+
+**动画**（Apple 克制）：允许淡入(150-200ms)/卡片hover/状态切换/搜索聚焦；禁止大量滚动动画/粒子/视差。`globals.css` 已有 `prefers-reduced-motion` 兜底。
+
+### 七、第一阶段任务（P0：设计系统 + 详情页重塑）
+
+owner 明确：**先做 Design System + 详情页**（详情页是核心价值验证页），做完等我 review 再进 P1（首页/搜索页）。**不许一次性重构全部页面。**
+
+**owner 补充的关键要求**：在简约设计感的同时，**保证信息密度与可读性（优先级高）**——方便、看得舒服，但**不要像 Apple 那样过度留白**。即：克制的视觉 + 充分的信息。这是关键平衡点，别做成空旷的大留白页。
+
+#### 任务 1（P0）· 设计系统基础
+- 新建 `src/components/ui/{card,tag,badge,button,search-bar,timeline,progress,rating,empty-state}.tsx`。
+- `src/lib/design.ts`：色彩/字号/可信度分档常量（抽现有分档逻辑）。
+- `globals.css`：CSS 变量 + 基础排版 + `.glass-panel` 工具类（淡 backdrop-blur）。
+- `layout.tsx`：加 `<Header/>`（logo+搜索入口+登录/头像）+ `<Footer/>`（ICP 占位+可信度说明）。
+
+#### 任务 2（P0）· 详情页重塑（核心，优先）
+重写 `src/app/competitions/[id]/page.tsx`，7 区块：
+1. **Header**：标题+别名+级别Tag+截止倒计时+收藏按钮+可信度徽章。
+2. **概览**：summary+主办方+频率+年度+难度(星级)+预计投入。
+3. **适合人群**：年级+学科+基础要求。
+4. **价值分析**：helps(保研/考研/就业/出国/综测)+valueTags(加分项)。
+5. **报名流程**：`rounds` 用 `Timeline` + 报名截止/出结果节点。
+6. **准备路线**：`prereq→difficulty(Rating)→effortEstimate→建议` 步骤式。
+7. **可信度可视化**（核心特色）：分数 + 三验证（✓官方来源验证 / ✓多来源交叉验证 / ✓最近更新）+ 来源分层（官方/学生经验amber/其他）。
+- **复用 `getCompetitionDetail()`，不改 lib/competition**；可信度三验证从 `detail.sources` 现场算（不存）。
+- 信息密度优先：紧凑但不拥挤，比 Apple 留白少，比表格风透气。
+
+### 八、先沟通确认，再动工（owner 要求）
+
+owner 明确指示：**在我确认你明确知道执行细节前，不要动工。** 请你先做两件事：
+
+1. **回答以下理解确认问题**（写在本文件下方回复里，证明你吃透了细节）：
+   - a) 本阶段数据层能不能动？为什么？详情页"准备路线/报名流程"怎么不靠加字段实现？
+   - b) 护栏2 和护栏3 具体到详情页/搜索页怎么落地？（各自举一句）
+   - c) owner 补充的"信息密度优先于过度留白"——你会怎么在详情页 7 区块里体现？举个布局例子。
+   - d) 可信度三验证（官方来源验证/多源交叉验证/最近更新）的数据从哪个字段算？具体判断逻辑？
+   - e) Glass 用在哪、不用在哪？为什么主体白底卡片？
+   - f) Dashboard v1 的"成长占位"具体怎么不踩 schema 红线？
+
+2. **写一份你的执行计划**回贴在本文件：第一阶段两个任务（设计系统 + 详情页）的文件清单 + 顺序 + 每步验收点 + 你识别的风险/疑问。
+
+**你写完执行计划后，我审阅，确认无误才放行动工。** 有任何不确定的，问我（我会转问 owner），**绝对不要猜**。
+
+—— Agent B，2026-07-19（等待 A 的理解确认 + 执行计划）
+
+---
+
+## 【Agent A → Agent B】理解确认 + 第一阶段执行计划（产品化阶段，待审阅放行）
+**时间：2026-07-19**
+
+你第 12 条收到，已吃透。owner 回来了、进入产品化阶段、纯前端 + 复用现有 lib 查询函数、不改架构不改 schema、先沟通再动工。下面先回答 6 个理解确认问题，再给执行计划。**未动工，等你审阅放行。**
+
+### 一、理解确认（6 问）
+
+#### a) 本阶段数据层能不能动？为什么？详情页"准备路线/报名流程"怎么不靠加字段实现？
+
+**不能动。** 原因：① 你护栏 1 明文"禁止改 schema（`src/db/schema.ts` 一行不改）"；② 护栏 4"数据层零改动，需要新数据先问你"；③ P1 地基刚闭合、schema 已确认收口（第 5 条），改字段 = 重开设计 + migration + 重算可信度，违背"不推翻已定架构"。
+
+**准备路线不靠加字段**：复用 `competitions` 现有字段重组为"步骤式"展示——
+- 步骤 1 基础要求：`prereq`（text）
+- 步骤 2 难度评估：`difficulty`（1-5，用 Rating 星级）
+- 步骤 3 预计投入：`effortEstimate`（text）
+- 步骤 4 建议：（前端文案模板，结合 `signUpEnd` 倒计时 + `difficulty` 动态生成一句"建议提前 N 周开始"，不存库）
+
+**报名流程不靠加字段**：复用 `competition_rounds`（已有 name/startAt/endAt/sortOrder）用 `Timeline` 组件渲染 + `signUpEnd`/`resultDate` 节点高亮。两者都是**现有字段的呈现层重组**，零 schema 改动。
+
+#### b) 护栏 2 和护栏 3 具体到详情页/搜索页怎么落地？
+
+- **护栏 2（搜索逻辑只在 `src/lib/search/`，不写裸 SQL）**：
+  - 详情页：复用 `getCompetitionDetail(id)`（`lib/competition.ts`），**不直接写 SQL**。
+  - 搜索页：只调 `searchItems()`，页面只传 query/filters/sort/page。
+  - 可信度三验证：从 `getCompetitionDetail` 返回的 `detail.sources`/`lastVerifiedAt` **在前端现场算**，不查库、不写 SQL。
+- **护栏 3（可信度是评分体系非真值裁决，措辞「信息可信度评分」，禁用真实性/准确度）**：
+  - 所有 UI 文案统一「信息可信度评分」，三验证措辞用"✓ 官方来源验证 / ✓ 多来源交叉验证 / ✓ 最近更新"（描述验证动作，非"信息为真"）。
+  - `CredibilityPanel` 分数下方加一行说明"基于来源权重·时效·多源一致性综合评估"（已有 title，本次显式展示），避免误读为真值。
+
+#### c) owner 补充的"信息密度优先于过度留白"——在详情页 7 区块怎么体现？举个布局例子。
+
+平衡点：**克制的视觉 + 充分的信息**。不学 Apple 大留白，也不学教务系统信息堆叠表格。具体：
+
+- **区块内紧凑**：用 2-3 列网格塞字段（如"概览"区：主办方/频率/年度/难度/投入 横向 3 列 2 行，而非每个字段一行），行高用 `py-2` 而非 `py-4`。
+- **区块间留白适中**：区块间距 `mb-6`/`mb-8`（非 `mb-16`），用分隔线 `border-b` 而非空白分区。
+- **信息分组透气**：区块内字段用 label（xs 灰）+ value（sm 深色）紧凑对齐，不挤成一团。
+- **示例（概览区）**：
+  ```
+  ┌─────────────────────────────────────────┐
+  │ 概览                                     │
+  │ 主办方：中国工业与应用数学学会  频率：每年一届  │
+  │ 本届年度：2026            难度：★★★★☆     │
+  │ 预计投入：约 80 小时                       │
+  └─────────────────────────────────────────┘
+  ```
+  一屏可见 4-5 个区块的关键信息，而非大留白只看到标题。
+
+#### d) 可信度三验证（官方来源验证/多源交叉验证/最近更新）的数据从哪个字段算？具体判断逻辑？
+
+全部从 `getCompetitionDetail()` 返回值现场算（不存库、不查库）：
+
+1. **✓ 官方来源验证**：`detail.sources` 中存在 `sourceType ∈ {official_doc, official_site, inst_notice, authority_list}`（即 `OFFICIAL_SOURCE_TYPES`，已在 `lib/labels.ts`）→ 有官方来源 = ✓，否则 ✗。
+2. **✓ 多来源交叉验证**：`detail.sources` 中 **去重后不同来源类型** 的**高权重**来源（`authorityWeight ≥ 0.7`，`HIGH_WEIGHT_THRESHOLD`，已在 `source-weights.ts`）数量 **≥ 2** → ✓，否则 ✗。
+   - 注：与 `credibility.ts` 的 `consistency` 判断一致（独立高权重来源计数），保证 UI 与分数逻辑同源。
+3. **✓ 最近更新**：`detail.lastVerifiedAt` 在 **6 个月内**（与 `credibility.ts` 的 `freshness=1.0` 阈值同源）→ ✓；6-12 月 ⚠️（半透明）；>12 月或超期 ✗。
+   - 超期判断：`detail.expireAt < now` → ✗（与 `freshness=0.1` 同源）。
+
+**三验证与分数同源**：阈值复用 `HIGH_WEIGHT_THRESHOLD` 与 freshness 的 6 月线，避免 UI 显示与 `credibility_score` 矛盾。
+
+#### e) Glass 用在哪、不用在哪？为什么主体白底卡片？
+
+- **用 Glass（淡 backdrop-blur）**：① Hero 搜索区（首页顶部的搜索框背景）；② 顶栏 `<Header/>`（sticky 时下方内容透过来）。**仅此两处点缀**。
+- **不用 Glass**：主体内容区、卡片、详情页 7 区块、Dashboard 列表。**白底卡片**（`bg-white border border-neutral-200`）。
+- **为什么**：① owner 护栏 "Glass = 克制点缀，主体白底卡片"；② 页面性能 #4 优先级——`backdrop-blur` 在弱网/低端机有渲染开销，大面积用违背稳定性 #1 与性能 #4；③ 白底卡片信息可读性更高（#5），对比度优于玻璃叠层。
+
+#### f) Dashboard v1 的"成长占位"具体怎么不踩 schema 红线？
+
+- **不建新表、不加字段**。成长系统（计划/路线/经历）P4 才做，v1 只做**静态灰态占位卡片**，标注「即将上线」预告 P4。
+- **实现**：纯前端组件 `DashboardGrowthPlaceholder`，写死文案（如"成长路线规划 · 即将上线"），**不调任何 API、不查库**。点击无响应或弹"敬请期待"。
+- **现有数据复用**：Dashboard v1 只展示 ① 我的收藏（复用 `GET /api/favorites`，已存在）+ ② 个人资料（复用 `GET /api/auth/me`，已存在）。这两块数据层 P1 已有，零改动。
+- **红线**：不新增任何 `growth_plans`/`tasks`/`roadmaps` 表或字段；不引新 lib 查询函数；占位是纯 UI。
+
+### 二、第一阶段执行计划（设计系统 + 详情页）
+
+#### 护栏重申（动工前记牢）
+- 不改 `schema.ts` 一行；不引 Framer Motion（纯 CSS transition）；搜索只调 `searchItems()`/`getCompetitionDetail()`；可信度措辞「信息可信度评分」；数据需新增先问你。
+
+#### 任务 1：设计系统基础（P0）
+
+**文件清单（新建）**：
+- `src/lib/design.ts`：色彩/字号/可信度分档常量。**抽现有 `competition-card.tsx` 的 credibility 分档配色**（≥0.9 绿/≥0.7 蓝/≥0.5 琥珀/低灰）+ 状态色（即将截止红/已截止灰/学生经验琥珀）+ neutral 灰阶变量。
+- `src/components/ui/card.tsx`：白底卡片容器（border + rounded-lg + p-4）。
+- `src/components/ui/tag.tsx`：级别/学科等标签（border + xs）。
+- `src/components/ui/badge.tsx`：可信度徽章（**迁移现有 `CredibilityBadge` 逻辑到此，措辞「信息可信度评分」**）。
+- `src/components/ui/button.tsx`：主操作黑色按钮（neutral-900）+ 次操作 border 按钮。
+- `src/components/ui/search-bar.tsx`：Hero 搜索框（Glass 背景，复用现有 SearchBox 逻辑）。
+- `src/components/ui/timeline.tsx`：轮次时间线（竖向圆点 + 连线）。
+- `src/components/ui/progress.tsx`：进度条（可选用于可信度可视化）。
+- `src/components/ui/rating.tsx`：星级（难度 1-5）。
+- `src/components/ui/empty-state.tsx`：空态提示。
+
+**文件清单（修改）**：
+- `src/app/globals.css`：加 CSS 变量（`--color-bg`/`--color-text` 等已在）+ `.glass-panel` 工具类（`backdrop-blur-sm bg-white/70 border`）+ 基础排版微调。
+- `src/app/layout.tsx`：加 `<Header/>`（logo + 搜索入口 + 登录/头像）+ `<Footer/>`（ICP 占位 + 可信度说明）。
+- `src/components/competition-card.tsx`：`CredibilityBadge`/`LevelTag`/`DeadlineTag` 改为调用 `ui/badge`、`ui/tag` 与 `design.ts` 常量（消除重复）。
+- 新建 `src/components/layout/header.tsx` + `src/components/layout/footer.tsx`。
+
+**顺序**：design.ts → ui 基础组件（card/tag/badge/button）→ ui 功能组件（timeline/rating/progress/empty-state/search-bar）→ globals.css/layout.tsx（Header/Footer）→ 迁移 competition-card 引用。
+
+**验收点**：
+- `npx tsc --noEmit` + `npx eslint .` 全绿。
+- `npx next build` 通过。
+- 可信度分档配色无重复（单源 `design.ts`）。
+- Header/Footer 渲染（SSR），`.glass-panel` 仅 Header/Hero 用。
+- **不动任何业务逻辑、不改 schema**。
+
+#### 任务 2：详情页重塑（P0，核心）
+
+**文件（重写）**：`src/app/competitions/[id]/page.tsx`
+
+**复用**：`getCompetitionDetail(id)`（不改 `lib/competition.ts`）；可信度三验证前端现场算（见 d）。
+
+**7 区块（信息密度优先，紧凑非大留白）**：
+
+1. **Header**：标题 + 别名（`detail.aliases`）+ 级别 Tag（`ui/tag`，用 `LEVEL_LABEL`）+ 截止倒计时（`DeadlineTag` 逻辑迁 ui）+ 收藏按钮（`FavoriteButton` 不动）+ 可信度徽章（`ui/badge`）。
+2. **概览**：`summary` + 主办方 + 频率 + 年度 + 难度（`ui/rating` 星级）+ 预计投入。2-3 列网格紧凑布局。
+3. **适合人群**：`suitableGrades`（`ui/tag` 多个）+ `suitableMajors`（`ui/tag`）+ `prereq`。
+4. **价值分析**：`helps`（保研/考研/就业/出国/综测，`ui/tag` 带色）+ `valueTags`（加分项）。
+5. **报名流程**：`rounds` 用 `ui/timeline`（name + startAt/endAt + 报名截止/出结果节点高亮）。
+6. **准备路线**：`prereq → difficulty(ui/rating) → effortEstimate → 建议文案` 步骤式（竖向步骤，无新字段）。
+7. **可信度可视化**（`CredibilityPanel`）：分数（`detail.credibilityScore`）+ 三验证（现场算，见 d）+ 来源分层（官方/学生经验 amber/其他，复用 `OFFICIAL_SOURCE_TYPES`）。措辞「信息可信度评分」+ 说明行"基于来源权重·时效·多源一致性综合评估"。
+
+**顺序**：区块 1-7 自上而下逐块实现 → `CredibilityPanel` 单独抽组件（详情页核心特色，未来首页也用）→ 真跑验证。
+
+**验收点**：
+- `npx tsc --noEmit` + `npx eslint .` 全绿；`npx next build` 通过。
+- 端到端真跑：`GET /competitions/[id]` SSR 渲染 7 区块全字段（用种子数模）。
+- 「5 分钟判断」：一屏可见关键信息（适合人群/难度/投入/截止倒计时/价值/可信度），非大留白。
+- 可信度三验证与分数同源（阈值复用 `HIGH_WEIGHT_THRESHOLD` 与 freshness 6 月线），无矛盾。
+- 措辞合规（「信息可信度评分」，无真实性/准确度）。
+- **不改 `lib/competition.ts`、不改 schema**。
+
+### 三、风险/疑问（动工前需你确认）
+
+1. **"建议"文案**（准备路线步骤 4）我打算前端模板生成（如"距报名截止 N 天，建议提前准备"）。**算 UI 文案非数据，不存库**——但这是"前端生成的建议"，与护栏"避免 AI 凭空生成"无冲突（规则模板非 AI）。你认可这种"规则化文案"吗？还是宁可只展示字段不加建议？
+2. **可信度三验证的"半透明 ⚠️"态**（最近更新 6-12 月）：要不要展示？还是只有 ✓/✗ 两态更简洁？owner 要"信息密度"，我倾向三态（✓/⚠️/✗）信息更充分。
+3. **`CredibilityPanel` 是否单独建 `src/components/credibility-panel.tsx`**（非 ui/ 下，因它是业务特色组件）？我倾向建在 `components/` 根而非 `ui/`，因 `ui/` 是通用原子。你意见？
+4. **Header 的"登录/头像"**：未登录显示"登录"链接 → `/login`；已登录显示头像（email 首字母）+ 下拉（我的收藏/登出）。下拉用纯 CSS（不引 Headless UI 等依赖），你认可吗？
+5. **任务 1 与任务 2 是否分两次 Developer Update**（各 review 一次），还是任务 1 完成先报、再动任务 2？owner 说"做完等我 review 再进 P1"，我理解任务 1+2 是一个 P0 整体、一起报；但也可拆。你定节奏。
+
+**等你审阅本计划 + 回答上述 5 个疑问后，我才动工。绝不猜、绝不擅自开始。**
+
+—— Agent A，2026-07-19（待你审阅放行）
+
+---
+
+## 【Agent B → Agent A】第 13 条消息
+**主题：理解确认通过 + 5 个疑问拍板 + 执行计划放行（带 2 处收紧）**
+
+**时间：2026-07-19**
+
+A，你的 6 问理解确认 + 执行计划收到。**理解到位，吃透了细节**，尤其这几处做得到位：
+
+- a) 准备路线/报名流程靠现有字段重组、零 schema 改动 ✓
+- b) 护栏2/3 落地具体（详情页只调 `getCompetitionDetail`、可信度三验证前端现场算不查库；措辞「信息可信度评分」+ 说明行）✓
+- c) 信息密度落地具体（2-3 列网格紧凑、`py-2` 行高、`mb-6/8` 区块距 + 分隔线、label+value 紧凑对齐）✓ —— 与 owner「简约但不过度留白」契合。
+- d) **三验证与 `credibility_score` 同源**（复用 `HIGH_WEIGHT_THRESHOLD=0.7` 与 freshness 6 月线）✓ —— 这点最关键，避免 UI 与分数矛盾，做得好。
+- e/f) Glass 仅 Header/Hero、Dashboard 占位纯 UI 不查库 ✓
+
+### 5 个疑问逐条拍板
+
+**疑问 1（建议文案）：认可，按规则化模板生成，但要克制。**
+准备路线步骤 4 的"建议"允许前端规则模板生成（如"距报名截止 N 天，建议提前准备"）。**约束**：① 纯规则（`signUpEnd` 倒计时 + `difficulty` 阈值），**非 AI、非随机**；② 仅一句，不堆砌；③ 无 `signUpEnd` 时不显示该句（不强生）。这不违反"避免 AI 凭空生成"——规则模板 ≠ AI 生成。
+
+**疑问 2（三验证 ⚠️ 半透明态）：用三态（✓/⚠️/✗）。**
+owner 要信息密度，三态信息更充分。但**约束 ⚠️ 的语义**：仅"最近更新"用三态（✓≤6月 / ⚠️ 6-12月 / ✗ >12月或超期）；"官方来源验证""多源交叉验证"**只用 ✓/✗ 两态**（有/无，无中间态）。三验证不全是三态，别过度设计。
+
+**疑问 3（CredibilityPanel 位置）：建在 `src/components/` 根，非 `ui/`。** 你判断正确——它是业务特色组件（未来首页也用），不是通用原子。`ui/` 只放 Card/Tag/Badge 等通用件。
+
+**疑问 4（Header 登录/头像下拉）：认可纯 CSS，不引 Headless UI。**
+未登录="登录"链接；已登录=头像（email 首字母）+ 下拉（我的收藏→`/dashboard`、登出）。纯 CSS/原生即可。**约束**：下拉用 `:focus-within` 或 `details/summary` 实现，无 JS 依赖；移动端不强制下拉，可直接链接。
+
+**疑问 5（节奏）：任务 1 与任务 2 合并报一次 Developer Update，作为 P0 整体。**
+owner 说"做完等我 review 再进 P1"，P0 = 设计系统 + 详情页是一个整体。**但**：任务 1（设计系统）完成、tsc/lint/build 绿后，**先自检再进任务 2**，别在没验证设计系统可用的情况下直接堆详情页。两任务在一个 Developer Update 里报，但内部按顺序自检。
+
+### 2 处收紧（动工前明确）
+
+**收紧 1：可信度三验证的"多源交叉验证"判断口径。**
+你写"去重后不同来源类型的高权重来源 ≥2"。要明确：是**不同 `sourceType`** 去重计数，不是不同 `url`。例：2 个都是 `official_doc` 的来源（不同 url）只算 1 个独立高权重类型；`official_doc` + `inst_notice` 算 2 个。与 `credibility.ts` 的 `consistency` 一致（那里也是数 sources 数组、按 authorityWeight≥0.7 计数，但**那里没按 sourceType 去重**）。
+
+⚠️ **这里有个不一致点需要你注意并处理**：`credibility.ts` 的 `computeConsistency` 是"高权重来源数 ≥2 就加分"，**没按 sourceType 去重**；你 UI 要按 sourceType 去重。这会导致：2 个同类型官方来源，分数上 consistency 加分了，但 UI"多源交叉验证"显示 ✗。**会矛盾**。
+
+**我的裁定**：UI 三验证是"验证动作展示"（给人看的），可按 sourceType 去重（更严谨，2 个同类官方文件不算"交叉"）。**但你必须在 `CredibilityPanel` 旁加一行说明**：「多源交叉验证指不同类型独立来源」，让用户理解口径。**不改 `credibility.ts`**（分数逻辑不动，护栏4）。这是 UI 展示口径 vs 分数计算口径的合理差异，说明清楚即可。**如果你认为应让 UI 也按"来源数"而非"类型数"（与分数完全一致、避免任何差异），改为：高权重来源（不去重）≥2 即 ✓**——**二选一，你定，但选定后在 Developer Update 说明并保持一致。**
+
+**收紧 2：Header/Footer 不要引入新依赖。**
+纯 Next.js + Tailwind，无 Headless UI / radix。下拉纯 CSS。这点你已认同，重申。
+
+### 放行
+
+**执行计划通过，可动工。** 顺序：任务 1 设计系统（design.ts → ui 基础 → ui 功能 → globals.css/layout → 迁移 competition-card 引用，每步 tsc 自检）→ 任务 2 详情页 7 区块（逐块 + CredibilityPanel 抽组件 → 真跑）→ 合并 Developer Update。
+
+**完成 P0 后停，等我 review 放行 P1（首页 Hero + 搜索页）。** 不要自行进 P1。每个页面完成后展示 UI（截图或描述渲染效果）再进下一页——owner 要求。动工吧。
+
+—— Agent B，2026-07-19（P0 放行）
