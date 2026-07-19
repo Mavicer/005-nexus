@@ -2,12 +2,12 @@ import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { users, userProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyPassword } from "@/lib/password";
 import { createSession } from "@/lib/auth";
 
-/** POST /api/auth/login */
+/** POST /api/auth/login — 返回 needsOnboarding 供前端跳转判断 */
 export async function POST(req: NextRequest) {
   let body: { email?: unknown; password?: unknown };
   try {
@@ -51,5 +51,17 @@ export async function POST(req: NextRequest) {
     email: row.email,
     isAdmin: row.isAdmin,
   });
-  return NextResponse.json({ user: { id: row.id, email: row.email } });
+
+  // 查 profile 判断 needsOnboarding（单次查询，一次往返）
+  const [profile] = await db
+    .select({ onboardingCompleted: userProfiles.onboardingCompleted })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, row.id))
+    .limit(1);
+  const needsOnboarding = !profile?.onboardingCompleted;
+
+  return NextResponse.json({
+    user: { id: row.id, email: row.email },
+    needsOnboarding,
+  });
 }

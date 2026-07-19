@@ -2,6 +2,8 @@ CREATE TYPE "public"."applicable_scope_type" AS ENUM('national', 'province', 'sc
 CREATE TYPE "public"."competition_frequency" AS ENUM('annual', 'biennial', 'irregular', 'once');--> statement-breakpoint
 CREATE TYPE "public"."competition_level" AS ENUM('school', 'provincial', 'national', 'international');--> statement-breakpoint
 CREATE TYPE "public"."competition_recognition" AS ENUM('official_A', 'leaderboard_listed', 'normal');--> statement-breakpoint
+CREATE TYPE "public"."goal" AS ENUM('baoyan', 'employment', 'civilService', 'abroad', 'entrepreneurship');--> statement-breakpoint
+CREATE TYPE "public"."goal_grade" AS ENUM('freshman', 'sophomore', 'junior', 'senior');--> statement-breakpoint
 CREATE TYPE "public"."info_category" AS ENUM('competition', 'research', 'exam', 'scholarship', 'baoyan', 'opportunity', 'internship');--> statement-breakpoint
 CREATE TYPE "public"."info_status" AS ENUM('draft', 'pending', 'published', 'archived', 'removed');--> statement-breakpoint
 CREATE TYPE "public"."source_type" AS ENUM('official_doc', 'inst_notice', 'authority_list', 'student_exp', 'community', 'official_site');--> statement-breakpoint
@@ -90,6 +92,18 @@ CREATE TABLE "info_sources" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "user_profiles" (
+	"user_id" uuid PRIMARY KEY NOT NULL,
+	"school" text,
+	"major" text,
+	"grade" "goal_grade",
+	"goal" "goal",
+	"interests" text[],
+	"onboarding_completed" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text NOT NULL,
@@ -107,6 +121,7 @@ ALTER TABLE "experiences" ADD CONSTRAINT "experiences_info_item_id_info_items_id
 ALTER TABLE "favorites" ADD CONSTRAINT "favorites_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "favorites" ADD CONSTRAINT "favorites_info_item_id_info_items_id_fk" FOREIGN KEY ("info_item_id") REFERENCES "public"."info_items"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "info_sources" ADD CONSTRAINT "info_sources_info_item_id_info_items_id_fk" FOREIGN KEY ("info_item_id") REFERENCES "public"."info_items"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "competition_rounds_comp_sort_idx" ON "competition_rounds" USING btree ("competition_id","sort_order");--> statement-breakpoint
 CREATE INDEX "competitions_level_idx" ON "competitions" USING btree ("level");--> statement-breakpoint
 CREATE INDEX "competitions_recognition_idx" ON "competitions" USING btree ("recognition");--> statement-breakpoint

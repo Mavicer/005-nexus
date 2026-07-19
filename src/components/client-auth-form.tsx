@@ -25,13 +25,23 @@ export function ClientAuthForm({ next }: { next: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        needsOnboarding?: boolean;
+      };
       if (!res.ok) {
         setError(data.error ?? "操作失败");
         return;
       }
       router.refresh();
-      router.push(next);
+      // P4-1：注册→onboarding（不查库）；登录→按 needsOnboarding 跳转
+      if (mode === "register") {
+        router.push("/onboarding");
+      } else if (data.needsOnboarding) {
+        router.push("/onboarding");
+      } else {
+        router.push(next);
+      }
     } finally {
       setLoading(false);
     }

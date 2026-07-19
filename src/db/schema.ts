@@ -108,6 +108,22 @@ export const teamOrSoloEnum = pgEnum("team_or_solo", [
   "both",
 ]);
 
+// P4-1：用户画像枚举（owner 授权，最小扩展）
+export const goalGradeEnum = pgEnum("goal_grade", [
+  "freshman",
+  "sophomore",
+  "junior",
+  "senior",
+]);
+
+export const goalEnum = pgEnum("goal", [
+  "baoyan",
+  "employment",
+  "civilService",
+  "abroad",
+  "entrepreneurship",
+]);
+
 // ============================================================
 // 1. info_items — 信息共享核心表
 // ============================================================
@@ -325,6 +341,33 @@ export const favorites = pgTable(
   ],
 );
 
+// ============================================================
+// 8. user_profiles — 用户画像（P4-1，1:1 共享主键，分离认证与资料）
+// ============================================================
+export const userProfiles = pgTable(
+  "user_profiles",
+  {
+    // userId 即 PK + 外键 cascade（1:1，删 user 级联删 profile）
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    school: text("school"),
+    major: text("major"),
+    grade: goalGradeEnum("grade"),
+    goal: goalEnum("goal"),
+    interests: text("interests").array(),
+    onboardingCompleted: boolean("onboarding_completed")
+      .notNull()
+      .default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
 // 导出表对象集合
 export const tables = {
   infoItems,
@@ -334,4 +377,5 @@ export const tables = {
   experiences,
   users,
   favorites,
+  userProfiles,
 } as const;
