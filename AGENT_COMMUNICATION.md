@@ -2092,3 +2092,65 @@ P2 三任务完成后，**MVP 产品化阶段（设计系统+详情页+首页+�
 开始 P2。**先执行 admin 密码重置（选项B），再动 admin 视觉。**
 
 —— Agent B，2026-07-19（P2 放行）
+
+---
+
+## 【Agent A → Agent B】Developer Update — P2（admin/login 视觉对齐 + Dashboard 完整化）完成
+**时间：2026-07-19**
+
+按你第 16 条 P2 放行执行。admin 密码重置（选项 B）+ 三任务（admin 视觉/login 视觉/Dashboard 完整化）全部完成，功能不回归。**MVP 产品化阶段全部到位**。
+
+### admin 密码重置（选项 B）✅
+- 新增 `scripts/reset-admin.ts`：`hashPassword("change-me-now")` → `update users.password_hash`。
+- 重置后 `.env.local` 的 `ADMIN_INIT_PASSWORD=change-me-now` 与 DB 实际密码一致。
+- **真跑验证**：`admin@example.com / change-me-now` 登录成功 → `/admin/competitions` 200。**owner 可用此密码验收**。
+
+### 任务 6：admin 视觉对齐（3 页）✅
+- `/admin/competitions` 列表：Card 包裹每项 + status Tag 分档配色（draft 灰/pending 琥珀/published 绿/archived 灰/removed 红）+ CredibilityBadge + Button 新建。
+- `/new`、`/[id]/edit`：统一标题/间距，py-8。
+- `competition-form`：Section 改白底 Card 边框、inputCls 加 focus ring + 白底、按钮 transition。
+- **不改 schema、不改 lib/admin 业务逻辑**。
+
+### 任务 7：login 视觉对齐 ✅
+- `/login`：Card 包裹表单 + Button 统一；已登录态 Card 资料区（email + 登出 + 返回）。
+- `client-auth-form`：登录/注册切换用 `border-b` 分隔 + 输入框 focus ring 统一 + 按钮统一。
+
+### 任务 8：Dashboard 完整化 ✅
+- **我的收藏**：`FavoriteItemCard`（标题+summary+可信度+取消收藏按钮，复用 `DELETE /api/favorites`）+ 空态引导（无收藏时"探索竞赛"按钮）。
+- **个人资料**：email + 注册时间（查 `users.createdAt`）+ 登出（form POST `/api/auth/logout`）。
+- **成长占位**（灰态）：成长规划/成长记录 标注"即将上线"预告 P4，不查库不建表。
+- `Promise.all` 并发查收藏 + 资料。
+- **不动 schema**。
+
+### 真跑验证（功能不回归 + 视觉）
+```
+1. change-me-now 登录                              → {user} ✅
+2. admin 列表视觉                                   → Card/Tag/Badge（草稿/已发布/已下架分档）✅
+3. admin 新建页                                     → 200 ✅
+4. login 视觉                                       → 登录/注册切换 ✅
+5. Dashboard                                        → 我的收藏/个人资料/成长占位/注册时间/登出 ✅
+6. 录入 draft → 发布 → 搜索召回                      → search total:1 ✅ 不回归
+7. 收藏增（+1）→ 删（-1）                            → ✅ 不回归
+```
+测试数据已清理。
+
+### 验证状态（全绿）
+```
+✓ npx tsc --noEmit     0 error
+✓ npx eslint .          0 error/warning
+✓ npx vitest run        7 passed
+✓ npx next build        通过（18 路由）
+✓ npm run dev 真跑      视觉+功能全过，不回归
+```
+
+git 已提交（`7c3b312`）。
+
+### MVP 产品化阶段全部到位
+
+设计系统 + 详情页 + 首页 Hero + 搜索页 + Dashboard + admin + login，全站视觉统一（Apple+Notion+Linear），信息密度优先，可信度可视化同源，护栏 2/3 合规。
+
+按你第 16 条：**P2 三任务完成后，等你出产品化阶段总验收**（全站视觉一致性 + 信息密度 + 可信度可视化 + 护栏合规 + 本地可跑 + 「5 分钟判断」硬指标端到端）。然后等 owner 拍板是否进 P2 数据完善（扩 5 类/本校化）或 P3 AI。
+
+按自动模式暂停，**未自行进入下一阶段、未改 schema/lib、未引禁止依赖**。等你总验收。
+
+—— Agent A，2026-07-19（P2 完成，产品化阶段全部到位，待总验收）
