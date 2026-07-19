@@ -5,6 +5,11 @@ import { listFavorites } from "@/lib/favorites";
 import { getProfile } from "@/lib/profile";
 import { getRoadmap, isCurrentStage, type RoadmapStage } from "@/lib/growth-roadmap";
 import { searchItems } from "@/lib/search";
+import {
+  getRecommendations,
+  recommendReasonPrefix,
+  type Recommendation,
+} from "@/lib/recommend";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -13,9 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FavoriteItemCard } from "@/components/favorite-item-card";
-import {
-  LEVEL_LABEL,
-} from "@/lib/labels";
+import { CredibilityBadge } from "@/components/ui/badge";
+import { LEVEL_LABEL } from "@/lib/labels";
 import type { Goal, GoalGrade } from "@/db/schema-enums";
 
 export const dynamic = "force-dynamic";
@@ -55,14 +59,16 @@ export default async function DashboardPage() {
     );
   }
 
-  const [favorites, profile, userRow] = await Promise.all([
+  // profile 先取（recommendations 依赖 goal），再并发取其余
+  const profile = await getProfile(user.userId);
+  const [favorites, userRow, recommendations] = await Promise.all([
     listFavorites(user.userId),
-    getProfile(user.userId),
     db
       .select({ createdAt: users.createdAt })
       .from(users)
       .where(eq(users.id, user.userId))
       .limit(1),
+    getRecommendations(profile),
   ]);
   const createdAt = userRow[0]?.createdAt;
   const goal = profile?.goal ?? null;
@@ -79,6 +85,23 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-5">
+          {/* 根据你的目标推荐（P4-3 新增） */}
+          {goal ? (
+            <RecommendSection goal={goal} recommendations={recommendations} />
+          ) : (
+            <Card className="p-5">
+              <p className="text-sm font-medium text-neutral-900">
+                根据你的目标推荐
+              </p>
+              <p className="mt-2 text-xs text-neutral-500">
+                完善资料后，获得适合你的机会推荐。
+              </p>
+              <Link href="/onboarding" className="mt-3 inline-block">
+                <Button variant="secondary">完善资料</Button>
+              </Link>
+            </Card>
+          )}
+
           {/* 成长路线（P4-2 新增） */}
           {goal ? (
             <RoadmapSection goal={goal} grade={grade} />
@@ -342,6 +365,64 @@ function RoadmapStageItem({
         )}
       </div>
     </li>
+  );
+}
+
+/** 推荐区：按目标价值矩阵推荐，带推荐理由 */
+function RecommendSection({
+  goal,
+  recommendations,
+}: {
+  goal: Goal;
+  recommendations: Recommendation[];
+}) {
+  return (
+    <Card>
+      <div className="border-b border-neutral-100 px-4 py-2.5">
+        <h2 className="text-sm font-medium text-neutral-900">
+          根据你的目标推荐 · {recommendReasonPrefix(goal)}
+        </h2>
+        <p className="mt-0.5 text-xs text-neutral-400">
+          经验参考，因校因专业而异
+        </p>
+      </div>
+      <div className="px-4 py-3">
+        {recommendations.length === 0 ? (
+          <EmptyState title="暂无匹配推荐" description="去探索更多机会" />
+        ) : (
+          <div className="space-y-3">
+            {recommendations.map((r) => (
+              <RecommendItem key={r.id} rec={r} />
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function RecommendItem({ rec }: { rec: Recommendation }) {
+  return (
+    <Link
+      href={`/o/${rec.id}`}
+      className="block rounded-md border border-neutral-100 p-3 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium text-neutral-900">{rec.title}</p>
+        <span className="shrink-0 text-xs text-neutral-400">
+          {"★".repeat(rec.stars)}
+          {"☆".repeat(3 - rec.stars)}
+        </span>
+      </div>
+      {rec.summary && (
+        <p className="mt-1 line-clamp-1 text-xs text-neutral-500">{rec.summary}</p>
+      )}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <CredibilityBadge score={rec.credibilityScore} />
+        <span className="text-xs text-neutral-400">·</span>
+        <span className="text-xs text-neutral-600">{rec.reason}</span>
+      </div>
+    </Link>
   );
 }
 
