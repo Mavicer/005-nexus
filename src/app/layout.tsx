@@ -4,9 +4,9 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
 export const metadata: Metadata = {
-  title: "大学学习通 | 大学生一站式信息平台",
+  title: "Nexus | University Growth Navigation OS",
   description:
-    "整合竞赛、科研、考试、奖学金、保研、发展机会等大学阶段重要信息，建立可靠、高效的信息检索系统，降低信息差。",
+    "Nexus — 大学生成长导航操作系统。整合竞赛、科研、保研、实习等大学阶段机会信息，建立可靠、高效的信息检索系统，降低信息差。",
   keywords: [
     "大学生",
     "竞赛",

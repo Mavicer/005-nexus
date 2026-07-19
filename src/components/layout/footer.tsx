@@ -10,7 +10,7 @@ export function Footer() {
           信息可信度评分基于来源权重、时效、多源一致性综合评估，仅供参考，非真实性裁决。
         </p>
         <p className="flex items-center gap-3">
-          <span>大学学习通</span>
+          <span>Nexus · University Growth Navigation OS</span>
           {icpNumber && (
             <a
               href="https://beian.miit.gov.cn/"
