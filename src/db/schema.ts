@@ -56,6 +56,7 @@ export const infoCategoryEnum = pgEnum("info_category", [
   "scholarship",
   "baoyan",
   "opportunity",
+  "internship",
 ]);
 
 export const applicableScopeTypeEnum = pgEnum("applicable_scope_type", [

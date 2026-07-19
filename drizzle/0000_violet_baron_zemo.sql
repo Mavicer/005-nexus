@@ -2,7 +2,7 @@ CREATE TYPE "public"."applicable_scope_type" AS ENUM('national', 'province', 'sc
 CREATE TYPE "public"."competition_frequency" AS ENUM('annual', 'biennial', 'irregular', 'once');--> statement-breakpoint
 CREATE TYPE "public"."competition_level" AS ENUM('school', 'provincial', 'national', 'international');--> statement-breakpoint
 CREATE TYPE "public"."competition_recognition" AS ENUM('official_A', 'leaderboard_listed', 'normal');--> statement-breakpoint
-CREATE TYPE "public"."info_category" AS ENUM('competition', 'research', 'exam', 'scholarship', 'baoyan', 'opportunity');--> statement-breakpoint
+CREATE TYPE "public"."info_category" AS ENUM('competition', 'research', 'exam', 'scholarship', 'baoyan', 'opportunity', 'internship');--> statement-breakpoint
 CREATE TYPE "public"."info_status" AS ENUM('draft', 'pending', 'published', 'archived', 'removed');--> statement-breakpoint
 CREATE TYPE "public"."source_type" AS ENUM('official_doc', 'inst_notice', 'authority_list', 'student_exp', 'community', 'official_site');--> statement-breakpoint
 CREATE TYPE "public"."team_or_solo" AS ENUM('team', 'solo', 'both');--> statement-breakpoint

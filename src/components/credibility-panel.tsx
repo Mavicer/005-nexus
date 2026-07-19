@@ -20,11 +20,11 @@
 import { OFFICIAL_SOURCE_TYPES, SOURCE_TYPE_LABEL } from "@/lib/labels";
 import { HIGH_WEIGHT_THRESHOLD } from "@/lib/source-weights";
 import { getCredibilityTier } from "@/lib/design";
-import type { CompetitionDetail } from "@/lib/competition";
+import type { InfoDetail } from "@/lib/info";
 
 type VerifyState = "yes" | "warn" | "no";
 
-export function CredibilityPanel({ detail }: { detail: CompetitionDetail }) {
+export function CredibilityPanel({ detail }: { detail: InfoDetail }) {
   const score = detail.credibilityScore;
   const tier = getCredibilityTier(score);
   const verifications = computeVerifications(detail);
@@ -99,7 +99,7 @@ function VerifyItem({
 }
 
 /** 来源分层：官方 / 学生经验(amber) / 其他 */
-function SourceList({ detail }: { detail: CompetitionDetail }) {
+function SourceList({ detail }: { detail: InfoDetail }) {
   const official = detail.sources.filter((s) =>
     OFFICIAL_SOURCE_TYPES.has(s.sourceType),
   );
@@ -216,7 +216,7 @@ function SourceRow({
 
 // ---------- 三验证计算（同源） ----------
 
-function computeVerifications(detail: CompetitionDetail): {
+function computeVerifications(detail: InfoDetail): {
   hasOfficial: VerifyState;
   crossVerified: VerifyState;
   freshness: VerifyState;
@@ -242,7 +242,7 @@ function computeVerifications(detail: CompetitionDetail): {
   return { hasOfficial, crossVerified, freshness };
 }
 
-function computeFreshnessState(detail: CompetitionDetail): VerifyState {
+function computeFreshnessState(detail: InfoDetail): VerifyState {
   const now = new Date();
   // 超期优先
   if (detail.expireAt && detail.expireAt.getTime() < now.getTime()) {

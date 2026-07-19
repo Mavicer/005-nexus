@@ -1,5 +1,5 @@
 {
-  "id": "83f7f128-e74e-4d3c-b5fc-af14fc59a0da",
+  "id": "262b2777-6298-44c3-b13b-c260e71a6970",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -944,7 +944,8 @@
         "exam",
         "scholarship",
         "baoyan",
-        "opportunity"
+        "opportunity",
+        "internship"
       ]
     },
     "public.info_status": {

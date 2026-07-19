@@ -38,7 +38,7 @@ export function FavoriteItemCard({
   return (
     <div className="flex items-start gap-2 rounded-md border border-neutral-100 p-3 transition-colors hover:border-neutral-200">
       <a
-        href={`/competitions/${infoItemId}`}
+        href={`/o/${infoItemId}`}
         className="min-w-0 flex-1"
       >
         <p className="truncate text-sm font-medium text-neutral-900 hover:underline">

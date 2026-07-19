@@ -9,6 +9,16 @@ import { useRouter, useSearchParams } from "next/navigation";
  *
  * baseHref: 推送到哪个路径（首页 `/` 或搜索页 `/explore`）
  */
+const CATEGORIES = [
+  { value: "", label: "全部类型" },
+  { value: "competition", label: "竞赛" },
+  { value: "research", label: "科研" },
+  { value: "baoyan", label: "保研" },
+  { value: "internship", label: "实习" },
+  { value: "scholarship", label: "奖学金" },
+  { value: "opportunity", label: "发展机会" },
+];
+
 const LEVELS = [
   { value: "", label: "全部级别" },
   { value: "school", label: "校级" },
@@ -55,6 +65,12 @@ export function SearchFilters({ baseHref = "/explore" }: { baseHref?: string }) 
 
   return (
     <div className="flex flex-wrap items-center gap-3">
+      <Select
+        label="类型"
+        value={sp.get("category") ?? ""}
+        options={CATEGORIES}
+        onChange={(v) => update("category", v)}
+      />
       <Select
         label="级别"
         value={sp.get("level") ?? ""}

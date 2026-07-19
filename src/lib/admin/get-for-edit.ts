@@ -41,6 +41,7 @@ export async function getCompetitionForEdit(
 
   return {
     title: base.info_items.title,
+    category: base.info_items.category ?? undefined,
     aliases: base.info_items.aliases ?? [],
     summary: base.info_items.summary ?? "",
     applicableScopeType: base.info_items.applicableScopeType,
@@ -48,7 +49,7 @@ export async function getCompetitionForEdit(
     expireAt: base.info_items.expireAt?.toISOString(),
     lastVerifiedAt: base.info_items.lastVerifiedAt?.toISOString(),
     organizer: c?.organizer ?? undefined,
-    level: c?.level ?? "national",
+    level: c?.level ?? undefined,
     recognition: c?.recognition,
     signUpStart: c?.signUpStart?.toISOString(),
     signUpEnd: c?.signUpEnd?.toISOString(),

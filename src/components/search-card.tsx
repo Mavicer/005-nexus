@@ -13,7 +13,7 @@ import { LEVEL_LABEL } from "@/lib/labels";
 export function SearchCard({ hit }: { hit: SearchHit }) {
   return (
     <Link
-      href={`/competitions/${hit.id}`}
+      href={`/o/${hit.id}`}
       className="block rounded-lg border border-neutral-200 p-4 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
     >
       <div className="flex items-start justify-between gap-3">

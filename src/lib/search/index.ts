@@ -146,10 +146,11 @@ function buildWhere(
   query: string | undefined,
   filters: SearchFilters | undefined,
 ): SQL {
-  const conditions: SQL[] = [
-    eq(infoItems.status, "published"),
-    eq(infoItems.category, filters?.category ?? "competition"),
-  ];
+  // 改动4（Agent B 第 17 条）：默认全类（category undefined 时不拼 WHERE）
+  const conditions: SQL[] = [eq(infoItems.status, "published")];
+  if (filters?.category) {
+    conditions.push(eq(infoItems.category, filters.category));
+  }
 
   const q = query?.trim();
   if (q) {

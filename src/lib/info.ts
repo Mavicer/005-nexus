@@ -2,6 +2,8 @@
  * 查询信息详情（含来源、轮次、经验、竞赛明细）
  * 护栏2：业务查询封装在 lib 模块内，页面/路由只调用
  *
+ * 改动3（Agent B 第 17 条）：去 category 硬编码，competitions 表作通用承载表。
+ *
  * PERF: 3 round-trips（sources/rounds/experiences 各一条独立查询）。
  *       MVP 种子数据量小可接受；未来一条信息挂几十条来源/经验时，
  *       应考虑合并查询或 Promise.all 并发，以减少 round-trip。nit-2（Agent B 第 8 条）。
@@ -17,7 +19,7 @@ import {
   experiences,
 } from "@/db/schema";
 
-export interface CompetitionDetail {
+export interface InfoDetail {
   id: string;
   title: string;
   aliases: string[] | null;
@@ -27,6 +29,7 @@ export interface CompetitionDetail {
   lastUpdatedAt: Date | null;
   expireAt: Date | null;
   status: string;
+  category: string | null;
   competition: {
     organizer: string | null;
     level: string | null;
@@ -73,12 +76,13 @@ export interface CompetitionDetail {
 }
 
 /**
- * 取单个竞赛详情（仅 published）
+ * 取单个信息详情（仅 published，不限 category）
  * 护栏2：唯一调用点，页面不直接写 SQL
+ * 改动3：去 category 硬编码，competitions 表作通用承载表
  */
-export async function getCompetitionDetail(
+export async function getInfoDetail(
   id: string,
-): Promise<CompetitionDetail | null> {
+): Promise<InfoDetail | null> {
   // 核心信息 + 竞赛明细
   const [row] = await db
     .select({
@@ -91,6 +95,7 @@ export async function getCompetitionDetail(
       lastUpdatedAt: infoItems.lastUpdatedAt,
       expireAt: infoItems.expireAt,
       status: infoItems.status,
+      category: infoItems.category,
       // 明细
       organizer: competitions.organizer,
       level: competitions.level,
@@ -114,9 +119,10 @@ export async function getCompetitionDetail(
     .from(infoItems)
     .leftJoin(competitions, eq(competitions.infoItemId, infoItems.id))
     .where(
+      // 改动3（Agent B 第 17 条）：去 category 硬编码，仅 id + status=published
+      // competitions 表作通用承载表（owner 裁定），非竞赛数据也走此查询
       and(
         eq(infoItems.id, id),
-        eq(infoItems.category, "competition"),
         eq(infoItems.status, "published"),
       ),
     );
@@ -195,6 +201,7 @@ export async function getCompetitionDetail(
     lastUpdatedAt: row.lastUpdatedAt,
     expireAt: row.expireAt,
     status: row.status,
+    category: row.category,
     competition,
     sources: sources.map((s) => ({
       id: s.id,

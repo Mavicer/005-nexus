@@ -8,7 +8,7 @@ import {
   type CompetitionInput,
 } from "@/lib/admin/competitions";
 
-/** GET 不在此实现（详情走公开 getCompetitionDetail 或后续补管理员视图） */
+/** GET 不在此实现（详情走公开 getInfoDetail 或后续补管理员视图） */
 
 /** PATCH /api/admin/competitions/:id — 更新 */
 export async function PATCH(

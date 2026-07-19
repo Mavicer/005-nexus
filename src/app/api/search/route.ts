@@ -12,6 +12,24 @@ import type {
   CompetitionRecognition,
   SearchSortBy,
 } from "@/lib/search";
+import type { InfoCategory } from "@/db/schema-enums";
+
+const VALID_CATEGORIES: InfoCategory[] = [
+  "competition",
+  "research",
+  "exam",
+  "scholarship",
+  "baoyan",
+  "opportunity",
+  "internship",
+];
+
+function parseCategory(v: string | null): InfoCategory | undefined {
+  if (!v) return undefined;
+  return VALID_CATEGORIES.includes(v as InfoCategory)
+    ? (v as InfoCategory)
+    : undefined;
+}
 
 function parseLevel(v: string | null): CompetitionLevel | undefined {
   if (!v) return undefined;
@@ -35,6 +53,7 @@ function parseSort(v: string | null): SearchSortBy {
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const query = sp.get("q") ?? undefined;
+  const category = parseCategory(sp.get("category"));
   const level = parseLevel(sp.get("level"));
   const recognition = parseRecognition(sp.get("recognition"));
   const suitableGrade = sp.get("suitableGrade") ?? undefined;
@@ -46,6 +65,7 @@ export async function GET(req: NextRequest) {
   const result = await searchItems({
     query,
     filters: {
+      category,
       level,
       recognition,
       suitableGrade,

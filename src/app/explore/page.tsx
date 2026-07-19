@@ -11,6 +11,7 @@ import type {
   CompetitionRecognition,
   SearchSortBy,
 } from "@/lib/search";
+import type { InfoCategory } from "@/db/schema-enums";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function ExplorePage({
     typeof sp[k] === "string" ? (sp[k] as string) : undefined;
 
   const query = get("q");
+  const category = get("category");
   const level = get("level");
   const recognition = get("recognition");
   const suitableGrade = get("suitableGrade");
@@ -37,6 +39,7 @@ export default async function ExplorePage({
   const result = await searchItems({
     query,
     filters: {
+      category: parseCategory(category),
       level: parseLevel(level),
       recognition: parseRecognition(recognition),
       suitableGrade,
@@ -48,6 +51,7 @@ export default async function ExplorePage({
 
   const qs = new URLSearchParams();
   if (query) qs.set("q", query);
+  if (category) qs.set("category", category);
   if (level) qs.set("level", level);
   if (recognition) qs.set("recognition", recognition);
   if (suitableGrade) qs.set("suitableGrade", suitableGrade);
@@ -58,10 +62,10 @@ export default async function ExplorePage({
     <main className="mx-auto max-w-4xl px-6 py-8">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-          探索竞赛
+          探索机会
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          搜索全国通用竞赛，判断适不适合你、现在该不该准备
+          搜索竞赛、科研、保研、实习等机会，判断适不适合你
         </p>
       </header>
 
@@ -104,6 +108,21 @@ export default async function ExplorePage({
       />
     </main>
   );
+}
+
+function parseCategory(v: string | undefined): InfoCategory | undefined {
+  if (!v) return undefined;
+  return [
+    "competition",
+    "research",
+    "exam",
+    "scholarship",
+    "baoyan",
+    "opportunity",
+    "internship",
+  ].includes(v)
+    ? (v as InfoCategory)
+    : undefined;
 }
 
 function parseLevel(v: string | undefined): CompetitionLevel | undefined {

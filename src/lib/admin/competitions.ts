@@ -24,6 +24,7 @@ import {
 } from "@/db/schema";
 import { computeCredibilityScore } from "@/lib/credibility";
 import { SOURCE_AUTHORITY_WEIGHT, type SourceType } from "@/lib/source-weights";
+import type { InfoCategory } from "@/db/schema-enums";
 
 // ---------- 输入类型 ----------
 
@@ -50,15 +51,16 @@ export interface ExperienceInput {
 export interface CompetitionInput {
   // info_items
   title: string;
+  category?: InfoCategory;
   aliases?: string[];
   summary?: string;
   applicableScopeType?: "national" | "province" | "school";
   applicableScopeValue?: string;
   expireAt?: string;
   lastVerifiedAt?: string;
-  // competitions
+  // competitions（非竞赛数据 level 等字段允许空，owner 裁定通用承载表）
   organizer?: string;
-  level: "school" | "provincial" | "national" | "international";
+  level?: "school" | "provincial" | "national" | "international";
   recognition?: "official_A" | "leaderboard_listed" | "normal";
   signUpStart?: string;
   signUpEnd?: string;
@@ -92,10 +94,11 @@ export async function createCompetition(
     .join(" ");
 
   // 1. info_items（status=draft）
+  // 改动5（Agent B 第 17 条）：category 从入参传（默认 competition），competitions 表作通用承载表
   const [item] = await db
     .insert(infoItems)
     .values({
-      category: "competition",
+      category: input.category ?? "competition",
       title: input.title,
       aliases: input.aliases,
       summary: input.summary,
@@ -111,11 +114,11 @@ export async function createCompetition(
 
   if (!item) throw new Error("创建 info_item 失败");
 
-  // 2. competitions 明细
+  // 2. competitions 明细（level 非竞赛可空）
   await db.insert(competitions).values({
     infoItemId: item.id,
     organizer: input.organizer,
-    level: input.level,
+    level: input.level ?? "national",
     recognition: input.recognition ?? "normal",
     signUpStart: input.signUpStart ? new Date(input.signUpStart) : null,
     signUpEnd: input.signUpEnd ? new Date(input.signUpEnd) : null,

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getCompetitionDetail } from "@/lib/competition";
+import { getInfoDetail } from "@/lib/info";
 import { getCurrentUser } from "@/lib/auth";
 import { isFavorited } from "@/lib/favorites";
 import {
@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * 竞赛详情页（产品化重塑，7 区块）
- * 护栏2：复用 getCompetitionDetail()，不写 SQL；不改 lib/competition
+ * 护栏2：复用 getInfoDetail()，不写 SQL；不改 lib/info
  * 护栏3：可信度措辞「信息可信度评分」，三验证同源
  * 信息密度优先：紧凑 2-3 列网格，非大留白
  */
@@ -32,7 +32,7 @@ export default async function CompetitionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const detail = await getCompetitionDetail(id);
+  const detail = await getInfoDetail(id);
   if (!detail) notFound();
 
   const c = detail.competition;

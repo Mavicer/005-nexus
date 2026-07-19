@@ -2154,3 +2154,115 @@ git 已提交（`7c3b312`）。
 按自动模式暂停，**未自行进入下一阶段、未改 schema/lib、未引禁止依赖**。等你总验收。
 
 —— Agent A，2026-07-19（P2 完成，产品化阶段全部到位，待总验收）
+
+---
+
+## 【Agent B】产品化阶段总验收结论（2026-07-19）
+
+**通过。** MVP 产品化阶段（P0 设计系统+详情页 / P1 首页+搜索页 / P2 admin+login+Dashboard）全部到位，全站视觉统一（Apple+Notion+Linear）、信息密度优先、可信度可视化同源、护栏 2/3 合规、schema 未改、本地 dev 可跑（owner 已 Safari 验收）。**核心展示流程闭合**。
+
+接下来进入**信息库扩充验证阶段**——验证平台从「展示系统」向「真实信息平台」的能力迁移。
+
+---
+
+## 【Agent B → Agent A】第 17 条消息
+**主题：信息库扩充验证阶段 — 100 条真实数据任务（前置工程改动 + 混合采集分工 + 先 20 条验证）**
+
+**时间：2026-07-19**
+
+A，产品化阶段验收通过。owner 下达新阶段：**扩充到 100 条真实机会数据**（竞赛40/科研20/保研20/实习20），每条必有真实来源链接、禁虚假数据、不为数量降可信度。这是验证「真实信息平台」能力，不是填充数据库。
+
+### 一、owner 三项关键裁定（先吃透，再动）
+
+1. **competitions 表 = MVP 阶段 opportunity_detail 通用承载表**。不拆 research/baoyan/internship 明细表（避免提前固化未知业务）。`info_items.category` 作一级分类。**非竞赛数据不强行填不适用字段，允许空**；rounds/prereq/effortEstimate/valueTags 按类型重解释；**记录字段语义冲突**为 schema v2 依据。不为 DB 纯度牺牲验证速度。
+2. **混合采集分工**：**B 定范围/提供目标清单/定审核标准；A 负责 WebSearch 查证/官方来源验证/字段结构化/入库。** B 不替代 A 采集，A 不自行降标准。
+3. **先 20 条跑通再扩 100**：批1 = 20 条（竞赛10+科研5+保研3+实习2）跑通全链路、修正问题后再扩批2 到 100。
+
+### 二、owner 三项技术裁定（前置工程改动，A 做，必须先于录数据）
+
+这些改动是支撑非竞赛数据能存/能搜/能看的必要前置，非范围扩大：
+
+**改动 1：category 枚举加 internship**（owner 已确认加）。drizzle migration `0001_add_internship_category` + schema.ts infoCategoryEnum 加 `"internship"`。schema-enums.ts 类型自动跟上。**仅加一个枚举值，非重设计。**
+
+**改动 2：详情路由 `/competitions/[id]` → `/o/[id]`**（通用 opportunity 路由）。
+- 移动 `src/app/competitions/[id]/page.tsx` → `src/app/o/[id]/page.tsx`。
+- 更新内部链接：`search-card.tsx`、`favorite-button.tsx`（2 处 `/login?next=`）、`favorite-item-card.tsx` 的 `/competitions/${id}` → `/o/${id}`。grep 全仓 `/competitions/` 确保无遗漏（admin 路由 `/admin/competitions` 保留，那是后台录入路径不改）。
+
+**改动 3：`getCompetitionDetail` → `getInfoDetail`（去 category 硬编码）**。
+- `src/lib/competition.ts`：WHERE 去掉 `eq(infoItems.category, "competition")`，仅保留 `id + status=published`。建议文件/函数改名 `lib/info.ts` + `getInfoDetail`（语义更准，A 定是否改名，改名要同步 import）。
+- **不改 schema**，只改查询条件。
+
+**改动 4：search 默认全类 + category 筛选器**。
+- `src/lib/search/index.ts`：默认 category 从 `"competition"` 改 `undefined`（category 为 undefined 时不拼该 WHERE 条件）。
+- `search-filters.tsx`：加 category 筛选下拉（全部/竞赛/科研/保研/实习/发展机会）。
+- 首页 `?q=` 态与探索页都受益。
+
+**改动 5：createCompetition 通用化 + 录入表单加 category 选择器**。
+- `src/lib/admin/competitions.ts` `createCompetition`：`category: "competition"` 硬编码 → 从入参 `input.category` 传。
+- `competition-form.tsx`：加 category 选择器（competition/research/baoyan/internship/opportunity）。**非竞赛字段允许空**（如实习无 rounds 可不填、科研 prereq 重解释为"研究基础"）。
+- 文件/函数名保留 `competitions`（owner 说 competitions 表是通用承载表，命名 MVP 阶段不改，避免大面积改名）。仅改 category 传参逻辑。
+
+### 三、B 的数据采集范围（批1 清单，A 按此 WebSearch 查证录入）
+
+**批 1（20 条）目标清单**（A 逐条 WebSearch 查官方来源、填全字段、入库）：
+
+**竞赛 10 条**（国家级/高价值）：
+1. 全国大学生数学建模竞赛（CUMCM）
+2. ACM-ICPC 国际大学生程序设计竞赛
+3. 挑战杯全国大学生课外学术科技作品竞赛
+4. 全国大学生电子设计竞赛
+5. 全国大学生数学竞赛（CMC）
+6. 全国大学生英语竞赛（NECCS）
+7. 全国大学生节能减排社会实践与科技竞赛
+8. 中国国际"互联网+"大学生创新创业大赛
+9. 周培源大学生力学竞赛
+10. 蓝桥杯全国软件和信息技术专业人才大赛
+
+**科研 5 条**：
+11. 国家级大学生创新创业训练计划（国创/大创）
+12. 清华大学本科生科研训练（SRT）
+13. 北京大学本科生科研基金（校长基金）
+14. 复旦大学本科生学术研究资助计划（FDUROP）
+15. 上海交通大学本科生研究计划（PRP）
+
+**保研 3 条**：
+16. 清华大学优秀大学生夏令营
+17. 北京大学优秀大学生夏令营
+18. 复旦大学全国优秀大学生夏令营
+
+**实习 2 条**：
+19. 字节跳动技术训练营（青训营）
+20. 腾讯犀牛鸟开源人才培养计划
+
+**每条入库字段**：name / category / organizer / difficulty / effortEstimate / valueTags / prereq / rounds（非竞赛可空）/ sources（≥1 一级真实 URL）/ credibilityScore（computeCredibilityScore 算）。
+
+### 四、B 的审核标准（A 录入前对照，录入后 B 抽查）
+
+- 每条必有 ≥1 个**一级来源**（官方官网/赛事官网/高校官网/教育部门），URL 真实可访问（A WebSearch 验证）。
+- 二级来源（高校通知页/官方公众号）可选补充；**三级来源（学生经验）仅作补充，不得作主来源**（authority_weight ≤0.4）。
+- credibility_score 由 `computeCredibilityScore` 算（复用，不手填）；有官方来源应 >0.7。
+- 必填字段缺失的条目不允许进 published（留 draft 待补）。
+- **记录字段语义冲突**（如实习无 rounds、科研 prereq 含义不同）到 Developer Update，为 schema v2 留依据。
+
+### 五、A 的执行顺序
+
+1. **前置工程改动 1-5**（先让平台能存/能搜/能看非竞赛）→ tsc/lint/build 绿 → 真跑 `/o/<id>` + 搜索非竞赛 + category 筛选器。
+2. **批 1 录入 20 条**（按清单 WebSearch 查证 → 填全字段 → 入库 published）。
+3. **回 Developer Update**：① 前置改动文件清单 + 验证；② 新增统计（竞赛10/科研5/保研3/实习2）；③ 随机抽 10 条（名称/来源/可信度/字段完整度）；④ 问题报告（难获取信息/字段不足/schema 冲突）。
+4. **停，等 B review**。review 通过后 B 给批 2 清单扩到 100。
+
+### 六、边界与护栏
+
+- 不允许虚假数据、不允许无来源、不为数量降可信度、每条标记来源（owner 四禁）。
+- competitions 表作通用承载表（owner 裁定），非竞赛字段允许空，**不建多明细表**。
+- 前置工程改动（路由/loader/search/表单通用化）是必要支撑，非范围扩大。
+- schema 仅加 internship 枚举值（owner 确认），其余不动。
+- **B 不替代 A 采集**：我给清单和标准，A 查证录入。A 遇到查不到官方来源的条目，记下来问我换条目，不要硬填。
+
+### 七、给我（B）的反馈点
+
+A 若发现：① 某字段对某类完全不适用需新增字段（→ 记 schema v2 依据，**当前不加**）；② 某条目查不到一级来源；③ 前置改动有更好方案——**记到 Developer Update 问我，不擅自决定**。
+
+开始执行。先前置改动，再 20 条，回 Developer Update 等 review。
+
+—— Agent B，2026-07-19（数据扩充阶段，批1 放行）

@@ -101,6 +101,22 @@ export function CompetitionForm({
             className={inputCls}
           />
         </Field>
+        <Field label="类型 *">
+          <select
+            value={form.category ?? "competition"}
+            onChange={(e) =>
+              set("category", e.target.value as CompetitionInput["category"])
+            }
+            className={inputCls}
+          >
+            <option value="competition">竞赛</option>
+            <option value="research">科研</option>
+            <option value="baoyan">保研</option>
+            <option value="internship">实习</option>
+            <option value="scholarship">奖学金</option>
+            <option value="opportunity">发展机会</option>
+          </select>
+        </Field>
         <Field label="别名（逗号分隔）">
           <input
             value={(form.aliases ?? []).join("，")}
@@ -162,9 +178,9 @@ export function CompetitionForm({
             className={inputCls}
           />
         </Field>
-        <Field label="级别 *">
+        <Field label="级别（竞赛适用）">
           <select
-            value={form.level}
+            value={form.level ?? "national"}
             onChange={(e) => set("level", e.target.value as CompetitionInput["level"])}
             className={inputCls}
           >

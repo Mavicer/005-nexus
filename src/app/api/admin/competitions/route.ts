@@ -34,8 +34,9 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "请求格式错误" }, { status: 400 });
   }
-  if (!body.title || !body.level) {
-    return NextResponse.json({ error: "缺少必填字段 title/level" }, { status: 400 });
+  if (!body.title) {
+    // 改动5：level 非竞赛可空（owner 裁定通用承载表），仅 title 必填
+    return NextResponse.json({ error: "缺少必填字段 title" }, { status: 400 });
   }
 
   const { id } = await createCompetition(body, user.userId);

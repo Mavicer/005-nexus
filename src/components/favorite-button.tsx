@@ -27,7 +27,7 @@ export function FavoriteButton({
           method: "DELETE",
         });
         if (res.status === 401) {
-          router.push(`/login?next=/competitions/${infoItemId}`);
+          router.push(`/login?next=/o/${infoItemId}`);
           return;
         }
         if (res.ok) setFavorited(false);
@@ -38,7 +38,7 @@ export function FavoriteButton({
           body: JSON.stringify({ infoItemId }),
         });
         if (res.status === 401) {
-          router.push(`/login?next=/competitions/${infoItemId}`);
+          router.push(`/login?next=/o/${infoItemId}`);
           return;
         }
         if (res.ok) setFavorited(true);
