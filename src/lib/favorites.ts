@@ -14,6 +14,8 @@ export interface FavoriteItem {
   summary: string | null;
   credibilityScore: string | null;
   favoritedAt: Date;
+  signUpEnd: Date | null;
+  expireAt: Date | null;
 }
 
 /** 当前用户的收藏列表（按收藏时间倒序） */
@@ -26,6 +28,8 @@ export async function listFavorites(userId: string): Promise<FavoriteItem[]> {
       summary: infoItems.summary,
       credibilityScore: infoItems.credibilityScore,
       favoritedAt: favorites.createdAt,
+      signUpEnd: infoItems.expireAt,
+      expireAt: infoItems.expireAt,
     })
     .from(favorites)
     .innerJoin(infoItems, eq(infoItems.id, favorites.infoItemId))
@@ -39,7 +43,36 @@ export async function listFavorites(userId: string): Promise<FavoriteItem[]> {
     summary: r.summary,
     credibilityScore: r.credibilityScore,
     favoritedAt: r.favoritedAt,
+    signUpEnd: r.signUpEnd,
+    expireAt: r.expireAt,
   }));
+}
+
+/** 机会池分组（P5 任务3）：即将截止 / 近期 / 长期 */
+export interface FavoritesGrouped {
+  closing: FavoriteItem[]; // signUpEnd/expireAt 30 天内
+  recent: FavoriteItem[]; // 最近收藏（createdAt 倒序 top N）
+  longterm: FavoriteItem[]; // 截止较远或无截止
+}
+
+/** 机会池分组：按 signUpEnd/expireAt 分（复用 listFavorites，前端分组也行，lib 提供便利方法） */
+export function groupFavorites(items: FavoriteItem[], now = new Date()): FavoritesGrouped {
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+  const closing: FavoriteItem[] = [];
+  const longterm: FavoriteItem[] = [];
+  for (const it of items) {
+    const end = it.signUpEnd ?? it.expireAt;
+    if (!end) {
+      longterm.push(it);
+    } else {
+      const diff = end.getTime() - now.getTime();
+      if (diff < THIRTY_DAYS) closing.push(it);
+      else longterm.push(it);
+    }
+  }
+  // recent = 最近收藏 top 5（已按 favoritedAt 倒序）
+  const recent = items.slice(0, 5);
+  return { closing, recent, longterm };
 }
 
 /** 添加收藏（若已存在则幂等返回） */

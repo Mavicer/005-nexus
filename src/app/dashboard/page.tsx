@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth";
-import { listFavorites } from "@/lib/favorites";
+import { listFavorites, groupFavorites, type FavoriteItem } from "@/lib/favorites";
 import { getProfile } from "@/lib/profile";
 import { getRoadmap, isCurrentStage, type RoadmapStage } from "@/lib/growth-roadmap";
 import { searchItems } from "@/lib/search";
@@ -73,6 +73,7 @@ export default async function DashboardPage() {
   const createdAt = userRow[0]?.createdAt;
   const goal = profile?.goal ?? null;
   const grade = profile?.grade ?? null;
+  const favGroups = groupFavorites(favorites);
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-8">
@@ -117,10 +118,10 @@ export default async function DashboardPage() {
             </Card>
           )}
 
-          {/* 我的收藏 */}
+          {/* 我的机会池（P5 任务3，分组展示，非后台表格） */}
           <Card>
             <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5">
-              <h2 className="text-sm font-medium text-neutral-900">我的收藏</h2>
+              <h2 className="text-sm font-medium text-neutral-900">我的机会池</h2>
               <Link href="/explore">
                 <Button variant="ghost" className="px-2 py-1 text-xs">
                   去探索 →
@@ -130,8 +131,8 @@ export default async function DashboardPage() {
             <div className="px-4 py-3">
               {favorites.length === 0 ? (
                 <EmptyState
-                  title="还没有收藏"
-                  description="去探索竞赛，收藏感兴趣的"
+                  title="还没有收藏的机会"
+                  description="去探索，收藏适合你的机会"
                   action={
                     <Link href="/explore">
                       <Button>探索机会</Button>
@@ -139,16 +140,25 @@ export default async function DashboardPage() {
                   }
                 />
               ) : (
-                <div className="space-y-2">
-                  {favorites.map((f) => (
-                    <FavoriteItemCard
-                      key={f.favoriteId}
-                      infoItemId={f.infoItemId}
-                      title={f.title}
-                      summary={f.summary}
-                      credibilityScore={f.credibilityScore}
-                    />
-                  ))}
+                <div className="space-y-4">
+                  <OpportunityGroup
+                    title="即将截止"
+                    count={favGroups.closing.length}
+                    items={favGroups.closing}
+                    tone="danger"
+                  />
+                  <OpportunityGroup
+                    title="近期收藏"
+                    count={favGroups.recent.length}
+                    items={favGroups.recent}
+                    tone="neutral"
+                  />
+                  <OpportunityGroup
+                    title="长期规划"
+                    count={favGroups.longterm.length}
+                    items={favGroups.longterm}
+                    tone="neutral"
+                  />
                 </div>
               )}
             </div>
@@ -233,6 +243,48 @@ export default async function DashboardPage() {
         </aside>
       </div>
     </main>
+  );
+}
+
+/** 机会池分组（P5 任务3，卡片式非后台） */
+function OpportunityGroup({
+  title,
+  count,
+  items,
+  tone,
+}: {
+  title: string;
+  count: number;
+  items: FavoriteItem[];
+  tone: "danger" | "neutral";
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2">
+        <span
+          className={`text-xs font-medium ${
+            tone === "danger" ? "text-red-600" : "text-neutral-500"
+          }`}
+        >
+          {title}
+        </span>
+        <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-500">
+          {count}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {items.map((f) => (
+          <FavoriteItemCard
+            key={f.favoriteId}
+            infoItemId={f.infoItemId}
+            title={f.title}
+            summary={f.summary}
+            credibilityScore={f.credibilityScore}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
