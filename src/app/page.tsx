@@ -1,17 +1,22 @@
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { searchItems } from "@/lib/search";
-import { SearchBox } from "@/components/search-box";
-import { SearchFilters } from "@/components/search-filters";
+import { SearchBar } from "@/components/ui/search-bar";
 import { SearchCard } from "@/components/search-card";
-import { Pagination } from "@/components/pagination";
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const SUGGEST_CHIPS = ["数学建模", "挑战杯", "ICPC", "保研政策"];
+
 /**
- * 首页（SSR 首屏，利于 SEO 与弱网首屏）
- * 护栏2：只调 searchItems()，不写 SQL
+ * 首页（SSR）
+ * 护栏2：只调 searchItems()
+ * 两种态：无 query = Hero 落地（Hero+热门+即将截止+成长入口）；
+ *        有 query = Hero 收紧 + 搜索结果列表。
  */
 export default async function HomePage({
   searchParams,
@@ -19,92 +24,188 @@ export default async function HomePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const get = (k: string) =>
-    typeof sp[k] === "string" ? (sp[k] as string) : undefined;
+  const q =
+    typeof sp.q === "string" ? sp.q : undefined;
 
-  const query = get("q");
-  const level = get("level");
-  const recognition = get("recognition");
-  const suitableGrade = get("suitableGrade");
-  const sort = get("sort") ?? "relevance";
-  const page = Number(get("page") ?? "1");
+  const user = await getCurrentUser();
 
-  const result = await searchItems({
-    query,
-    filters: {
-      level:
-        level && ["school", "provincial", "national", "international"].includes(level)
-          ? (level as "school" | "provincial" | "national" | "international")
-          : undefined,
-      recognition:
-        recognition &&
-        ["official_A", "leaderboard_listed", "normal"].includes(recognition)
-          ? (recognition as "official_A" | "leaderboard_listed" | "normal")
-          : undefined,
-      suitableGrade,
-    },
-    sort: {
-      by:
-        sort === "credibility" || sort === "closing" ? sort : "relevance",
-    },
-    page: Number.isFinite(page) && page > 0 ? page : 1,
-    pageSize: 20,
-  });
+  if (q) {
+    // 搜索结果态
+    const result = await searchItems({ query: q, pageSize: 20 });
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-8">
+        <div className="mb-5">
+          <Suspense>
+            <SearchBar />
+          </Suspense>
+        </div>
+        <p className="mb-4 text-xs text-neutral-400">
+          搜索「{q}」 · 共 {result.total} 条
+        </p>
+        {result.hits.length === 0 ? (
+          <EmptyState
+            title="没有找到相关竞赛"
+            description="试试其他关键词"
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {result.hits.map((hit) => (
+              <SearchCard key={hit.id} hit={hit} />
+            ))}
+          </div>
+        )}
+      </main>
+    );
+  }
 
-  const qs = new URLSearchParams();
-  if (query) qs.set("q", query);
-  if (level) qs.set("level", level);
-  if (recognition) qs.set("recognition", recognition);
-  if (suitableGrade) qs.set("suitableGrade", suitableGrade);
-  if (sort && sort !== "relevance") qs.set("sort", sort);
-  const basePath = qs.toString();
+  // Hero 落地态
+  const [hot, closing] = await Promise.all([
+    searchItems({ sort: { by: "credibility" }, pageSize: 4 }),
+    searchItems({
+      filters: { closingWithinDays: 30 },
+      sort: { by: "closing" },
+      pageSize: 4,
+    }),
+  ]);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-          {SITE_NAME}
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500">{SITE_TAGLINE}</p>
-      </header>
-
-      <div className="mb-6">
-        <SearchBox />
-      </div>
-
-      <div className="mb-6 border-b border-neutral-100 pb-4">
-        <Suspense>
-          <SearchFilters />
-        </Suspense>
-      </div>
-
-      <div className="mb-4 flex items-center justify-between text-xs text-neutral-400">
-        <span>
-          {query
-            ? `搜索「${query}」`
-            : "全部竞赛"}
-          · 共 {result.total} 条
-        </span>
-      </div>
-
-      {result.hits.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-neutral-200 py-16 text-center text-sm text-neutral-400">
-          没有找到相关竞赛，试试其他关键词或调整筛选条件
+    <main>
+      {/* Hero */}
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-3xl">
+          <h1 className="mb-3 text-3xl font-semibold tracking-tight text-neutral-900">
+            大学生未来四年的成长信息操作系统
+          </h1>
+          <p className="mb-8 text-sm leading-relaxed text-neutral-500">
+            发现机会 · 理解价值 · 制定计划 · 记录成长——降低大学阶段的信息差。
+          </p>
+          <div className="mb-4">
+            <Suspense>
+              <SearchBar />
+            </Suspense>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-neutral-400">热门搜索</span>
+            {SUGGEST_CHIPS.map((chip) => (
+              <Link
+                key={chip}
+                href={`/?q=${encodeURIComponent(chip)}`}
+                className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600 hover:border-neutral-300 hover:text-neutral-900"
+              >
+                {chip}
+              </Link>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {result.hits.map((hit) => (
-            <SearchCard key={hit.id} hit={hit} />
-          ))}
+      </section>
+
+      {/* 热门机会 */}
+      <section className="px-6 py-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-base font-medium text-neutral-900">热门机会</h2>
+            <Link
+              href="/explore?sort=credibility"
+              className="text-xs text-neutral-400 hover:text-neutral-600"
+            >
+              查看全部 →
+            </Link>
+          </div>
+          {hot.hits.length === 0 ? (
+            <EmptyState title="暂无数据" />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {hot.hits.map((hit) => (
+                <SearchCard key={hit.id} hit={hit} />
+              ))}
+            </div>
+          )}
         </div>
+      </section>
+
+      {/* 即将截止 */}
+      {closing.hits.length > 0 && (
+        <section className="px-6 py-8">
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-4 flex items-baseline justify-between">
+              <h2 className="text-base font-medium text-neutral-900">
+                即将截止
+              </h2>
+              <Link
+                href="/explore?sort=closing"
+                className="text-xs text-neutral-400 hover:text-neutral-600"
+              >
+                查看全部 →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {closing.hits.map((hit) => (
+                <SearchCard key={hit.id} hit={hit} />
+              ))}
+            </div>
+          </div>
+        </section>
       )}
 
-      <Pagination
-        page={result.page}
-        pageSize={result.pageSize}
-        total={result.total}
-        basePath={basePath}
-      />
+      {/* 成长入口 */}
+      <section className="px-6 py-12">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-4 text-base font-medium text-neutral-900">
+            成长入口
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <GrowthCard
+              title="探索竞赛"
+              desc="搜索全国通用竞赛，判断适不适合你"
+              href="/explore"
+            />
+            <GrowthCard
+              title="我的收藏"
+              desc="收藏感兴趣的竞赛，随时回看"
+              href={user ? "/dashboard" : "/login"}
+            />
+            <GrowthCard
+              title="成长规划"
+              desc="即将上线"
+              href="#"
+              disabled
+            />
+          </div>
+        </div>
+      </section>
     </main>
+  );
+}
+
+function GrowthCard({
+  title,
+  desc,
+  href,
+  disabled = false,
+}: {
+  title: string;
+  desc: string;
+  href: string;
+  disabled?: boolean;
+}) {
+  if (disabled) {
+    return (
+      <Card className="p-4 opacity-60">
+        <p className="text-sm font-medium text-neutral-700">{title}</p>
+        <p className="mt-1 text-xs text-neutral-400">{desc}</p>
+        <span className="mt-3 inline-block rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-400">
+          即将上线
+        </span>
+      </Card>
+    );
+  }
+  return (
+    <Link href={href}>
+      <Card className="p-4 transition-colors hover:border-neutral-300 hover:bg-neutral-50">
+        <p className="text-sm font-medium text-neutral-900">{title}</p>
+        <p className="mt-1 text-xs text-neutral-500">{desc}</p>
+        <span className="mt-3 inline-block text-xs text-neutral-400">→</span>
+      </Card>
+    </Link>
   );
 }

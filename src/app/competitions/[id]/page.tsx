@@ -321,10 +321,13 @@ function Field({
   value?: string | null | React.ReactNode;
 }) {
   if (value == null || value === "") return null;
+  // nit-5: value 可为 ReactNode（如 Rating），用 items-start 防多列网格 baseline 错位
   return (
-    <div>
+    <div className="flex flex-col items-start">
       <dt className="text-xs text-neutral-400">{label}</dt>
-      <dd className="mt-0.5 text-sm text-neutral-800">{value}</dd>
+      <dd className="mt-0.5 flex items-center text-sm text-neutral-800">
+        {value}
+      </dd>
     </div>
   );
 }

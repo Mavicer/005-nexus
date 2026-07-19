@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
  * 搜索筛选栏（客户端组件，URL 同步状态）
  * 筛选：level / recognition / suitableGrade
  * 排序：relevance / credibility / closing
+ *
+ * baseHref: 推送到哪个路径（首页 `/` 或搜索页 `/explore`）
  */
 const LEVELS = [
   { value: "", label: "全部级别" },
@@ -36,7 +38,7 @@ const SORTS = [
   { value: "closing", label: "即将截止" },
 ];
 
-export function SearchFilters() {
+export function SearchFilters({ baseHref = "/explore" }: { baseHref?: string }) {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -48,7 +50,7 @@ export function SearchFilters() {
       params.delete(key);
     }
     params.delete("page");
-    router.push(`/?${params.toString()}`);
+    router.push(`${baseHref}?${params.toString()}`);
   }
 
   return (
