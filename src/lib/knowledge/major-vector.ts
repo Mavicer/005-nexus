@@ -197,6 +197,7 @@ export const OPPORTUNITY_VECTORS: Partial<Record<OpportunitySubtype, MajorVector
   "case-competition": { math: 0.3, research: 0.3, clinical: 0.2, engineering: 0.3, humanities: 0.5, business: 0.9, arts: 0.2 },
   "arts-competition": { math: 0.1, research: 0.2, clinical: 0, engineering: 0.3, humanities: 0.4, business: 0.5, arts: 1.0 },
   "electronic-design": { math: 0.6, research: 0.5, clinical: 0, engineering: 1.0, humanities: 0.1, business: 0.2, arts: 0.1 },
+  "language-exam": { math: 0.1, research: 0.2, clinical: 0, engineering: 0.1, humanities: 0.8, business: 0.3, arts: 0.1 },
   // other 兜底（中性，归一失败或未覆盖 subtype 用）
   other: { math: 0.4, research: 0.4, clinical: 0.3, engineering: 0.4, humanities: 0.4, business: 0.4, arts: 0.3 },
 };

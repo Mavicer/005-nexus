@@ -15,6 +15,7 @@ import type {
   InfoCategory,
   MajorDirection,
   SchoolTier,
+  ProgramMode,
   GpaTier,
   ResearchLevel,
   CompetitionCapability,
@@ -75,6 +76,10 @@ export interface DecisionProfile {
   internshipLevel?: InternshipLevel | null;
   /** 行为推断的重复 subtype 标记（behavior-inference 算，engine dedup 降权用） */
   repeatedSubtypes?: OpportunitySubtype[];
+  // Phase A 4.5 第3小步：培养模式 + 出国意向（schoolFit 出国通道用）
+  programMode?: ProgramMode | null;
+  /** true=不出国（4+0 中外合办），engine 据此出国通道不加权 */
+  isGoAbroad?: boolean | null;
 }
 
 /** tier → 分值映射（集中一处可审，铁律②） */
@@ -265,12 +270,40 @@ function gradeFitFromKnowledge(
  * - c211 + international（如 ACM-ICPC 国际级）→ 0（可冲但门槛高）
  * - other + 顶尖夏令营(school级目标院校) → -8（错配，概率低）
  * - schoolTier=null → 0（不评）
+ *
+ * Phase A 4.5 第3小步：培养模式接入
+ * - 中外合办 sino_foreign + isGoAbroad=true(4+0不出国) + goal=abroad → 出国通道不加权
+ *   （abroad goal 的机会 schoolFit 不额外加分，提示"4+0 不出国，出国通道权重降低"）
+ * - 中外合办 + goal=baoyan → 提示"中外合办保研资格可能受限，以本校办法为准"（非硬阻断，辅助决策）
  */
 export function schoolFit(
   profile: DecisionProfile,
   opp: DecisionOpportunity,
 ): Factor {
+  // Phase A 4.5 第3小步：中外合办 4+0 不出国 → abroad goal 出国通道不加权
+  if (
+    profile.programMode === "sino_foreign" &&
+    profile.isGoAbroad === true &&
+    profile.goal === "abroad"
+  ) {
+    return {
+      name: "schoolFit",
+      score: -10,
+      reason: "中外合办 4+0 不出国，出国通道权重降低，建议优先国内发展路径",
+      source: "schoolFit:sino_foreign+4+0+abroad-降权",
+    };
+  }
+
   if (!profile.schoolTier) {
+    // 中外合办保研资格提示（非硬阻断，辅助决策）
+    if (profile.programMode === "sino_foreign" && profile.goal === "baoyan") {
+      return {
+        name: "schoolFit",
+        score: 0,
+        reason: "中外合办保研资格可能受限，以本校办法为准（辅助提示，非阻断）",
+        source: "schoolFit:sino_foreign+baoyan-提示",
+      };
+    }
     return {
       name: "schoolFit",
       score: 0,

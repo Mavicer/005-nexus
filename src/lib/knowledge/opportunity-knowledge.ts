@@ -175,6 +175,13 @@ const AI_BAOYAN_BY_SUBTYPE: {
     outcome: "国家级/省级奖",
     stageRole: "准备",
   },
+  "language-exam": {
+    tier: "A",
+    reason: "语言能力证明，中外合办/出国方向核心门槛",
+    cost: "中（备考周期长）",
+    outcome: "雅思/托福达标分数",
+    stageRole: "准备",
+  },
 };
 
 /**
@@ -237,6 +244,7 @@ export type OpportunitySubtype =
   | "case-competition"
   | "arts-competition"
   | "electronic-design"
+  | "language-exam"
   | "other";
 
 /**
@@ -252,6 +260,8 @@ export function inferSubtype(
 ): OpportunitySubtype {
   const tags = valueTags ?? [];
   const hay = `${title ?? ""} ${tags.join(" ")}`;
+  // 语言考试（雅思/托福，4.5 第3小步补，中外合办/出国门槛）
+  if (/雅思|托福|ielts|toefl|gre|gmat/i.test(hay)) return "language-exam";
   if (category === "research") return "research";
   if (category === "baoyan") return "baoyan-camp";
   if (category === "internship") {

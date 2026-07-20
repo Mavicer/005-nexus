@@ -94,6 +94,11 @@ export const VALUE_MATRIX: Partial<Record<Goal, Partial<Record<InfoCategory, Val
     },
   },
   abroad: {
+    // Phase A 4.5 第3小步：出国 goal — 英语门槛优先（language-exam/exam category）
+    exam: {
+      tier: "S",
+      reason: "出国核心门槛，雅思/托福是申请硬通货",
+    },
     research: {
       tier: "S",
       reason: "海外申请核心经历，科研产出是关键区分项",
@@ -112,9 +117,14 @@ export const VALUE_MATRIX: Partial<Record<Goal, Partial<Record<InfoCategory, Val
     },
   },
   entrepreneurship: {
+    // Phase A 4.5 第3小步：创业 goal（U2 验证）— 工程产品/开源核心，论文降级
+    opportunity: {
+      tier: "S",
+      reason: "开源贡献/独立项目是创业核心，AI 工程力、产品原型硬通货",
+    },
     competition: {
-      tier: "A",
-      reason: "创业竞赛（互联网+/挑战杯）是起步试炼场",
+      tier: "S",
+      reason: "创业竞赛（互联网+/挑战杯）是起步试炼场，商业模式验证",
     },
     internship: {
       tier: "A",
@@ -122,7 +132,7 @@ export const VALUE_MATRIX: Partial<Record<Goal, Partial<Record<InfoCategory, Val
     },
     research: {
       tier: "B",
-      reason: "科研经历对技术创业有帮助",
+      reason: "科研经历对创业目标相关性较低，降级",
     },
   },
 };
