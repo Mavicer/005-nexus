@@ -36,6 +36,7 @@ import {
   schoolFit,
   roiWithKnowledge,
   timeConflict,
+  readinessGapWithSubtype,
   type Factor,
   type DecisionProfile,
   type DecisionOpportunity,
@@ -48,9 +49,9 @@ export type GrowthStage = "探索" | "建设" | "冲刺" | "收尾";
 export interface DecisionResult {
   /** 推荐项（机会基础信息） */
   recommendation: DecisionOpportunity;
-  /** 6 因子三元组（铁律②可解释） */
+  /** 7 因子三元组（铁律②可解释，4.5 加 readinessGap） */
   factors: Factor[];
-  /** 适配度总分（6 因子求和，非黑盒） */
+  /** 适配度总分（7 因子求和，非黑盒） */
   fitScore: number;
   /** 价值分层（按 majorMatch 量级：≥20=S/10-19=A/<10=B） */
   tier: "S" | "A" | "B";
@@ -108,12 +109,14 @@ export function analyzeGoal(goal: Goal): { category: InfoCategory; tier: "S" | "
 
 /**
  * 步骤3+4：对单个机会，用 engine 预算的专业向量 + inferSubtype 得 subtype 取机会向量，
- * 组装 6 因子（majorMatch 向量点积注入；gradeFit/roi 注入 knowledge）。
+ * 组装 7 因子（majorMatch 向量点积注入；gradeFit/roi 注入 knowledge；readinessGap 注入 subtype）。
  *
  * 4.3 关键：majorMatch 走 majorMatchWithVector（向量点积，任意专业可算）。
  *           gradeFit/roi 走 knowledge（stageRole/cost/outcome 通用维度）。
+ * 4.5 第2小步：readinessGap 第7因子（能力 vs 门槛三态）。
+ *           行为推断重复 subtype 降权（behavior-inference 算，engine dedup）。
  *
- * 返回 6 因子 + knowledge + subtype（供步骤7 生成 reason）。
+ * 返回 7 因子 + knowledge + subtype（供步骤7 生成 reason）。
  */
 function evaluateOpportunity(
   profile: DecisionProfile,
@@ -132,7 +135,7 @@ function evaluateOpportunity(
     subtype,
   });
 
-  // 组装 6 因子
+  // 组装 7 因子
   const gm = goalMatch(profile.goal, opp);
   if (!gm) {
     // 该 category 对此 goal 不适用 → 不进候选（上层 analyzeGoal 已过滤，此处兜底）
@@ -145,9 +148,20 @@ function evaluateOpportunity(
   const sf = schoolFit(profile, opp);
   const r = roiWithKnowledge(profile, opp, knowledge);
   const tc = timeConflict(opp, now);
+  // readinessGap：能力 vs 门槛三态（4.5 第2小步，注入 subtype）
+  let rg = readinessGapWithSubtype(profile, subtype);
+  // 行为推断重复 subtype 降权（U3 数模：已达门槛但同类重复 → 额外 -5 提示升级）
+  if (profile.repeatedSubtypes?.includes(subtype)) {
+    rg = {
+      ...rg,
+      score: rg.score - 5,
+      reason: `${rg.reason}；你已有关注此类机会，重复投入建议升级`,
+      source: `${rg.source}+behavior-inference:重复`,
+    };
+  }
 
   return {
-    factors: [gm, mm, gf, sf, r, tc],
+    factors: [gm, mm, gf, sf, r, tc, rg],
     knowledge,
     subtype,
   };

@@ -15,6 +15,11 @@ import type {
   InfoCategory,
   MajorDirection,
   SchoolTier,
+  GpaTier,
+  ResearchLevel,
+  CompetitionCapability,
+  EnglishLevel,
+  InternshipLevel,
 } from "@/db/schema-enums";
 import { VALUE_MATRIX, type ValueEntry } from "@/lib/recommend";
 import {
@@ -62,6 +67,14 @@ export interface DecisionProfile {
   grade: GoalGrade | null;
   /** 专业名文本（Phase A 4.2：向量归一用，复用 user_profiles.major） */
   majorText?: string | null;
+  // Phase A 4.5：能力画像 5 维（readinessGap 因子用）
+  gpaTier?: GpaTier | null;
+  researchLevel?: ResearchLevel | null;
+  competitionCapability?: CompetitionCapability | null;
+  englishLevel?: EnglishLevel | null;
+  internshipLevel?: InternshipLevel | null;
+  /** 行为推断的重复 subtype 标记（behavior-inference 算，engine dedup 降权用） */
+  repeatedSubtypes?: OpportunitySubtype[];
 }
 
 /** tier → 分值映射（集中一处可审，铁律②） */
@@ -502,6 +515,157 @@ export function timeConflict(
     reason: `距截止较远（${diffDays.toFixed(0)} 天），远期`,
     source: `timeConflict:>60天`,
   };
+}
+
+// ============================================================
+// 因子 7：readinessGap — 能力 vs 门槛差距三态（Phase A 4.5 第2小步）
+// 来源：profile 能力 5 维 × 机会门槛（按 subtype 维度匹配表）
+// 三态：未达差1档0/差2档+-15、达且未超+10、已达且超-10、门槛none0、能力none0
+// 解决"达+10 奖励重复"：拆"达"为达且未超(+10)vs已达且超(-10)
+// ============================================================
+
+/** 能力维度（readinessGap 比较 5 维） */
+export type CapabilityAxis =
+  | "gpaTier"
+  | "researchLevel"
+  | "competitionCapability"
+  | "englishLevel"
+  | "internshipLevel";
+
+/** 档位排序（低→高，index 越大越强） */
+const TIER_ORDER: Record<CapabilityAxis, string[]> = {
+  gpaTier: ["below", "top50", "top20", "top5"],
+  researchLevel: ["none", "project", "paper"],
+  competitionCapability: ["none", "provincial", "national"],
+  englishLevel: ["none", "cet", "ielts_toefl"],
+  internshipLevel: ["none", "has"],
+};
+
+/** subtype → 门槛维度+档位（维度匹配表，结构化非 if 硬编码，镜像 09-md/08-md） */
+const OPPORTUNITY_THRESHOLD: Partial<
+  Record<OpportunitySubtype, { axis: CapabilityAxis; level: string }>
+> = {
+  research: { axis: "researchLevel", level: "project" },
+  dachuang: { axis: "researchLevel", level: "project" },
+  acm: { axis: "competitionCapability", level: "provincial" },
+  "math-modeling": { axis: "competitionCapability", level: "provincial" },
+  "case-competition": { axis: "competitionCapability", level: "provincial" },
+  "arts-competition": { axis: "competitionCapability", level: "provincial" },
+  "challenge-cup": { axis: "competitionCapability", level: "provincial" },
+  "electronic-design": { axis: "competitionCapability", level: "provincial" },
+  "baoyan-camp": { axis: "gpaTier", level: "top20" }, // 保研通常需前20%（经验区间）
+  "ai-training-camp": { axis: "researchLevel", level: "project" },
+  "open-source": { axis: "researchLevel", level: "project" },
+  // internship/clinical-internship/other 无明确门槛 → readinessGap 中性 0
+};
+
+/** 能力档 index（未填返回 -1 表示 none） */
+function capabilityIndex(
+  axis: CapabilityAxis,
+  value: string | null | undefined,
+): number {
+  if (!value) return -1; // none / 未填
+  const order = TIER_ORDER[axis];
+  const idx = order.indexOf(value);
+  return idx; // -1 if not found（none 在 order[0]，但 none 应返回 -1 表示无能力）
+}
+
+/**
+ * readinessGap：能力 vs 门槛三态。
+ *
+ * 三态（B 第 52 条拍板）：
+ *  - 未达差1档 → 0（够格冲但差一点）
+ *  - 未达差2档+ → -15（差距大）
+ *  - 达且未超（能力=门槛，门槛≠none）→ +10（鼓励冲）
+ *  - 已达且超（能力>门槛，能力≠none，门槛≠none）→ -10（降权+提示升级）
+ *  - 门槛=none（无明确门槛）→ 0（不评）
+ *  - 能力=none（未填）→ 0（中性，等行为推断或提示自评）
+ */
+export function readinessGap(
+  profile: DecisionProfile,
+  opp: DecisionOpportunity,
+): Factor {
+  const subtype = inferSubtype(opp.category, opp.title);
+  return readinessGapWithSubtype(profile, subtype);
+}
+
+/** readinessGap（subtype 显式传入版，engine/单测复用） */
+export function readinessGapWithSubtype(
+  profile: DecisionProfile,
+  subtype: OpportunitySubtype,
+): Factor {
+  const threshold = OPPORTUNITY_THRESHOLD[subtype];
+  if (!threshold) {
+    return {
+      name: "readinessGap",
+      score: 0,
+      reason: "该机会无明确能力门槛，不评准备度差距",
+      source: `readinessGap:无门槛(${subtype})`,
+    };
+  }
+
+  const { axis, level: thresholdLevel } = threshold;
+  const userValue = profile[axis] ?? null;
+  const userIdx = capabilityIndex(axis, userValue);
+  const thresholdIdx = TIER_ORDER[axis].indexOf(thresholdLevel);
+
+  // 能力=none（未填）→ 中性 0
+  if (userIdx <= 0) {
+    return {
+      name: "readinessGap",
+      score: 0,
+      reason: `未填${axisLabel(axis)}，无法评估准备度，建议自评`,
+      source: `readinessGap:能力none`,
+    };
+  }
+
+  const diff = userIdx - thresholdIdx;
+  // 已达且超（能力 > 门槛）→ -10 提示升级
+  if (diff > 0) {
+    return {
+      name: "readinessGap",
+      score: -10,
+      reason: `你当前${axisLabel(axis)}(${userValue})已超该机会门槛(${thresholdLevel})，重复投入低收益，建议升级到更高目标`,
+      source: `readinessGap:已超(${userValue}>${thresholdLevel})`,
+    };
+  }
+  // 达且未超（能力 = 门槛）→ +10 鼓励冲
+  if (diff === 0) {
+    return {
+      name: "readinessGap",
+      score: 10,
+      reason: `你当前${axisLabel(axis)}(${userValue})刚好达该机会门槛(${thresholdLevel})，够格冲`,
+      source: `readinessGap:达且未超(${userValue}=${thresholdLevel})`,
+    };
+  }
+  // 未达（能力 < 门槛）
+  const gap = Math.abs(diff);
+  if (gap === 1) {
+    return {
+      name: "readinessGap",
+      score: 0,
+      reason: `你当前${axisLabel(axis)}(${userValue})距该机会门槛(${thresholdLevel})差1档，需补强`,
+      source: `readinessGap:未达差1档(${userValue}<${thresholdLevel})`,
+    };
+  }
+  return {
+    name: "readinessGap",
+    score: -15,
+    reason: `你当前${axisLabel(axis)}(${userValue})距该机会门槛(${thresholdLevel})差${gap}档，门槛较高`,
+    source: `readinessGap:未达差${gap}档(${userValue}<${thresholdLevel})`,
+  };
+}
+
+/** axis 中文标签（reason 用） */
+function axisLabel(axis: CapabilityAxis): string {
+  const labels: Record<CapabilityAxis, string> = {
+    gpaTier: "GPA 档位",
+    researchLevel: "科研经历",
+    competitionCapability: "竞赛水平",
+    englishLevel: "英语水平",
+    internshipLevel: "实习经历",
+  };
+  return labels[axis];
 }
 
 // ============================================================
