@@ -101,10 +101,10 @@ describe("decide() 硬指标①：南航 AI 大一保研（向量版）", () => 
     expect(results[results.length - 1]!.recommendation.id).toBe("beida-camp"); // 末位夏令营
   });
 
-  it("每条 DecisionResult 含 7 因子 + tier + reason（铁律②⑧，4.5 加 readinessGap）", async () => {
+  it("每条 DecisionResult 含 8 因子 + tier + reason（铁律②⑧，4.5 readinessGap + 4.6.2 hardConstraintPressure）", async () => {
     const results = await decide(NUAA_AI_FRESHMAN_BAOYAN, candidates, NOW);
     for (const r of results) {
-      expect(r.factors.length).toBe(7);
+      expect(r.factors.length).toBe(8);
       expect(["S", "A", "B"]).toContain(r.tier);
       expect(r.reason).toBeTruthy();
     }

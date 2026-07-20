@@ -21,6 +21,7 @@ import type {
   CompetitionCapability,
   EnglishLevel,
   InternshipLevel,
+  HardConstraint,
 } from "@/db/schema-enums";
 import { VALUE_MATRIX, type ValueEntry } from "@/lib/recommend";
 import {
@@ -37,6 +38,10 @@ import {
   getOpportunityVector,
   type MajorVector,
 } from "@/lib/knowledge/major-vector";
+import {
+  computeHardConstraintScore,
+  deadlineToMonthsRemaining,
+} from "@/lib/knowledge/hard-constraint-rules";
 import type { CompetitionLevel, CompetitionRecognition } from "@/lib/search";
 
 /** 单个因子三元组（铁律②可解释） */
@@ -82,6 +87,8 @@ export interface DecisionProfile {
   programMode?: ProgramMode | null;
   /** true=不出国（4+0 中外合办），engine 据此出国通道不加权 */
   isGoAbroad?: boolean | null;
+  // Phase A 4.6.2：硬约束（hardConstraintPressure 第8因子用，source 强约束 user_declared）
+  hardConstraints?: HardConstraint[] | null;
 }
 
 /** tier → 分值映射（集中一处可审，铁律②） */
@@ -701,6 +708,121 @@ function axisLabel(axis: CapabilityAxis): string {
     internshipLevel: "实习经历",
   };
   return labels[axis];
+}
+
+// ============================================================
+// 因子 8：hardConstraintPressure — 硬约束压力（Phase A 4.6.2 第8因子）
+// 来源：profile.hardConstraints（user_declared）× HARD_CONSTRAINT_RULES（10-md 镜像）
+// 只接受 user_declared（source 强约束），pressure=f(差距,截止剩余,目标影响)
+// UI 透明归因用户输入（"由于你设置X截止要求"），禁"系统认为"
+// ============================================================
+
+/** subtype → 相关硬约束 type（判断某机会是否关联某硬约束） */
+const SUBTYPE_TO_CONSTRAINT_TYPE: Partial<Record<OpportunitySubtype, HardConstraint["type"]>> = {
+  "language-exam": "language_requirement",
+  "baoyan-camp": "gpa_requirement", // 保研夏令营关联绩点门槛
+  "ai-training-camp": "internship_requirement",
+  internship: "internship_requirement",
+  "clinical-internship": "internship_requirement",
+};
+
+/**
+ * hardConstraintPressure：机会相关硬约束的压力分（0-30）。
+ *
+ * 流程：
+ * 1. inferSubtype 得机会 subtype → 查关联硬约束 type（如 language-exam→language_requirement）
+ * 2. 在 user_declared 硬约束里找该 type 的 → computeHardConstraintScore 算 pressure
+ * 3. 多相关硬约束取 max（不叠加避免无限加压）
+ * 4. 无相关硬约束 → 0（不评）
+ *
+ * reason："由于你设置了[X截止要求]（差距Y+剩余Z月→pressure W），该任务存在明确截止压力"
+ * source 追到 constraint.id + pressureFunction 输出。
+ *
+ * **source 强约束**：只 user_declared 进（api 已拒绝 system_inferred，此处二次校验）。
+ */
+export function hardConstraintPressure(
+  profile: DecisionProfile,
+  opp: DecisionOpportunity,
+  now: Date = new Date(),
+): Factor {
+  if (!profile.hardConstraints || profile.hardConstraints.length === 0) {
+    return {
+      name: "hardConstraintPressure",
+      score: 0,
+      reason: "未设置硬约束，不评截止压力",
+      source: "hardConstraintPressure:无硬约束",
+    };
+  }
+
+  const subtype = inferSubtype(opp.category, opp.title);
+  const relatedType = SUBTYPE_TO_CONSTRAINT_TYPE[subtype];
+  if (!relatedType) {
+    return {
+      name: "hardConstraintPressure",
+      score: 0,
+      reason: "该机会无关联硬约束，不评截止压力",
+      source: `hardConstraintPressure:无关联(${subtype})`,
+    };
+  }
+
+  // 找相关 type 的 user_declared 硬约束（source 强约束，二次校验）
+  const related = profile.hardConstraints.filter(
+    (hc) => hc.type === relatedType && hc.source === "user_declared",
+  );
+  if (related.length === 0) {
+    return {
+      name: "hardConstraintPressure",
+      score: 0,
+      reason: "无相关 user_declared 硬约束",
+      source: `hardConstraintPressure:无user_declared(${relatedType})`,
+    };
+  }
+
+  // 取 current 能力（按 type 取对应能力维度）
+  const current = currentCapabilityForType(relatedType, profile);
+
+  // 多硬约束取 max pressure（不叠加）
+  let maxScore = 0;
+  let topConstraint: HardConstraint | null = null;
+  let topPressure = 0;
+  let topMonths: number | null = null;
+  for (const hc of related) {
+    const result = computeHardConstraintScore(hc, profile.goal, current, now, profile);
+    if (result.score > maxScore) {
+      maxScore = result.score;
+      topConstraint = hc;
+      topPressure = result.pressure;
+      topMonths = deadlineToMonthsRemaining(hc.deadline, now);
+    }
+  }
+
+  const monthsText = topMonths !== null ? `${topMonths}月` : "未知";
+  const reason = topConstraint
+    ? `由于你设置了[${topConstraint.title}]（压力${topPressure.toFixed(1)}+剩余${monthsText}），该任务存在明确截止压力，优先级提升`
+    : "硬约束压力";
+  return {
+    name: "hardConstraintPressure",
+    score: maxScore,
+    reason,
+    source: `hardConstraintPressure:${topConstraint?.id}(${relatedType},pressure=${topPressure.toFixed(2)})`,
+  };
+}
+
+/** 按 type 取 profile 对应能力维度 current 值 */
+function currentCapabilityForType(
+  type: HardConstraint["type"],
+  profile: DecisionProfile,
+): string | null {
+  switch (type) {
+    case "language_requirement":
+      return profile.englishLevel ?? null;
+    case "gpa_requirement":
+      return profile.gpaTier ?? null;
+    case "internship_requirement":
+      return profile.internshipLevel ?? null;
+    default:
+      return null;
+  }
 }
 
 // ============================================================

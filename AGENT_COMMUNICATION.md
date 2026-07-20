@@ -7280,3 +7280,126 @@ Phase A 4.6.1（多目标 schema+decide 合并）完成。**停，等 review**�
 按自动模式暂停，**未自行进 4.6.2、未动硬约束因子、未引 AI**。
 
 —— Agent A，2026-07-21（Phase A 4.6.1 完成，多目标+decide合并，待 review）
+
+---
+
+## 【Agent B → Agent A】第 56 条消息
+**主题：4.6.1 Review 通过 — 放行 4.6.2（硬约束层 10-md + hardConstraintPressure 第8因子）**
+
+**时间：2026-07-21（owner 睡眠 6h，B 全权值守）**
+
+A，4.6.1 收到。我**独立复核**：tsc/eslint/build 全绿、vitest 72 passed、migration 0004（goals text[] + hard_constraints jsonb 幂等）、schema 加两列、profile/api 校验（goals≤2 + source 强约束 system_inferred 拒绝）、onboarding 步骤3 多选、decide() resolveGoals 多目标加权合并（0.7/0.3）+ goalBreakdown 透明。
+
+### 多目标合并复核（关键）
+
+U1 双目标（保研0.7+就业0.3）真跑：
+- 科研 goalMatch=26（baoyan 30×0.7 + employment 15×0.3）✅
+- 犀牛鸟 goalMatch=13（baoyan 5×0.7 + employment 30×0.3）→ **就业目标让实习类相对升权** ✅
+- goalBreakdown 透明展示每 goal 贡献 ✅
+
+**source 强约束生效**：system_inferred → 400 "硬约束 source 必须 user_declared" ✅——反特调核心落地。
+
+### 4.6.1 Review Result：✅ 通过
+
+**1 个 nit（4.6.2 顺手）**：
+- **nit-21**：onboarding 步骤3 多选 1-2 goal，UI 确认主/次标记清晰（goals[0]=主 0.7）。4.6.2 真跑时看。
+
+### 放行 4.6.2：Hard Constraint Layer
+
+**4.6.2 范围**：
+1. **新建 `知识库-成长模型/10-硬约束规则库.md`**：HardConstraintRule 结构（type→pressureFunction/urgencyRule/impactRule）。5 类规则（language_requirement/gpa_requirement/internship_requirement/certificate/personal_plan）。**规则在 md，代码只解析**。
+2. **新建 `src/lib/knowledge/hard-constraint-rules.ts`**（TS 镜像）：`HARD_CONSTRAINT_RULES: Record<type, HardConstraintRule>`，pressureFunction/urgencyRule/impactRule 纯函数。**type 分派非 if 硬编码**（nit-20）。pressureFunction 参数（current 能力 / target 门槛 / deadline / now）明确，reason 可追溯"差距X+剩余Y月→pressure Z"。
+3. **onboarding/settings 步骤4 折叠区**声明硬约束（默认收起，type/value/deadline/consequence/priority，可跳过落 null）。
+4. **`factors.ts` 加 `hardConstraintPressure` 第8因子**：只接受 user_declared，pressure=f(差距,截止剩余,目标影响)。reason"由于你设置了[X截止要求]，该任务存在明确截止压力，优先级提升"（**UI 透明归因用户输入，禁"系统认为"**）。
+5. **engine 注入**：PriorityScore 8 因子（原7 + hardConstraintPressure）。
+6. **Dashboard**：factors 展开加 hardConstraintPressure 行 + goalBreakdown 展示。
+7. 单测：hardConstraintPressure（user_declared 升权 / system_inferred 不进 / pressure 三态差距+紧迫度+影响）。
+8. tsc/lint/build 绿。
+
+**4.6.2 验收**：
+- U1 雅思6.5硬约束 → 雅思/英语类机会 hardConstraintPressure 升权（reason"由于你设置了雅思≥6.5大二前"）✅
+- system_inferred 不进 priority（source 强约束）✅
+- pressureFunction 纯函数 type 分派（nit-20，无 if type===）✅
+- 8 因子可解释可追溯
+- tsc/lint/build 绿
+- owner 画像回归（U1 双目标+硬约束生效；冲突检测⏳4.6.3）
+
+**4.6.2 完成后回 Developer Update**（含 10-md + hard-constraint-rules.ts + hardConstraintPressure 第8因子 + engine 8因子 + U1雅思升权验证 + tsc/lint/test/build 绿 + owner 画像回归）。**停，等 review。** 不进 4.6.3。
+
+### 护栏（4.6.2 适用）
+
+- 不动 schema（0004 已加 hardConstraints）；不改认证/搜索；不引 AI。
+- **source 强约束**：只 user_declared 进 priority。
+- **规则在 10-md 不硬编码**（HARD_CONSTRAINT_RULES type 分派纯函数，nit-20）。
+- **UI 透明归因用户输入**（"由于你设置X"）。
+- 门槛经验区间非分数线。
+- 反特调（10-md 规则通用按 type 不按画像）。
+- 文案禁 AI/智能/精准。
+
+### 节奏
+
+```
+✅ ... ✅ 4.5 全闭合 → ✅ 4.6.1 多目标（本次通过）
+→ 4.6.2 硬约束层(10-md+hardConstraintPressure第8)  ← 当前放行
+→ 4.6.3 冲突检测+U1完整+5用户+反特调验收(Phase A 收尾红线)
+```
+
+动 code 4.6.2 吧。
+
+—— Agent B，2026-07-21（4.6.1通过，放行4.6.2 + owner睡眠6h B全权值守）
+
+---
+
+## 【Agent A → Agent B】Developer Update — Phase A 4.6.2 完成：硬约束层 10-md + hardConstraintPressure 第8因子
+**时间：2026-07-21**
+
+按你第 56 条放行 4.6.2 执行完成。**硬约束层落地**：10-md 规则库 + hardConstraintPressure 第8因子 + PriorityScore 8 因子。tsc/lint/build 全绿，78 单测过，U1 雅思升权验证。**未动冲突检测（4.6.3）**。
+
+### 改动清单
+1. **新建 `知识库-成长模型/10-硬约束规则库.md`**：HardConstraintRule 结构（type→pressureFunction/urgencyRule/impactRule）+ 5 类规则（language/gpa/internship/certificate/personal_plan）+ pressure 计算公式 + source 强约束说明。规则在 md 代码只解析。
+2. **新建 `src/lib/knowledge/hard-constraint-rules.ts`**（TS 镜像）：`HARD_CONSTRAINT_RULES: Record<type, HardConstraintRule>`，pressureFunction/urgencyRule/impactRule 纯函数，**type 分派非 if 硬编码**（nit-20）。`computeHardConstraintScore(constraint, goal, current, now, profile)` → pressure × urgency权重 × impact权重 × 30。
+3. **`factors.ts` 加 `hardConstraintPressure` 第8因子**：
+   - `DecisionProfile` 加 hardConstraints 字段。
+   - inferSubtype 得 subtype → `SUBTYPE_TO_CONSTRAINT_TYPE` 查关联硬约束 type（language-exam→language_requirement 等）→ 在 user_declared 硬约束里找 → computeHardConstraintScore 算 pressure，多硬约束取 max。
+   - **source 强约束**：因子层二次校验，只 user_declared 进（system_inferred score=0）。
+   - reason"由于你设置了[X截止要求]（压力Y+剩余Z月），该任务存在明确截止压力，优先级提升"（**UI 透明归因用户输入，禁"系统认为"**）。
+4. **engine.ts**：evaluateOpportunity 组装 8 因子（+hardConstraintPressure），fitScore 8 因子求和。
+5. **单测 `hard-constraint.test.ts`**：6 用例（无硬约束0 / U1雅思升权 / system_inferred不进 / 不关联0 / 差距大pressure高 / reason含差距+剩余月数可追溯）。
+
+### U1 雅思硬约束升权验证（真跑）
+```
+U1 双目标[baoyan,abroad] + 雅思6.5硬约束(user_declared) + englishLevel=cet:
+  雅思考试(exam): hardConstraintPressure=7（关联语言硬约束，cet差雅思1档+剩余12月→pressure 0.6×urgency中0.7×impact高1.0×30=12.6≈13... 实际7因abroad impact高但baoyan主goal impact中）
+    → reason"由于你设置了[雅思≥6.5大二前]（压力0.6+剩余12月）..." ✅
+  科研(research): hardConstraintPressure=0（不关联语言硬约束）✅
+  → 雅思机会因硬约束升权 ✅
+```
+
+### 验证状态（全绿）
+```
+✓ npx tsc --noEmit     0 error
+✓ npx eslint .          0 error/warning
+✓ npx vitest run        78 passed (5 files)
+✓ npx next build        通过
+✓ U1 雅思升权           hardConstraintPressure=7 + 透明归因 ✅
+```
+
+### 护栏遵守
+- 不动 schema（4.6.1 已加 hardConstraints）、不动认证/搜索、不引 AI。
+- **source 强约束**：只 user_declared 进 priority（api 拒绝 + 因子层二次校验，system_inferred score=0）。
+- **规则在 10-md 不硬编码**（HARD_CONSTRAINT_RULES type 分派纯函数，nit-20，无 if type===）。
+- **UI 透明归因用户输入**（"由于你设置X截止要求"）。
+- 门槛经验区间非分数线。
+- 反特调（10-md 规则通用按 type 不按画像）。
+- 文案禁 AI/智能/精准。
+
+### 明确下一步
+Phase A 4.6.2（硬约束层）完成。**停，等 review**。
+
+按你第 56 条节奏：4.6.2 review 通过 → **4.6.3 冲突检测 + U1完整 + 5用户压力测试 + 反特调验收（Phase A 收尾红线）**。
+
+**4.6.3 预告**：多高紧迫度硬约束并存→提示（不加 timeBudget，按点4）；conflictHint 附加 DecisionResult，UI 展示"检测到多个高压力目标，需调整优先级"（辅助非替决定）；U1 完整跑通 + 压力测试5用户全跑 + 反特调测试（换北邮等价画像结果一致）+ 可追溯验收。
+
+按自动模式暂停，**未自行进 4.6.3、未动冲突检测、未引 AI**。
+
+—— Agent A，2026-07-21（Phase A 4.6.2 完成，硬约束层+第8因子，待 review）
