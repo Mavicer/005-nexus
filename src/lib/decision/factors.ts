@@ -99,35 +99,10 @@ export function goalMatch(goal: Goal, opp: DecisionOpportunity): Factor | null {
 }
 
 // ============================================================
-// 向后兼容：枚举版 majorMatchWithKnowledge（Phase A 第三步枚举架构，4.3 engine 重做后移除）
-// Phase A 4.2 majorMatch 改向量点积，engine.ts 枚举版引用此旧函数。
-// 4.3 重做 engine 时改用 majorMatchWithVector，本函数届时删除。
-// 暂时保留以免 engine.ts（枚举版留参考）编译断裂——但 engine.ts 4.3 会重写，不实际调用。
+// 因子 2：majorMatch — 专业方向分流（Phase A 4.2 改向量点积）
+// 来源：classifyMajor(majorText) 得专业向量 × OPPORTUNITY_VECTORS[subtype] 得机会向量 → majorMatchScore 点积
+// 任意专业都能算（康复/中医药/兽医），不靠枚举不靠特调（owner 铁律①③⑨）
 // ============================================================
-/**
- * @deprecated 枚举版 majorMatch（Phase A 第三步），4.3 engine 重做后移除。
- * 保留仅为 engine.ts 枚举版编译通过，不再用于新逻辑。
- */
-export function majorMatchWithKnowledge(
-  profile: DecisionProfile,
-  opp: DecisionOpportunity,
-  knowledge: OpportunityKnowledge | null,
-): Factor {
-  if (!knowledge) {
-    return {
-      name: "majorMatch",
-      score: 0,
-      reason: "专业方向未覆盖，按通用价值判断",
-      source: "knowledge:null(回退base)",
-    };
-  }
-  return {
-    name: "majorMatch",
-    score: MAJOR_TIER_SCORE[knowledge.tier],
-    reason: knowledge.reason,
-    source: `knowledge:${profile.majorDirection}/${opp.category}(subtype).tier=${knowledge.tier}`,
-  };
-}
 
 /**
  * majorMatch（向量点积版，Phase A 4.2）。

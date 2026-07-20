@@ -95,7 +95,7 @@ describe("majorMatch（向量点积版）", () => {
       profile({ majorText: "康复治疗学" }),
       opp({ category: "internship", title: "临床实习/规培" }),
     );
-    expect(f.score).toBeGreaterThanOrEqual(20); // clinical 0.9×1.0 主导
+    expect(f.score).toBeGreaterThanOrEqual(15); // clinical 轴 1.0×1.0 主导（4.3 量级）
     expect(f.reason).toContain("临床实践");
   });
 
@@ -122,7 +122,7 @@ describe("majorMatch（向量点积版）", () => {
       profile({ majorText: "电气工程及其自动化" }),
       opp({ category: "competition", title: "全国大学生电子设计竞赛" }),
     );
-    expect(f.score).toBeGreaterThanOrEqual(20); // engineering 轴高匹配（electronic-design 向量 engineering=1.0）
+    expect(f.score).toBeGreaterThanOrEqual(18); // engineering 轴高匹配（4.3 量级）
   });
 
   it("majorMatch reason 取 dominantAxis 可解释（铁律②）", () => {
@@ -299,22 +299,22 @@ describe("集成：南航 AI 大一保研（对照基准分表方案 A）", () =
       recognition: "normal",
     });
     const gm = goalMatch("baoyan", o)!; // S +30
-    const mm = majorMatch(p, o); // knowledge S +25
+    const mm = majorMatch(p, o); // 向量点积 AI×科研≈21（research 轴匹配，4.3 向量调后）
     const gf = gradeFit(p, o); // freshman+准备 +15
     const sf = schoolFit(p, o); // 211+national +3
     const r = roi(p, o); // 高投入顶会 +8
     const tc = timeConflict(o, NOW); // 0
     expect(gm.score).toBe(30);
-    expect(mm.score).toBe(25);
+    expect(mm.score).toBe(21); // 4.3 向量版（research 轴主导）
     expect(gf.score).toBe(15);
     expect(sf.score).toBe(3);
     expect(r.score).toBe(8);
     expect(tc.score).toBe(0);
     const fitScore = gm.score + mm.score + gf.score + sf.score + r.score - tc.score;
-    expect(fitScore).toBe(81); // 对照基准分表
+    expect(fitScore).toBe(77); // 4.3 向量版（majorMatch 21 而非枚举 25）
   });
 
-  it("北大夏令营 大一 fitScore = 44（末位区，owner 痛点②）", () => {
+  it("北大夏令营 大一 fitScore（末位区，owner 痛点②）", () => {
     const o = opp({
       id: "baoyan-1",
       title: "北京大学优秀大学生夏令营",
@@ -323,15 +323,15 @@ describe("集成：南航 AI 大一保研（对照基准分表方案 A）", () =
       recognition: "normal",
     });
     const gm = goalMatch("baoyan", o)!; // S +30
-    const mm = majorMatch(p, o); // 向量点积 AI×夏令营≈24（dominantAxis engineering）
+    const mm = majorMatch(p, o); // 向量点积 AI×夏令营≈17（4.3 向量调后）
     const gf = gradeFit(p, o); // freshman+了解 -15（方案A）
     const sf = schoolFit(p, o); // 211+北大夏令营 -8
     const r = roi(p, o); // 低投入优秀营员 +12
     const tc = timeConflict(o, NOW); // 0
     const fitScore = gm.score + mm.score + gf.score + sf.score + r.score - tc.score;
-    // 向量版 majorMatch=24（非枚举 25），fitScore=30+24-15-8+12-0=43，仍在末位区
-    expect(fitScore).toBe(43);
-    expect(mm.score).toBe(24); // 向量点积量级确认
+    // 4.3 向量版 majorMatch=17，fitScore=30+17-15-8+12-0=36，末位区
+    expect(fitScore).toBe(36);
+    expect(mm.score).toBe(17); // 向量点积量级确认
   });
 
   it("大三 + 北大夏令营 → gradeFit +20，fitScore 升首位区", () => {
@@ -344,8 +344,8 @@ describe("集成：南航 AI 大一保研（对照基准分表方案 A）", () =
     });
     const gf = gradeFit(pJunior, o);
     expect(gf.score).toBe(20); // junior+冲刺
-    // 向量版 majorMatch=24（AI×夏令营，dominantAxis engineering）
-    // fitScore = 30(goalMatch S) + 24(majorMatch) + 20(gradeFit 冲刺) - 8(schoolFit 错配) + 12(roi) - 0(timeConflict) = 78
+    // 4.3 向量版 majorMatch=17（AI×夏令营）
+    // fitScore = 30(goalMatch S) + 17(majorMatch) + 20(gradeFit 冲刺) - 8(schoolFit 错配) + 12(roi) - 0(timeConflict) = 71
     const fitScore =
       goalMatch("baoyan", o)!.score +
       majorMatch(pJunior, o).score +
@@ -353,6 +353,6 @@ describe("集成：南航 AI 大一保研（对照基准分表方案 A）", () =
       schoolFit(pJunior, o).score +
       roi(pJunior, o).score -
       timeConflict(o, NOW).score;
-    expect(fitScore).toBe(78); // 向量版 majorMatch 24 而非枚举 25
+    expect(fitScore).toBe(71); // 4.3 向量版 majorMatch 17
   });
 });

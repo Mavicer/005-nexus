@@ -1,18 +1,24 @@
 /**
- * 决策引擎 — 7 步推理链（Phase A 第四步）
+ * 决策引擎 — 7 步推理链（Phase A 4.3 向量版重做）
  *
  * decide(profile, candidates): DecisionResult[]
  *   步骤1 成长阶段判断（grade → stage：探索/建设/冲刺/收尾）
- *   步骤2 目标分析（goal → 核心维度）
- *   步骤3 专业方向价值判断（majorDirection → knowledge tier）
- *   步骤4 机会价值评估：用 inferSubtype(category, title) 推断 subtype 后查 knowledge（解决偏差1/2），
- *           组装 6 因子（majorMatch/gradeFit/roi 注入 engine 推断的 knowledge）
+ *   步骤2 目标分析（goal → 核心维度，取该 goal 下高价值 category）
+ *   步骤3 专业方向价值判断（classifyMajor(majorText) → 专业向量，循环外算一次）
+ *   步骤4 机会价值评估：每候选 inferSubtype(category, title) → 机会向量 → majorMatchWithVector
+ *           注入向量点积 majorMatch；gradeFit/roi 仍查 knowledge（stageRole/cost/outcome 通用）
  *   步骤5 时间适配判断（grade × stageRole → gradeFit，已查）
  *   步骤6 推序（fitScore = 6 因子求和，降序）
  *   步骤7 解释原因（factors → reason 文本，非静态模板）
  *
+ * 4.3 关键改动（取代枚举版）：
+ *   - majorMatch 改向量点积（majorMatchWithVector），任意专业可算，不靠枚举不靠特调（owner 铁律①③⑨）。
+ *   - 步骤3 classifyMajor 循环外算一次专业向量（不每候选重复算）。
+ *   - gradeFit/roi 仍查 knowledge（stageRole/cost/outcome 通用维度，不随专业变）。
+ *   - tier 取 majorMatch dominantAxis 对应的量级（高≥20=S/中10-19=A/低<10=B）。
+ *
  * 候选来源：上层（recommend.ts 第七步重构时）调 searchItems 取候选传入，engine 不写裸 SQL（护栏2）。
- * 护栏：fitScore 可解释可追溯（铁律②）；不引 AI；文案禁 AI/智能/精准。
+ * 护栏：fitScore 可解释可追溯（铁律②）；不引 AI；文案禁 AI/智能/精准；反特调（禁止画像专属规则）。
  */
 import type { Goal, GoalGrade, InfoCategory } from "@/db/schema-enums";
 import { VALUE_MATRIX } from "@/lib/recommend";
@@ -22,9 +28,10 @@ import {
   type OpportunityKnowledge,
   type OpportunitySubtype,
 } from "@/lib/knowledge/opportunity-knowledge";
+import { classifyMajor, type MajorVector } from "@/lib/knowledge/major-vector";
 import {
   goalMatch,
-  majorMatchWithKnowledge,
+  majorMatchWithVector,
   gradeFitWithKnowledge,
   schoolFit,
   roiWithKnowledge,
@@ -45,7 +52,7 @@ export interface DecisionResult {
   factors: Factor[];
   /** 适配度总分（6 因子求和，非黑盒） */
   fitScore: number;
-  /** 价值分层（取 majorMatch knowledge tier，无则 goalMatch tier） */
+  /** 价值分层（按 majorMatch 量级：≥20=S/10-19=A/<10=B） */
   tier: "S" | "A" | "B";
   /** 排名（1-based，按 fitScore 降序） */
   rank: number;
@@ -96,25 +103,27 @@ export function analyzeGoal(goal: Goal): { category: InfoCategory; tier: "S" | "
 }
 
 // ============================================================
-// 步骤3+4：机会价值评估（inferSubtype 推断 subtype 后查 knowledge，组装因子）
+// 步骤3+4：机会价值评估（向量点积版）
 // ============================================================
 
 /**
- * 步骤3+4：对单个机会，用 inferSubtype 推断 subtype 后查 knowledge，组装 6 因子。
+ * 步骤3+4：对单个机会，用 engine 预算的专业向量 + inferSubtype 得 subtype 取机会向量，
+ * 组装 6 因子（majorMatch 向量点积注入；gradeFit/roi 注入 knowledge）。
  *
- * 关键（解决偏差1/2）：majorMatch/gradeFit/roi 注入 engine 推断 subtype 后的 knowledge，
- *   使 ACM（inferSubtype→acm）→tier S→majorMatch+25、犀牛鸟（→ai-training-camp）→tier A→+10。
+ * 4.3 关键：majorMatch 走 majorMatchWithVector（向量点积，任意专业可算）。
+ *           gradeFit/roi 走 knowledge（stageRole/cost/outcome 通用维度）。
  *
- * 返回 6 因子 + knowledge（供步骤7 生成 reason）。
+ * 返回 6 因子 + knowledge + subtype（供步骤7 生成 reason）。
  */
 function evaluateOpportunity(
   profile: DecisionProfile,
   opp: DecisionOpportunity,
+  majorVec: MajorVector,
   now: Date,
 ): { factors: Factor[]; knowledge: OpportunityKnowledge | null; subtype: OpportunitySubtype } {
-  // 步骤3：subtype 推断（engine 层职责，knowledge 库只按四维查）
+  // 步骤4a：inferSubtype 得 subtype（选机会向量用）
   const subtype = inferSubtype(opp.category, opp.title);
-  // 步骤4：查 knowledge（注入 subtype，精确匹配 ACM/犀牛鸟等）
+  // 步骤4b：查 knowledge（gradeFit/roi 用，stageRole/cost/outcome 通用）
   const knowledge = queryKnowledge({
     goal: profile.goal,
     majorDirection: profile.majorDirection,
@@ -123,13 +132,15 @@ function evaluateOpportunity(
     subtype,
   });
 
-  // 组装 6 因子（goalMatch 走 base；majorMatch/gradeFit/roi 注入 knowledge）
+  // 组装 6 因子
   const gm = goalMatch(profile.goal, opp);
   if (!gm) {
     // 该 category 对此 goal 不适用 → 不进候选（上层 analyzeGoal 已过滤，此处兜底）
     return { factors: [], knowledge: null, subtype };
   }
-  const mm = majorMatchWithKnowledge(profile, opp, knowledge);
+  // majorMatch：向量点积注入（4.3 核心，取代枚举 tier）
+  const mm = majorMatchWithVector(majorVec, opp);
+  // gradeFit/roi：注入 knowledge（stageRole/cost/outcome 通用维度）
   const gf = gradeFitWithKnowledge(profile, opp, knowledge);
   const sf = schoolFit(profile, opp);
   const r = roiWithKnowledge(profile, opp, knowledge);
@@ -165,11 +176,7 @@ function explainReason(
   const top = positive[0];
   const neg = negative[0];
 
-  const profileDesc = [
-    profile.schoolTier ?? "",
-    profile.majorDirection ?? "",
-    profile.grade ?? "",
-  ]
+  const profileDesc = [profile.schoolTier ?? "", profile.grade ?? ""]
     .filter(Boolean)
     .join("·");
 
@@ -195,9 +202,9 @@ function explainReason(
 // ============================================================
 
 /**
- * 决策引擎主入口（7 步推理链）。
+ * 决策引擎主入口（7 步推理链，向量版）。
  *
- * @param profile 用户画像（goal/schoolTier/majorDirection/grade）
+ * @param profile 用户画像（goal/schoolTier/majorDirection/grade/majorText）
  * @param candidates 候选机会（上层用 searchItems 取，护栏2，engine 不写裸 SQL）
  * @param now 当前时间（可注入便于测试）
  * @returns DecisionResult[] 按 fitScore 降序，rank 1-based
@@ -210,16 +217,19 @@ export async function decide(
   // 步骤1：成长阶段判断
   const growthStage = judgeGrowthStage(profile.grade);
 
+  // 步骤3：classifyMajor 循环外算一次专业向量（不每候选重复算）
+  const majorVec = classifyMajor(profile.majorText ?? null).vector;
+
   // 步骤2-5：逐候选评估
   const evaluated = candidates.map((opp) => {
-    const { factors, knowledge } = evaluateOpportunity(profile, opp, now);
+    const { factors, knowledge } = evaluateOpportunity(profile, opp, majorVec, now);
     if (factors.length === 0) return null; // goalMatch 不适用，跳过
 
     // 步骤6：fitScore = 6 因子求和（timeConflict 在 factors 内已是负值，直接求和）
     const fitScore = factors.reduce((sum, f) => sum + f.score, 0);
 
-    // tier：取 majorMatch knowledge tier，无则 goalMatch tier
-    const tier = knowledge?.tier ?? extractGoalMatchTier(factors);
+    // tier：按 majorMatch 量级（向量版无 knowledge tier，用 majorMatch score 量级分层）
+    const tier = extractTierFromFactors(factors);
 
     return {
       recommendation: opp,
@@ -254,11 +264,21 @@ export async function decide(
   }));
 }
 
-/** 从 factors 提取 goalMatch 的 tier（兜底，当 knowledge 为 null 时） */
-function extractGoalMatchTier(factors: Factor[]): "S" | "A" | "B" {
+/**
+ * 从 factors 提取 tier（向量版：按 majorMatch 量级分层）。
+ * majorMatch ≥20 = S / 10-19 = A / <10 = B（与枚举版量级一致，4.2 量级对照表验证）。
+ * majorMatch 为 0（goalMatch 不适用已跳过，不会到这）时按 goalMatch tier 兜底。
+ */
+function extractTierFromFactors(factors: Factor[]): "S" | "A" | "B" {
+  const mm = factors.find((f) => f.name === "majorMatch");
+  if (mm) {
+    if (mm.score >= 20) return "S";
+    if (mm.score >= 10) return "A";
+    return "B";
+  }
+  // 兜底：按 goalMatch tier
   const gm = factors.find((f) => f.name === "goalMatch");
   if (!gm) return "B";
-  // 反推 tier（TIER_SCORE S30/A15/B5）
   if (gm.score >= 30) return "S";
   if (gm.score >= 15) return "A";
   return "B";

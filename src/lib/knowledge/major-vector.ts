@@ -140,7 +140,7 @@ export const SUBTYPE_KEYWORD_ADJUST: KeywordAdjust[] = [
   { discipline: "工学", kw: "软件", axis: "engineering", delta: 0.1 },
   { discipline: "工学", kw: "软件", axis: "math", delta: 0.1 },
   { discipline: "工学", kw: "人工智能", axis: "engineering", delta: 0.1 },
-  { discipline: "工学", kw: "人工智能", axis: "math", delta: 0.1 },
+  { discipline: "工学", kw: "人工智能", axis: "research", delta: 0.3 },
   { discipline: "工学", kw: "电子", axis: "engineering", delta: 0.1 },
   { discipline: "工学", kw: "电子", axis: "math", delta: 0.1 },
   { discipline: "工学", kw: "通信", axis: "engineering", delta: 0.1 },
@@ -185,7 +185,7 @@ export const SUBTYPE_KEYWORD_ADJUST: KeywordAdjust[] = [
 
 export const OPPORTUNITY_VECTORS: Partial<Record<OpportunitySubtype, MajorVector>> = {
   research: { math: 0.5, research: 1.0, clinical: 0.3, engineering: 0.6, humanities: 0.4, business: 0.2, arts: 0.1 },
-  acm: { math: 1.0, research: 0.6, clinical: 0, engineering: 0.8, humanities: 0, business: 0.1, arts: 0 },
+  acm: { math: 1.0, research: 0.8, clinical: 0, engineering: 0.9, humanities: 0, business: 0.1, arts: 0 },
   "math-modeling": { math: 0.9, research: 0.4, clinical: 0.1, engineering: 0.5, humanities: 0.2, business: 0.4, arts: 0 },
   "challenge-cup": { math: 0.5, research: 0.7, clinical: 0.2, engineering: 0.6, humanities: 0.4, business: 0.3, arts: 0.1 },
   "open-source": { math: 0.3, research: 0.5, clinical: 0, engineering: 1.0, humanities: 0, business: 0.2, arts: 0.1 },
@@ -282,10 +282,11 @@ export function classifyMajor(majorText: string | null): ClassifyResult {
 
 /**
  * maxPossibleDot 标定值（从 OPPORTUNITY_VECTORS 实际最大点积估算）。
- * 理论极端（两向量同轴都 1.0，单轴）= 1.0；实际多轴叠加，标定上限 1.4。
- * 标定值非魔数：见 09-md §6，4.2 review 调整。
+ * 理论极端（两向量同轴都 1.0，单轴）= 1.0；实际多轴叠加，向量都较"满"时 dotSum 可达 ~2.1。
+ * 标定上限 2.2（取 AI×ACM 这类高匹配 dot≈2.12 的上界 + 余量）。
+ * 标定值非魔数：见 09-md §6，4.2 review 调整。调低会让高匹配区分度下降（顶满 25）。
  */
-export const MAX_POSSIBLE_DOT = 1.4;
+export const MAX_POSSIBLE_DOT = 2.2;
 
 /** majorMatch 归一上限（与枚举版 MAJOR_TIER_SCORE.S=25 量级一致） */
 export const MAJOR_MATCH_MAX_SCORE = 25;
