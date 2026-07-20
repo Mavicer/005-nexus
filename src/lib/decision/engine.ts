@@ -29,6 +29,7 @@ import {
   type OpportunitySubtype,
 } from "@/lib/knowledge/opportunity-knowledge";
 import { classifyMajor, type MajorVector } from "@/lib/knowledge/major-vector";
+import { HARD_CONSTRAINT_RULES } from "@/lib/knowledge/hard-constraint-rules";
 import {
   goalMatch,
   majorMatchWithVector,
@@ -62,6 +63,8 @@ export interface DecisionResult {
   growthStage: GrowthStage;
   /** Phase A 4.6.1：多目标贡献分解（透明展示每 goal 的 goalMatch） */
   goalBreakdown: { goal: Goal; weight: number; goalMatchScore: number }[];
+  /** Phase A 4.6.3：冲突检测提示（多高紧迫度硬约束并存，辅助决策非替决定） */
+  conflictHint: string | null;
   /** 步骤7 生成的个性化原因（从 factors 拼接，非静态模板） */
   reason: string;
 }
@@ -138,13 +141,9 @@ function evaluateOpportunity(
     subtype,
   });
 
-  // 组装 8 因子
-  const gm = goalMatch(profile.goal, opp);
-  if (!gm) {
-    // 该 category 对此 goal 不适用 → 不进候选（上层 analyzeGoal 已过滤，此处兜底）
-    return { factors: [], knowledge: null, subtype };
-  }
-  // majorMatch：向量点积注入（4.3 核心，取代枚举 tier）
+  // 组装 8 因子（goalMatch 由 decide 多目标合并注入，此处跳过）
+  // Phase A 4.6.3：不在 evaluateOpportunity 内对 profile.goal 短路（多目标时某 goal 可能适用），
+  //   applicability 由 decide 的 goalMatchResults 判断（至少一 goal 适用即保留）。
   const mm = majorMatchWithVector(majorVec, opp);
   // gradeFit/roi：注入 knowledge（stageRole/cost/outcome 通用维度）
   const gf = gradeFitWithKnowledge(profile, opp, knowledge);
@@ -163,12 +162,14 @@ function evaluateOpportunity(
     };
   }
 
-  // readinessGap 第7因子（4.6.2 后接 hardConstraintPressure 第8因子）
   // hardConstraintPressure 第8因子：只 user_declared，UI 透明归因"由于你设置X"
   const hcp = hardConstraintPressure(profile, opp, now);
 
+  // goalMatch 占位（由 decide 多目标合并替换）
+  const gmPlaceholder: Factor = { name: "goalMatch", score: 0, reason: "", source: "goalMatch:待合并" };
+
   return {
-    factors: [gm, mm, gf, sf, r, tc, rg, hcp],
+    factors: [gmPlaceholder, mm, gf, sf, r, tc, rg, hcp],
     knowledge,
     subtype,
   };
@@ -240,6 +241,9 @@ export async function decide(
 
   // 步骤3：classifyMajor 循环外算一次专业向量（不每候选重复算）
   const majorVec = classifyMajor(profile.majorText ?? null).vector;
+
+  // Phase A 4.6.3：冲突检测（多高紧迫度 user_declared 硬约束并存 → 提示）
+  const conflictHint = detectConflict(profile, now);
 
   // Phase A 4.6.1：多目标分解。goals[0]=主(0.7)/goals[1]=次(0.3)，空回退 goal 单选
   const goals = resolveGoals(profile);
@@ -315,6 +319,7 @@ export async function decide(
     rank: i + 1,
     growthStage: r.growthStage ?? "探索",
     goalBreakdown: r.goalBreakdown ?? [],
+    conflictHint,
     reason: explainReason(
       profile,
       r.recommendation,
@@ -323,6 +328,34 @@ export async function decide(
       r.growthStage,
     ),
   }));
+}
+
+/**
+ * Phase A 4.6.3：冲突检测（多高紧迫度 user_declared 硬约束并存 → 提示）。
+ *
+ * 不加 timeBudget（owner 定位：个人资源约束不建模）。
+ * 规则：≥2 个 urgencyRule=紧急/中的 user_declared 硬约束并存 → conflictHint 提示。
+ * 辅助决策非替决定（降低信息差，不替用户决定优先级）。
+ */
+function detectConflict(
+  profile: DecisionProfile,
+  now: Date,
+): string | null {
+  if (!profile.hardConstraints || profile.hardConstraints.length === 0) {
+    return null;
+  }
+  // 只看 user_declared 硬约束的紧迫度
+  const urgentConstraints = profile.hardConstraints.filter((hc) => {
+    if (hc.source !== "user_declared") return false;
+    const rule = HARD_CONSTRAINT_RULES[hc.type];
+    const urgency = rule.urgencyRule(hc.deadline, now);
+    return urgency === "紧急" || urgency === "中";
+  });
+  if (urgentConstraints.length >= 2) {
+    const titles = urgentConstraints.map((hc) => hc.title).join(" + ");
+    return `检测到多个高压力目标（${titles}），当前时间预算可能不足，需调整优先级`;
+  }
+  return null;
 }
 
 /** Phase A 4.6.1：解析多目标（goals[0]=主0.7/goals[1]=次0.3，空回退 goal 单选） */

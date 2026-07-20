@@ -151,10 +151,14 @@ export interface Recommendation {
   fitScore: number;
   /** 个性化理由（factors 聚合，profile 驱动，非静态模板） */
   reason: string;
-  /** 6 因子三元组（铁律②可展开，UI 可点开看全貌） */
+  /** 8 因子三元组（铁律②可展开，UI 可点开看全貌） */
   factors?: { name: string; score: number; reason: string; source: string }[];
   /** 排名（1-based） */
   rank?: number;
+  /** Phase A 4.6.1：多目标贡献分解（透明展示每 goal 的 goalMatch） */
+  goalBreakdown?: { goal: Goal; weight: number; goalMatchScore: number }[];
+  /** Phase A 4.6.3：冲突检测提示（多高压力硬约束并存，辅助决策非替决定） */
+  conflictHint?: string | null;
 }
 
 /**
@@ -278,6 +282,8 @@ export async function getRecommendations(
       reason: dr.reason,
       factors: dr.factors,
       rank: dr.rank,
+      goalBreakdown: dr.goalBreakdown,
+      conflictHint: dr.conflictHint,
     };
   });
 }
