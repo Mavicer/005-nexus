@@ -28,6 +28,8 @@ export default async function SettingsPage() {
   const initial: ProfileData = {
     school: profile?.school ?? "",
     major: profile?.major ?? "",
+    schoolTier: profile?.schoolTier ?? null,
+    majorDirection: profile?.majorDirection ?? null,
     grade: profile?.grade ?? null,
     goal: profile?.goal ?? null,
     interests: profile?.interests ?? [],

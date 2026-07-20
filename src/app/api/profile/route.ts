@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth";
 import { upsertProfile, type ProfileInput } from "@/lib/profile";
-import type { GoalGrade, Goal } from "@/db/schema-enums";
+import type { GoalGrade, Goal, SchoolTier, MajorDirection } from "@/db/schema-enums";
 
 const VALID_GRADES: GoalGrade[] = [
   "freshman",
@@ -16,6 +16,24 @@ const VALID_GOALS: Goal[] = [
   "civilService",
   "abroad",
   "entrepreneurship",
+];
+const VALID_SCHOOL_TIERS: SchoolTier[] = [
+  "C9",
+  "c985",
+  "c211",
+  "doubleFirst",
+  "other",
+];
+const VALID_MAJOR_DIRECTIONS: MajorDirection[] = [
+  "ai_general",
+  "ai_cv",
+  "ai_nlp",
+  "ai_llm",
+  "ai_robotics",
+  "cs_general",
+  "ee_general",
+  "business_general",
+  "other",
 ];
 
 /**
@@ -40,6 +58,15 @@ export async function POST(req: NextRequest) {
   }
   if (body.goal && !VALID_GOALS.includes(body.goal)) {
     return NextResponse.json({ error: "无效目标" }, { status: 400 });
+  }
+  if (body.schoolTier && !VALID_SCHOOL_TIERS.includes(body.schoolTier)) {
+    return NextResponse.json({ error: "无效学校层次" }, { status: 400 });
+  }
+  if (
+    body.majorDirection &&
+    !VALID_MAJOR_DIRECTIONS.includes(body.majorDirection)
+  ) {
+    return NextResponse.json({ error: "无效专业方向" }, { status: 400 });
   }
   if (body.interests && !Array.isArray(body.interests)) {
     return NextResponse.json({ error: "兴趣需为数组" }, { status: 400 });

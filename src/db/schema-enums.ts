@@ -8,6 +8,8 @@ import type {
   sourceTypeEnum,
   goalGradeEnum,
   goalEnum,
+  schoolTierEnum,
+  majorDirectionEnum,
 } from "./schema";
 
 export type InfoCategory =
@@ -20,3 +22,8 @@ export type GoalGrade =
   (typeof goalGradeEnum)["enumValues"][number];
 export type Goal =
   (typeof goalEnum)["enumValues"][number];
+// Phase A：画像四维个性化枚举（owner 确认"加字段不加表"打磨例外）
+export type SchoolTier =
+  (typeof schoolTierEnum)["enumValues"][number];
+export type MajorDirection =
+  (typeof majorDirectionEnum)["enumValues"][number];

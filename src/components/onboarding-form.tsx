@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { GoalGrade, Goal } from "@/db/schema-enums";
+import type { GoalGrade, Goal, SchoolTier, MajorDirection } from "@/db/schema-enums";
 
 const GRADES: { value: GoalGrade; label: string }[] = [
   { value: "freshman", label: "大一" },
@@ -20,6 +20,33 @@ const GOALS: { value: Goal; label: string; desc: string }[] = [
   { value: "civilService", label: "考公", desc: "公务员/事业编" },
   { value: "abroad", label: "出国", desc: "海外深造" },
   { value: "entrepreneurship", label: "创业", desc: "自主创业" },
+];
+
+// Phase A：学校层次（把自由文本 school 归一成可计算的层次，影响学校×机会门槛错配）
+const SCHOOL_TIERS: { value: SchoolTier; label: string; desc: string }[] = [
+  { value: "C9", label: "C9", desc: "清北复交浙科南哈+中科大" },
+  { value: "c985", label: "其他 985", desc: "除 C9 外的 985 高校" },
+  { value: "c211", label: "211", desc: "211 工程高校" },
+  { value: "doubleFirst", label: "双一流", desc: "双一流非 211" },
+  { value: "other", label: "其他", desc: "普通本科/其他" },
+];
+
+// Phase A：专业方向（把自由文本 major 归一成可计算的方向，影响专业×机会价值分流）
+// AI 类先做细分（5 项），其余类占位走通用路线
+const MAJOR_DIRECTIONS: {
+  value: MajorDirection;
+  label: string;
+  desc: string;
+}[] = [
+  { value: "ai_general", label: "人工智能（通用）", desc: "AI 方向，尚未细分" },
+  { value: "ai_cv", label: "AI · 计算机视觉", desc: "图像/视频/CV" },
+  { value: "ai_nlp", label: "AI · 自然语言", desc: "NLP/对话/搜索" },
+  { value: "ai_llm", label: "AI · 大模型", desc: "LLM/预训练" },
+  { value: "ai_robotics", label: "AI · 机器人", desc: "具身/控制" },
+  { value: "cs_general", label: "计算机 / 软件", desc: "非 AI 的 CS 方向" },
+  { value: "ee_general", label: "电子 / 通信", desc: "EE 方向" },
+  { value: "business_general", label: "经管 / 商科", desc: "经济/管理/金融" },
+  { value: "other", label: "其他", desc: "未覆盖方向" },
 ];
 
 const INTERESTS = [
@@ -39,6 +66,8 @@ const INTERESTS = [
 interface ProfileData {
   school: string;
   major: string;
+  schoolTier: SchoolTier | null;
+  majorDirection: MajorDirection | null;
   grade: GoalGrade | null;
   goal: Goal | null;
   interests: string[];
@@ -54,6 +83,8 @@ export function OnboardingForm({ next }: { next: string }) {
   const [data, setData] = useState<ProfileData>({
     school: "",
     major: "",
+    schoolTier: null,
+    majorDirection: null,
     grade: null,
     goal: null,
     interests: [],
@@ -71,6 +102,8 @@ export function OnboardingForm({ next }: { next: string }) {
         body: JSON.stringify({
           school: data.school || null,
           major: data.major || null,
+          schoolTier: data.schoolTier,
+          majorDirection: data.majorDirection,
           grade: data.grade,
           goal: data.goal,
           interests: data.interests,
@@ -118,7 +151,9 @@ export function OnboardingForm({ next }: { next: string }) {
           <h2 className="text-base font-medium text-neutral-900">
             你的学校与专业
           </h2>
-          <p className="text-xs text-neutral-400">可选，便于推荐更精准的机会</p>
+          <p className="text-xs text-neutral-400">
+            可选，便于推荐更精准的机会
+          </p>
           <div>
             <label className="mb-1 block text-xs text-neutral-500">学校</label>
             <input
@@ -129,6 +164,32 @@ export function OnboardingForm({ next }: { next: string }) {
             />
           </div>
           <div>
+            <label className="mb-1 block text-xs text-neutral-500">
+              学校层次（经验参考，影响机会门槛适配）
+            </label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {SCHOOL_TIERS.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() =>
+                    setData({ ...data, schoolTier: t.value as SchoolTier })
+                  }
+                  className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                    data.schoolTier === t.value
+                      ? "border-neutral-900 bg-neutral-50"
+                      : "border-neutral-200 hover:border-neutral-300"
+                  }`}
+                >
+                  <p className="text-sm font-medium text-neutral-900">
+                    {t.label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-neutral-400">{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
             <label className="mb-1 block text-xs text-neutral-500">专业</label>
             <input
               value={data.major}
@@ -136,6 +197,28 @@ export function OnboardingForm({ next }: { next: string }) {
               placeholder="如 计算机科学与技术"
               className={inputCls}
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-neutral-500">
+              专业方向（决定推荐侧重点，可跳过走通用路线）
+            </label>
+            <select
+              value={data.majorDirection ?? ""}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  majorDirection: (e.target.value || null) as MajorDirection | null,
+                })
+              }
+              className={inputCls}
+            >
+              <option value="">选择专业方向（可跳过）</option>
+              {MAJOR_DIRECTIONS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label} — {d.desc}
+                </option>
+              ))}
+            </select>
           </div>
           <NavRow
             onSkip={() => submit(false)}
@@ -294,4 +377,4 @@ function NavRow({
 
 export { inputCls };
 export type { ProfileData };
-export { GRADES, GOALS, INTERESTS };
+export { GRADES, GOALS, INTERESTS, SCHOOL_TIERS, MAJOR_DIRECTIONS };

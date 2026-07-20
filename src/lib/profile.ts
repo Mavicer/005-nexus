@@ -7,11 +7,13 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema";
-import type { GoalGrade, Goal } from "@/db/schema-enums";
+import type { GoalGrade, Goal, SchoolTier, MajorDirection } from "@/db/schema-enums";
 
 export interface ProfileInput {
   school?: string | null;
   major?: string | null;
+  schoolTier?: SchoolTier | null;
+  majorDirection?: MajorDirection | null;
   grade?: GoalGrade | null;
   goal?: Goal | null;
   interests?: string[] | null;
@@ -22,6 +24,8 @@ export interface Profile {
   userId: string;
   school: string | null;
   major: string | null;
+  schoolTier: SchoolTier | null;
+  majorDirection: MajorDirection | null;
   grade: GoalGrade | null;
   goal: Goal | null;
   interests: string[] | null;
@@ -40,6 +44,8 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     userId: row.userId,
     school: row.school,
     major: row.major,
+    schoolTier: row.schoolTier,
+    majorDirection: row.majorDirection,
     grade: row.grade,
     goal: row.goal,
     interests: row.interests,
@@ -58,6 +64,8 @@ export async function upsertProfile(
       userId,
       school: input.school ?? null,
       major: input.major ?? null,
+      schoolTier: input.schoolTier ?? null,
+      majorDirection: input.majorDirection ?? null,
       grade: input.grade ?? null,
       goal: input.goal ?? null,
       interests: input.interests ?? null,
@@ -68,6 +76,8 @@ export async function upsertProfile(
       set: {
         school: input.school ?? null,
         major: input.major ?? null,
+        schoolTier: input.schoolTier ?? null,
+        majorDirection: input.majorDirection ?? null,
         grade: input.grade ?? null,
         goal: input.goal ?? null,
         interests: input.interests ?? null,
@@ -84,6 +94,8 @@ export async function upsertProfile(
     userId: row.userId,
     school: row.school,
     major: row.major,
+    schoolTier: row.schoolTier,
+    majorDirection: row.majorDirection,
     grade: row.grade,
     goal: row.goal,
     interests: row.interests,

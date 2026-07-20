@@ -124,6 +124,29 @@ export const goalEnum = pgEnum("goal", [
   "entrepreneurship",
 ]);
 
+// Phase A：画像四维个性化枚举（owner 确认的"加字段不加表"打磨例外）
+// schoolTier：把自由文本 school 归一成可计算的学校层次，用于 schoolFit（学校×机会门槛错配）
+export const schoolTierEnum = pgEnum("school_tier", [
+  "C9",
+  "c985",
+  "c211",
+  "doubleFirst",
+  "other",
+]);
+// majorDirection：把自由文本 major 归一成专业方向，用于 majorMatch（专业×机会价值分流）
+// AI 类先做细（5 细分），其余类占位走通用路线（Phase A 不退化）
+export const majorDirectionEnum = pgEnum("major_direction", [
+  "ai_general",
+  "ai_cv",
+  "ai_nlp",
+  "ai_llm",
+  "ai_robotics",
+  "cs_general",
+  "ee_general",
+  "business_general",
+  "other",
+]);
+
 // ============================================================
 // 1. info_items — 信息共享核心表
 // ============================================================
@@ -353,6 +376,11 @@ export const userProfiles = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     school: text("school"),
     major: text("major"),
+    // Phase A：school/major 是自由文本，无法可靠匹配（"南航"/"NUAA" 写法不一）；
+    // 加 schoolTier/majorDirection 两枚举把不可比文本归一成可计算的层次与方向，
+    // 决策引擎据此查知识库算 schoolFit/majorMatch。可空（onboarding 可跳过）。
+    schoolTier: schoolTierEnum("school_tier"),
+    majorDirection: majorDirectionEnum("major_direction"),
     grade: goalGradeEnum("grade"),
     goal: goalEnum("goal"),
     interests: text("interests").array(),

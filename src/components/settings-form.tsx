@@ -9,10 +9,12 @@ import {
   GRADES,
   GOALS,
   INTERESTS,
+  SCHOOL_TIERS,
+  MAJOR_DIRECTIONS,
   inputCls,
   type ProfileData,
 } from "@/components/onboarding-form";
-import type { GoalGrade, Goal } from "@/db/schema-enums";
+import type { GoalGrade, Goal, SchoolTier, MajorDirection } from "@/db/schema-enums";
 
 /**
  * Settings 单页表单（预填，复用 onboarding 字段组件常量）
@@ -36,6 +38,8 @@ export function SettingsForm({ initial }: { initial: ProfileData }) {
         body: JSON.stringify({
           school: data.school || null,
           major: data.major || null,
+          schoolTier: data.schoolTier,
+          majorDirection: data.majorDirection,
           grade: data.grade,
           goal: data.goal,
           interests: data.interests,
@@ -83,6 +87,53 @@ export function SettingsForm({ initial }: { initial: ProfileData }) {
               className={inputCls}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs text-neutral-500">
+            学校层次（经验参考，影响机会门槛适配）
+          </label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {SCHOOL_TIERS.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() =>
+                  setData({ ...data, schoolTier: t.value as SchoolTier })
+                }
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  data.schoolTier === t.value
+                    ? "border-neutral-900 bg-neutral-900 text-white"
+                    : "border-neutral-200 hover:border-neutral-300"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs text-neutral-500">
+            专业方向（决定推荐侧重点）
+          </label>
+          <select
+            value={data.majorDirection ?? ""}
+            onChange={(e) =>
+              setData({
+                ...data,
+                majorDirection: (e.target.value || null) as MajorDirection | null,
+              })
+            }
+            className={inputCls}
+          >
+            <option value="">选择专业方向（可跳过）</option>
+            {MAJOR_DIRECTIONS.map((d) => (
+              <option key={d.value} value={d.value}>
+                {d.label} — {d.desc}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
