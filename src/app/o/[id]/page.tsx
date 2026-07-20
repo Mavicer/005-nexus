@@ -8,6 +8,7 @@ import { getProfile } from "@/lib/profile";
 import {
   getOpportunityValue,
   getMatchReason,
+  type Tier,
 } from "@/lib/opportunity-value";
 import {
   LEVEL_LABEL,
@@ -172,7 +173,7 @@ export default async function CompetitionDetailPage({
                   </p>
                 </div>
                 <div className="space-y-4 px-4 py-3">
-                  {/* 价值星级矩阵（复用 VALUE_MATRIX） */}
+                  {/* 价值分层矩阵（Phase A：tier S/A/B 徽章，退役 stars） */}
                   {opportunityValue.length > 0 && (
                     <div>
                       <p className="mb-2 text-xs text-neutral-500">
@@ -180,7 +181,7 @@ export default async function CompetitionDetailPage({
                       </p>
                       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                         {opportunityValue
-                          .filter((v) => v.stars > 0)
+                          .filter((v) => v.tier !== null)
                           .map((v) => (
                             <div
                               key={v.goal}
@@ -189,17 +190,12 @@ export default async function CompetitionDetailPage({
                               <span className="text-xs text-neutral-600">
                                 {v.goalLabel}
                               </span>
-                              <span className="text-xs text-neutral-900">
-                                {"★".repeat(v.stars)}
-                                <span className="text-neutral-200">
-                                  {"★".repeat(3 - v.stars)}
-                                </span>
-                              </span>
+                              <TierBadge tier={v.tier} />
                             </div>
                           ))}
                       </div>
                       {/* 最高价值说明 */}
-                      {opportunityValue[0] && opportunityValue[0].stars > 0 && (
+                      {opportunityValue[0] && opportunityValue[0].tier !== null && (
                         <p className="mt-2 text-xs text-neutral-500">
                           {opportunityValue[0].goalLabel}：
                           {opportunityValue[0].reason}
@@ -424,4 +420,21 @@ function FieldRow({
 function fmt(d: Date | null): string | null {
   if (!d) return null;
   return d.toLocaleDateString("zh-CN");
+}
+
+/** 价值分层徽章（Phase A：tier S/A/B，退役 stars） */
+function TierBadge({ tier }: { tier: Tier | null }) {
+  if (!tier) return null;
+  const styles: Record<Tier, string> = {
+    S: "bg-neutral-900 text-white",
+    A: "bg-blue-600 text-white",
+    B: "bg-neutral-100 text-neutral-600",
+  };
+  return (
+    <span
+      className={`rounded px-1.5 py-0.5 text-xs font-medium ${styles[tier]}`}
+    >
+      {tier} 级
+    </span>
+  );
 }
