@@ -35,12 +35,18 @@ export interface OpportunityKnowledge {
   stageRole: StageRole;
 }
 
-/** 知识库查询入参（四维画像 + 机会 category） */
+/** 知识库查询入参（四维画像 + 机会 category + 可选 subtype） */
 export interface KnowledgeQuery {
   goal: Goal;
   majorDirection: MajorDirection | null;
   grade: GoalGrade | null;
   category: InfoCategory;
+  /**
+   * 机会细分（engine 层用 inferSubtype(category, title) 推断后传入）。
+   * 传入时优先按 subtype 查（ACM→acm→S、犀牛鸟→ai-training-camp→A）；
+   * 未传时按 category 兜底（competition→math-modeling）。
+   */
+  subtype?: OpportunitySubtype;
 }
 
 /**
@@ -140,6 +146,28 @@ const AI_BAOYAN_BY_SUBTYPE: {
     outcome: "—",
     stageRole: "了解",
   },
+  // 4.1 新增 subtype（向量匹配覆盖用，AI 保研 knowledge 兜底走 other 语义）
+  "clinical-internship": {
+    tier: "A",
+    reason: "临床实践经历，医学/康复方向核心区分度",
+    cost: "中",
+    outcome: "临床经历/规培证明",
+    stageRole: "准备",
+  },
+  "case-competition": {
+    tier: "A",
+    reason: "商业分析能力展示，经管方向区分度",
+    cost: "中",
+    outcome: "国家级/省级奖",
+    stageRole: "准备",
+  },
+  "arts-competition": {
+    tier: "A",
+    reason: "创意设计能力展示，艺术/传媒方向区分度",
+    cost: "中",
+    outcome: "国家级/省级奖",
+    stageRole: "准备",
+  },
 };
 
 /**
@@ -198,6 +226,9 @@ export type OpportunitySubtype =
   | "baoyan-camp"
   | "ai-training-camp"
   | "internship"
+  | "clinical-internship"
+  | "case-competition"
+  | "arts-competition"
   | "other";
 
 /**
@@ -216,6 +247,8 @@ export function inferSubtype(
   if (category === "research") return "research";
   if (category === "baoyan") return "baoyan-camp";
   if (category === "internship") {
+    // 临床实习/规培/见习（康复/医学场景，4.1 补）
+    if (/临床|规培|见习|实习医生|住院医师/i.test(hay)) return "clinical-internship";
     if (/训练营|青训营|犀牛鸟|北斗|aidu|阿里星/i.test(hay)) return "ai-training-camp";
     return "internship";
   }
@@ -224,7 +257,9 @@ export function inferSubtype(
     if (/数学建模|数模|cumcm/i.test(hay)) return "math-modeling";
     if (/挑战杯/i.test(hay)) return "challenge-cup";
     if (/大创|创新创业训练|国家级创新/i.test(hay)) return "dachuang";
-    return "math-modeling"; // 通用竞赛兜底归到数模型（多数竞赛对 AI 是 A 级补充）
+    if (/案例|商业|市场调查|营销/i.test(hay)) return "case-competition";
+    if (/广告|艺术|设计|美术|动画/i.test(hay)) return "arts-competition";
+    return "math-modeling"; // 通用竞赛兜底归到数模型
   }
   if (/开源|github|gsoc/i.test(hay)) return "open-source";
   return "other";
@@ -235,23 +270,27 @@ export function inferSubtype(
  *
  * 查询顺序：
  * 1. AI 保研：按 subtype 查 AI_BAOYAN_BY_SUBTYPE（保研夏令营走 grade 调整）
+ *    subtype 由 engine 层 inferSubtype(category, title) 推断后传入（ACM→acm→S、犀牛鸟→ai-training-camp→A）；
+ *    未传 subtype 时按 category 兜底（competition→math-modeling）。
  * 2. 其余 majorDirection/goal：暂走 base 兜底（返回 null，决策引擎用 01 矩阵 goal×category）
  *
  * 返回 null = 知识库未覆盖该四维组合，决策引擎应回退 base（01 矩阵 tier）。
  */
 export function queryKnowledge(q: KnowledgeQuery): OpportunityKnowledge | null {
-  const { goal, majorDirection, grade, category } = q;
+  const { goal, majorDirection, grade, category, subtype } = q;
 
   // AI 保研一条线（08-md 第三节）
   const isAI = majorDirection && AI_MAJOR_DIRECTIONS.includes(majorDirection);
   if (goal === "baoyan" && isAI) {
-    // 保研夏令营按 grade 调整（stageRole 随年级变）
+    // 保研夏令营按 grade 调整（stageRole 随年级变，tier 恒 S）
     if (category === "baoyan") {
       return gradeAdjustedBaoyanCamp(grade);
     }
-    // 其余 category 按 subtype 查（subtype 推断需标题，此处用 category 兜底）
-    const subtype = categoryToAISubtype(category);
-    const rec = AI_BAOYAN_BY_SUBTYPE[subtype];
+    // 其余 category 按 subtype 查：
+    //   - engine 传入 subtype（inferSubtype 推断）→ 精确匹配（ACM→acm→S、犀牛鸟→ai-training-camp→A）
+    //   - 未传 subtype → 按 category 兜底（competition→math-modeling）
+    const sub = subtype ?? categoryToAISubtype(category);
+    const rec = AI_BAOYAN_BY_SUBTYPE[sub];
     return rec ?? null;
   }
 

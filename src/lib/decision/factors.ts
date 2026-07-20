@@ -97,6 +97,10 @@ export function goalMatch(goal: Goal, opp: DecisionOpportunity): Factor | null {
 /**
  * majorMatch：查知识库得专业方向 tier → 分值。
  * 回答"这个专业方向下价值多大"。AI 保研数模=A（降级），ACM=S（核心）。
+ *
+ * engine 层应先 inferSubtype(category, title) 推断 subtype 后通过 knowledge 传入
+ * （或 engine 调 queryKnowledge 传 subtype），使 ACM→acm→S、犀牛鸟→ai-training-camp→A。
+ * factors.ts 本函数接收 engine 已注入 subtype 的 knowledge（见 majorMatchWithKnowledge）。
  */
 export function majorMatch(
   profile: DecisionProfile,
@@ -122,6 +126,32 @@ export function majorMatch(
     score: MAJOR_TIER_SCORE[knowledge.tier],
     reason: knowledge.reason,
     source: `knowledge:${profile.majorDirection}/${opp.category}.tier=${knowledge.tier}`,
+  };
+}
+
+/**
+ * majorMatch（engine 注入已推断 subtype 的 knowledge 版本）。
+ * engine 层用 inferSubtype(category, title) 推断 subtype 后查 knowledge，传入本函数。
+ * 解决偏差1/2：ACM→acm subtype→tier S→+25；犀牛鸟→ai-training-camp→tier A→+10。
+ */
+export function majorMatchWithKnowledge(
+  profile: DecisionProfile,
+  opp: DecisionOpportunity,
+  knowledge: OpportunityKnowledge | null,
+): Factor {
+  if (!knowledge) {
+    return {
+      name: "majorMatch",
+      score: 0,
+      reason: "专业方向未覆盖，按通用价值判断",
+      source: "knowledge:null(回退base)",
+    };
+  }
+  return {
+    name: "majorMatch",
+    score: MAJOR_TIER_SCORE[knowledge.tier],
+    reason: knowledge.reason,
+    source: `knowledge:${profile.majorDirection}/${opp.category}(subtype).tier=${knowledge.tier}`,
   };
 }
 
@@ -166,6 +196,9 @@ const GRADE_FIT_TABLE: Record<GoalGrade, Record<StageRole, number>> = {
 /**
  * gradeFit：查知识库 stageRole × 用户 grade 表。
  * 知识库无 stageRole（非 AI 方向）→ 中性 0（不评阶段，走 base）。
+ *
+ * engine 层应传入已推断 subtype 的 knowledge（见 gradeFitWithKnowledge），
+ * 使 ACM 等精确 subtype 的 stageRole 被正确读取。
  */
 export function gradeFit(
   profile: DecisionProfile,
@@ -177,6 +210,22 @@ export function gradeFit(
     grade: profile.grade,
     category: opp.category,
   });
+  return gradeFitFromKnowledge(profile, knowledge);
+}
+
+/** gradeFit（engine 注入已推断 subtype 的 knowledge 版本） */
+export function gradeFitWithKnowledge(
+  profile: DecisionProfile,
+  opp: DecisionOpportunity,
+  knowledge: OpportunityKnowledge | null,
+): Factor {
+  return gradeFitFromKnowledge(profile, knowledge);
+}
+
+function gradeFitFromKnowledge(
+  profile: DecisionProfile,
+  knowledge: OpportunityKnowledge | null,
+): Factor {
   if (!profile.grade || !knowledge?.stageRole) {
     return {
       name: "gradeFit",
@@ -318,6 +367,8 @@ export function schoolFit(
 /**
  * roi：投入（cost）× 产出（outcome）→ 分值。
  * 低投入高回报（夏令营当期优秀营员）最高；极高投入（ACM 1000+小时）拉低。
+ *
+ * engine 层应传入已推断 subtype 的 knowledge（见 roiWithKnowledge）。
  */
 export function roi(profile: DecisionProfile, opp: DecisionOpportunity): Factor {
   const knowledge = queryKnowledge({
@@ -326,6 +377,19 @@ export function roi(profile: DecisionProfile, opp: DecisionOpportunity): Factor 
     grade: profile.grade,
     category: opp.category,
   });
+  return roiFromKnowledge(knowledge);
+}
+
+/** roi（engine 注入已推断 subtype 的 knowledge 版本） */
+export function roiWithKnowledge(
+  profile: DecisionProfile,
+  opp: DecisionOpportunity,
+  knowledge: OpportunityKnowledge | null,
+): Factor {
+  return roiFromKnowledge(knowledge);
+}
+
+function roiFromKnowledge(knowledge: OpportunityKnowledge | null): Factor {
   if (!knowledge) {
     return {
       name: "roi",
