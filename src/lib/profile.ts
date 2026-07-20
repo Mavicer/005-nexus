@@ -7,13 +7,31 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema";
-import type { GoalGrade, Goal, SchoolTier, MajorDirection } from "@/db/schema-enums";
+import type {
+  GoalGrade,
+  Goal,
+  SchoolTier,
+  MajorDirection,
+  ProgramMode,
+  GpaTier,
+  ResearchLevel,
+  CompetitionCapability,
+  EnglishLevel,
+  InternshipLevel,
+} from "@/db/schema-enums";
 
 export interface ProfileInput {
   school?: string | null;
   major?: string | null;
   schoolTier?: SchoolTier | null;
   majorDirection?: MajorDirection | null;
+  programMode?: ProgramMode | null;
+  isGoAbroad?: boolean | null;
+  gpaTier?: GpaTier | null;
+  researchLevel?: ResearchLevel | null;
+  competitionCapability?: CompetitionCapability | null;
+  englishLevel?: EnglishLevel | null;
+  internshipLevel?: InternshipLevel | null;
   grade?: GoalGrade | null;
   goal?: Goal | null;
   interests?: string[] | null;
@@ -26,6 +44,13 @@ export interface Profile {
   major: string | null;
   schoolTier: SchoolTier | null;
   majorDirection: MajorDirection | null;
+  programMode: ProgramMode | null;
+  isGoAbroad: boolean | null;
+  gpaTier: GpaTier | null;
+  researchLevel: ResearchLevel | null;
+  competitionCapability: CompetitionCapability | null;
+  englishLevel: EnglishLevel | null;
+  internshipLevel: InternshipLevel | null;
   grade: GoalGrade | null;
   goal: Goal | null;
   interests: string[] | null;
@@ -46,6 +71,13 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     major: row.major,
     schoolTier: row.schoolTier,
     majorDirection: row.majorDirection,
+    programMode: row.programMode,
+    isGoAbroad: row.isGoAbroad,
+    gpaTier: row.gpaTier,
+    researchLevel: row.researchLevel,
+    competitionCapability: row.competitionCapability,
+    englishLevel: row.englishLevel,
+    internshipLevel: row.internshipLevel,
     grade: row.grade,
     goal: row.goal,
     interests: row.interests,
@@ -66,6 +98,13 @@ export async function upsertProfile(
       major: input.major ?? null,
       schoolTier: input.schoolTier ?? null,
       majorDirection: input.majorDirection ?? null,
+      programMode: input.programMode ?? null,
+      isGoAbroad: input.isGoAbroad ?? null,
+      gpaTier: input.gpaTier ?? null,
+      researchLevel: input.researchLevel ?? null,
+      competitionCapability: input.competitionCapability ?? null,
+      englishLevel: input.englishLevel ?? null,
+      internshipLevel: input.internshipLevel ?? null,
       grade: input.grade ?? null,
       goal: input.goal ?? null,
       interests: input.interests ?? null,
@@ -78,6 +117,13 @@ export async function upsertProfile(
         major: input.major ?? null,
         schoolTier: input.schoolTier ?? null,
         majorDirection: input.majorDirection ?? null,
+        programMode: input.programMode ?? null,
+        isGoAbroad: input.isGoAbroad ?? null,
+        gpaTier: input.gpaTier ?? null,
+        researchLevel: input.researchLevel ?? null,
+        competitionCapability: input.competitionCapability ?? null,
+        englishLevel: input.englishLevel ?? null,
+        internshipLevel: input.internshipLevel ?? null,
         grade: input.grade ?? null,
         goal: input.goal ?? null,
         interests: input.interests ?? null,
@@ -96,6 +142,13 @@ export async function upsertProfile(
     major: row.major,
     schoolTier: row.schoolTier,
     majorDirection: row.majorDirection,
+    programMode: row.programMode,
+    isGoAbroad: row.isGoAbroad,
+    gpaTier: row.gpaTier,
+    researchLevel: row.researchLevel,
+    competitionCapability: row.competitionCapability,
+    englishLevel: row.englishLevel,
+    internshipLevel: row.internshipLevel,
     grade: row.grade,
     goal: row.goal,
     interests: row.interests,

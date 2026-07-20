@@ -11,10 +11,27 @@ import {
   INTERESTS,
   SCHOOL_TIERS,
   MAJOR_DIRECTIONS,
+  PROGRAM_MODES,
+  GPA_TIERS,
+  RESEARCH_LEVELS,
+  COMPETITION_LEVELS,
+  ENGLISH_LEVELS,
+  INTERNSHIP_LEVELS,
   inputCls,
   type ProfileData,
 } from "@/components/onboarding-form";
-import type { GoalGrade, Goal, SchoolTier, MajorDirection } from "@/db/schema-enums";
+import type {
+  GoalGrade,
+  Goal,
+  SchoolTier,
+  MajorDirection,
+  ProgramMode,
+  GpaTier,
+  ResearchLevel,
+  CompetitionCapability,
+  EnglishLevel,
+  InternshipLevel,
+} from "@/db/schema-enums";
 
 /**
  * Settings 单页表单（预填，复用 onboarding 字段组件常量）
@@ -40,6 +57,13 @@ export function SettingsForm({ initial }: { initial: ProfileData }) {
           major: data.major || null,
           schoolTier: data.schoolTier,
           majorDirection: data.majorDirection,
+          programMode: data.programMode,
+          isGoAbroad: data.isGoAbroad,
+          gpaTier: data.gpaTier,
+          researchLevel: data.researchLevel,
+          competitionCapability: data.competitionCapability,
+          englishLevel: data.englishLevel,
+          internshipLevel: data.internshipLevel,
           grade: data.grade,
           goal: data.goal,
           interests: data.interests,
@@ -136,6 +160,92 @@ export function SettingsForm({ initial }: { initial: ProfileData }) {
           </select>
         </div>
 
+        {/* Phase A 4.5：培养模式 + 能力画像 */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs text-neutral-500">培养模式</label>
+            <select
+              value={data.programMode ?? ""}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  programMode: (e.target.value || null) as ProgramMode | null,
+                })
+              }
+              className={inputCls}
+            >
+              <option value="">未选</option>
+              {PROGRAM_MODES.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end">
+            {data.programMode === "sino_foreign" && (
+              <label className="flex items-center gap-2 text-xs text-neutral-600">
+                <input
+                  type="checkbox"
+                  checked={data.isGoAbroad === true}
+                  onChange={(e) =>
+                    setData({ ...data, isGoAbroad: e.target.checked })
+                  }
+                  className="h-4 w-4 rounded border-neutral-300"
+                />
+                4+0 不出国
+              </label>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <CapabilitySelectSet
+            label="GPA 档位"
+            value={data.gpaTier}
+            options={GPA_TIERS}
+            onChange={(v) => setData({ ...data, gpaTier: v as GpaTier | null })}
+          />
+          <CapabilitySelectSet
+            label="科研经历"
+            value={data.researchLevel}
+            options={RESEARCH_LEVELS}
+            onChange={(v) =>
+              setData({ ...data, researchLevel: v as ResearchLevel | null })
+            }
+          />
+          <CapabilitySelectSet
+            label="竞赛水平"
+            value={data.competitionCapability}
+            options={COMPETITION_LEVELS}
+            onChange={(v) =>
+              setData({
+                ...data,
+                competitionCapability: v as CompetitionCapability | null,
+              })
+            }
+          />
+          <CapabilitySelectSet
+            label="英语水平"
+            value={data.englishLevel}
+            options={ENGLISH_LEVELS}
+            onChange={(v) =>
+              setData({ ...data, englishLevel: v as EnglishLevel | null })
+            }
+          />
+          <CapabilitySelectSet
+            label="实习经历"
+            value={data.internshipLevel}
+            options={INTERNSHIP_LEVELS}
+            onChange={(v) =>
+              setData({
+                ...data,
+                internshipLevel: v as InternshipLevel | null,
+              })
+            }
+          />
+        </div>
+
         <div>
           <label className="mb-1 block text-xs text-neutral-500">年级</label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -211,5 +321,36 @@ export function SettingsForm({ initial }: { initial: ProfileData }) {
         </div>
       </div>
     </Card>
+  );
+}
+
+/** 能力自评下拉（紧凑，复用 onboarding 样式） */
+function CapabilitySelectSet<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T | null;
+  options: { value: T; label: string }[];
+  onChange: (v: T | null) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-1 block text-xs text-neutral-500">{label}</label>
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange((e.target.value || null) as T | null)}
+        className={inputCls}
+      >
+        <option value="">未选</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

@@ -5,7 +5,18 @@ import { useRouter } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { GoalGrade, Goal, SchoolTier, MajorDirection } from "@/db/schema-enums";
+import type {
+  GoalGrade,
+  Goal,
+  SchoolTier,
+  MajorDirection,
+  ProgramMode,
+  GpaTier,
+  ResearchLevel,
+  CompetitionCapability,
+  EnglishLevel,
+  InternshipLevel,
+} from "@/db/schema-enums";
 
 const GRADES: { value: GoalGrade; label: string }[] = [
   { value: "freshman", label: "大一" },
@@ -63,11 +74,53 @@ const INTERESTS = [
   "管理 / 商科",
 ];
 
+// Phase A 4.5：培养模式（programMode，中外合办4+0 影响出国通道）
+const PROGRAM_MODES: { value: ProgramMode; label: string; desc: string }[] = [
+  { value: "regular", label: "普通", desc: "普通培养" },
+  { value: "sino_foreign", label: "中外合办", desc: "中外合作办学" },
+  { value: "joint", label: "联合培养", desc: "联合培养项目" },
+  { value: "independent", label: "独立学院", desc: "独立学院" },
+];
+
+// Phase A 4.5：能力画像 5 维（经验区间，非固定分数线）
+const GPA_TIERS: { value: GpaTier; label: string }[] = [
+  { value: "top5", label: "前 5%（高绩点）" },
+  { value: "top20", label: "前 20%" },
+  { value: "top50", label: "前 50%" },
+  { value: "below", label: "后 50%" },
+];
+const RESEARCH_LEVELS: { value: ResearchLevel; label: string }[] = [
+  { value: "none", label: "暂无" },
+  { value: "project", label: "有项目经历" },
+  { value: "paper", label: "有论文产出" },
+];
+const COMPETITION_LEVELS: { value: CompetitionCapability; label: string }[] = [
+  { value: "none", label: "暂无" },
+  { value: "provincial", label: "省级奖" },
+  { value: "national", label: "国家级奖" },
+];
+const ENGLISH_LEVELS: { value: EnglishLevel; label: string }[] = [
+  { value: "none", label: "暂无" },
+  { value: "cet", label: "四六级" },
+  { value: "ielts_toefl", label: "雅思/托福" },
+];
+const INTERNSHIP_LEVELS: { value: InternshipLevel; label: string }[] = [
+  { value: "none", label: "暂无" },
+  { value: "has", label: "有实习经历" },
+];
+
 interface ProfileData {
   school: string;
   major: string;
   schoolTier: SchoolTier | null;
   majorDirection: MajorDirection | null;
+  programMode: ProgramMode | null;
+  isGoAbroad: boolean | null;
+  gpaTier: GpaTier | null;
+  researchLevel: ResearchLevel | null;
+  competitionCapability: CompetitionCapability | null;
+  englishLevel: EnglishLevel | null;
+  internshipLevel: InternshipLevel | null;
   grade: GoalGrade | null;
   goal: Goal | null;
   interests: string[];
@@ -85,6 +138,13 @@ export function OnboardingForm({ next }: { next: string }) {
     major: "",
     schoolTier: null,
     majorDirection: null,
+    programMode: null,
+    isGoAbroad: null,
+    gpaTier: null,
+    researchLevel: null,
+    competitionCapability: null,
+    englishLevel: null,
+    internshipLevel: null,
     grade: null,
     goal: null,
     interests: [],
@@ -104,6 +164,13 @@ export function OnboardingForm({ next }: { next: string }) {
           major: data.major || null,
           schoolTier: data.schoolTier,
           majorDirection: data.majorDirection,
+          programMode: data.programMode,
+          isGoAbroad: data.isGoAbroad,
+          gpaTier: data.gpaTier,
+          researchLevel: data.researchLevel,
+          competitionCapability: data.competitionCapability,
+          englishLevel: data.englishLevel,
+          internshipLevel: data.internshipLevel,
           grade: data.grade,
           goal: data.goal,
           interests: data.interests,
@@ -220,6 +287,47 @@ export function OnboardingForm({ next }: { next: string }) {
               ))}
             </select>
           </div>
+          {/* Phase A 4.5：培养模式（programMode）+ isGoAbroad 联动 */}
+          <div>
+            <label className="mb-1 block text-xs text-neutral-500">
+              培养模式（中外合办等影响出国通道，可跳过）
+            </label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {PROGRAM_MODES.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() =>
+                    setData({ ...data, programMode: m.value as ProgramMode })
+                  }
+                  className={`rounded-lg border px-2 py-2 text-sm transition-colors ${
+                    data.programMode === m.value
+                      ? "border-neutral-900 bg-neutral-900 text-white"
+                      : "border-neutral-200 hover:border-neutral-300"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* 中外合办→显示 4+0 不出国勾选 */}
+          {data.programMode === "sino_foreign" && (
+            <div className="flex items-center gap-2">
+              <input
+                id="isGoAbroad"
+                type="checkbox"
+                checked={data.isGoAbroad === true}
+                onChange={(e) =>
+                  setData({ ...data, isGoAbroad: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-neutral-300"
+              />
+              <label htmlFor="isGoAbroad" className="text-xs text-neutral-600">
+                4+0 不出国（在国内完成全部学业，出国通道权重降低）
+              </label>
+            </div>
+          )}
           <NavRow
             onSkip={() => submit(false)}
             onNext={() => setStep(2)}
@@ -261,7 +369,9 @@ export function OnboardingForm({ next }: { next: string }) {
           <h2 className="text-base font-medium text-neutral-900">
             你的主目标
           </h2>
-          <p className="text-xs text-neutral-400">单选，决定你的成长路线推荐</p>
+          <p className="text-xs text-neutral-400">
+            单选，决定你的成长路线推荐（必选，完成后才能继续）
+          </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {GOALS.map((g) => (
               <button
@@ -282,7 +392,15 @@ export function OnboardingForm({ next }: { next: string }) {
           <NavRow
             onBack={() => setStep(2)}
             onSkip={() => submit(false)}
-            onNext={() => setStep(4)}
+            onNext={() => {
+              // Phase A 4.5：goal 强制选（owner 决策3），不选不能进步骤4
+              if (!data.goal) {
+                setError("请选择你的主目标，系统据此推荐");
+                return;
+              }
+              setError(null);
+              setStep(4);
+            }}
             saving={saving}
           />
         </div>
@@ -291,24 +409,83 @@ export function OnboardingForm({ next }: { next: string }) {
       {step === 4 && (
         <div className="space-y-4">
           <h2 className="text-base font-medium text-neutral-900">
-            你的兴趣方向
+            兴趣与能力自评
           </h2>
-          <p className="text-xs text-neutral-400">多选，帮助推荐匹配的机会</p>
-          <div className="flex flex-wrap gap-2">
-            {INTERESTS.map((i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => toggleInterest(i)}
-                className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                  data.interests.includes(i)
-                    ? "border-neutral-900 bg-neutral-900 text-white"
-                    : "border-neutral-200 text-neutral-600 hover:border-neutral-300"
-                }`}
-              >
-                {i}
-              </button>
-            ))}
+          <p className="text-xs text-neutral-400">
+            帮助推荐匹配的机会，能力自评影响门槛适配（经验参考，可跳过）
+          </p>
+          {/* 两栏：左兴趣 chips，右能力自评下拉 */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* 左栏：兴趣 */}
+            <div>
+              <p className="mb-1.5 text-xs text-neutral-500">兴趣方向（多选）</p>
+              <div className="flex flex-wrap gap-1.5">
+                {INTERESTS.map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => toggleInterest(i)}
+                    className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                      data.interests.includes(i)
+                        ? "border-neutral-900 bg-neutral-900 text-white"
+                        : "border-neutral-200 text-neutral-600 hover:border-neutral-300"
+                    }`}
+                  >
+                    {i}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* 右栏：能力自评 5 下拉 */}
+            <div className="space-y-2">
+              <p className="text-xs text-neutral-500">能力自评（可跳过）</p>
+              <CapabilitySelect
+                label="GPA 档位"
+                value={data.gpaTier}
+                options={GPA_TIERS}
+                onChange={(v) =>
+                  setData({ ...data, gpaTier: v as GpaTier | null })
+                }
+              />
+              <CapabilitySelect
+                label="科研经历"
+                value={data.researchLevel}
+                options={RESEARCH_LEVELS}
+                onChange={(v) =>
+                  setData({ ...data, researchLevel: v as ResearchLevel | null })
+                }
+              />
+              <CapabilitySelect
+                label="竞赛水平"
+                value={data.competitionCapability}
+                options={COMPETITION_LEVELS}
+                onChange={(v) =>
+                  setData({
+                    ...data,
+                    competitionCapability: v as CompetitionCapability | null,
+                  })
+                }
+              />
+              <CapabilitySelect
+                label="英语水平"
+                value={data.englishLevel}
+                options={ENGLISH_LEVELS}
+                onChange={(v) =>
+                  setData({ ...data, englishLevel: v as EnglishLevel | null })
+                }
+              />
+              <CapabilitySelect
+                label="实习经历"
+                value={data.internshipLevel}
+                options={INTERNSHIP_LEVELS}
+                onChange={(v) =>
+                  setData({
+                    ...data,
+                    internshipLevel: v as InternshipLevel | null,
+                  })
+                }
+              />
+            </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
@@ -341,6 +518,37 @@ export function OnboardingForm({ next }: { next: string }) {
 
       {error && step !== 4 && <p className="text-sm text-red-600">{error}</p>}
     </Card>
+  );
+}
+
+/** 能力自评下拉（紧凑） */
+function CapabilitySelect<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T | null;
+  options: { value: T; label: string }[];
+  onChange: (v: T | null) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-16 shrink-0 text-xs text-neutral-500">{label}</span>
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange((e.target.value || null) as T | null)}
+        className="flex-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 focus:border-neutral-400 focus:outline-none"
+      >
+        <option value="">未选</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -377,4 +585,16 @@ function NavRow({
 
 export { inputCls };
 export type { ProfileData };
-export { GRADES, GOALS, INTERESTS, SCHOOL_TIERS, MAJOR_DIRECTIONS };
+export {
+  GRADES,
+  GOALS,
+  INTERESTS,
+  SCHOOL_TIERS,
+  MAJOR_DIRECTIONS,
+  PROGRAM_MODES,
+  GPA_TIERS,
+  RESEARCH_LEVELS,
+  COMPETITION_LEVELS,
+  ENGLISH_LEVELS,
+  INTERNSHIP_LEVELS,
+};

@@ -147,6 +147,43 @@ export const majorDirectionEnum = pgEnum("major_direction", [
   "other",
 ]);
 
+// Phase A 4.5：培养模式 + 能力画像枚举（owner 授权打磨例外，Agent B 第 50 条放行）
+// programMode：培养模式（中外合办4+0 等影响出国通道）
+export const programModeEnum = pgEnum("program_mode", [
+  "regular",
+  "sino_foreign",
+  "joint",
+  "independent",
+]);
+
+// 能力画像 5 枚举（readinessGap 因子用，经验区间非固定分数线）
+export const gpaTierEnum = pgEnum("gpa_tier", [
+  "top5",
+  "top20",
+  "top50",
+  "below",
+]);
+export const researchLevelEnum = pgEnum("research_level", [
+  "none",
+  "project",
+  "paper",
+]);
+// 注：能力画像的竞赛水平用 competition_capability 枚举（与 competition_level 比赛级别区分，避免重名）
+export const competitionCapabilityEnum = pgEnum("competition_capability", [
+  "none",
+  "provincial",
+  "national",
+]);
+export const englishLevelEnum = pgEnum("english_level", [
+  "none",
+  "cet",
+  "ielts_toefl",
+]);
+export const internshipLevelEnum = pgEnum("internship_level", [
+  "none",
+  "has",
+]);
+
 // ============================================================
 // 1. info_items — 信息共享核心表
 // ============================================================
@@ -381,6 +418,15 @@ export const userProfiles = pgTable(
     // 决策引擎据此查知识库算 schoolFit/majorMatch。可空（onboarding 可跳过）。
     schoolTier: schoolTierEnum("school_tier"),
     majorDirection: majorDirectionEnum("major_direction"),
+    // Phase A 4.5：培养模式 + 能力画像（owner 授权打磨例外）
+    // isGoAbroad 语义：true=不出国（如4+0中外合办），engine 据此出国通道不加权
+    programMode: programModeEnum("program_mode"),
+    isGoAbroad: boolean("is_go_abroad"),
+    gpaTier: gpaTierEnum("gpa_tier"),
+    researchLevel: researchLevelEnum("research_level"),
+    competitionCapability: competitionCapabilityEnum("competition_capability"),
+    englishLevel: englishLevelEnum("english_level"),
+    internshipLevel: internshipLevelEnum("internship_level"),
     grade: goalGradeEnum("grade"),
     goal: goalEnum("goal"),
     interests: text("interests").array(),
