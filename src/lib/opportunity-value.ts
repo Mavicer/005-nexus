@@ -8,9 +8,19 @@
  *  - 退役 stars，改用 tier（S/A/B）——与推荐列表一致，避免双轨（铁律②）。
  *  - getOpportunityValue(category) 返回 GoalValue[] 带 tier + reason。
  *  - ValueEntry 接口去 stars 留 tier + reason + majorReason。
+ *
+ * Phase A 4.2 升级（B 第 46 条）：
+ *  - getMatchReason 从读 entry.majorReason（枚举特调，作废）→ 改用
+ *    classifyMajor + 向量点积生成匹配说明（取 dominantAxis + 两向量该轴值，任意专业可算）。
  */
 import type { Goal, InfoCategory, MajorDirection } from "@/db/schema-enums";
 import { VALUE_MATRIX } from "@/lib/recommend";
+import {
+  classifyMajor,
+  majorMatchScore,
+  getOpportunityVector,
+} from "@/lib/knowledge/major-vector";
+import { inferSubtype } from "@/lib/knowledge/opportunity-knowledge";
 
 export interface GoalValue {
   goal: Goal;
@@ -76,15 +86,22 @@ export function getOpportunityValue(category: InfoCategory): GoalValue[] {
 }
 
 /**
- * 匹配说明（结合用户画像 + 机会 category）
- * 规则模板生成「适合你」+ 原因，非 AI。
- * Phase A：用 tier 表达价值层次（无 AI/智能/精准）。
+ * 匹配说明（结合用户画像 + 机会）
+ * Phase A 4.2：用 classifyMajor + 向量点积生成（取代枚举 majorReason，任意专业可算）。
+ * 取 dominantAxis（点积贡献最大轴）+ 两向量该轴值拼文本，措辞合规（非 AI，无智能/精准）。
+ *
+ * @param category 机会类别
+ * @param profile 用户画像（需 major 文本做向量归一）
+ * @param oppTitle 机会标题（inferSubtype 推断 subtype 用）
  */
 export function getMatchReason(
   category: InfoCategory,
-  profile: { goal: Goal | null; majorDirection?: MajorDirection | null } | null,
+  profile: { goal: Goal | null; major?: string | null; majorDirection?: MajorDirection | null } | null,
+  oppTitle?: string,
 ): { matched: boolean; reason: string | null } {
   if (!profile?.goal) return { matched: false, reason: null };
+
+  // goal 维度：该机会对 goal 有价值否（VALUE_MATRIX）
   const entry = VALUE_MATRIX[profile.goal]?.[category];
   if (!entry) {
     return {
@@ -92,12 +109,15 @@ export function getMatchReason(
       reason: `${GOAL_LABELS[profile.goal]}目标下该类机会价值较低，仅供参考`,
     };
   }
-  const majorReason = profile.majorDirection
-    ? (entry.majorReason?.[profile.majorDirection] ?? null)
-    : null;
-  const reasonText = majorReason ?? entry.reason;
+
+  // 专业向量 × 机会向量点积（任意专业可算，不靠枚举）
+  const majorVec = classifyMajor(profile.major ?? null).vector;
+  const subtype = inferSubtype(category, oppTitle ?? "");
+  const oppVec = getOpportunityVector(subtype);
+  const match = majorMatchScore(majorVec, oppVec);
+
   return {
     matched: true,
-    reason: `适合你：你目标${GOAL_LABELS[profile.goal]}，${reasonText}`,
+    reason: `适合你：你目标${GOAL_LABELS[profile.goal]}，${match.reason}`,
   };
 }

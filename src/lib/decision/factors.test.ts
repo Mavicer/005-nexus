@@ -27,6 +27,7 @@ function profile(over: Partial<DecisionProfile> = {}): DecisionProfile {
     goal: "baoyan",
     schoolTier: "c211",
     majorDirection: "ai_general",
+    majorText: "人工智能",
     grade: "freshman",
     ...over,
   };
@@ -74,36 +75,66 @@ describe("goalMatch", () => {
   });
 });
 
-// ---------- 因子 2：majorMatch（AI vs 非 AI 分流） ----------
-describe("majorMatch", () => {
-  it("AI 保研 + 科研 → knowledge S → +25", () => {
-    const f = majorMatch(
-      profile({ majorDirection: "ai_general" }),
-      opp({ category: "research" }),
-    );
-    expect(f.score).toBe(25); // MAJOR_TIER_SCORE.S
-    expect(f.source).toContain("ai_general");
+// ---------- 因子 2：majorMatch（Phase A 4.2 向量点积，任意专业可归一） ----------
+describe("majorMatch（向量点积版）", () => {
+  it("人工智能 × 科研(research) → 高分（research 轴匹配）", () => {
+    const f = majorMatch(profile(), opp({ category: "research" }));
+    expect(f.score).toBeGreaterThan(15); // 向量点积高
   });
 
-  it("AI 保研 + 竞赛(ACM subtype) → knowledge S → +25", () => {
+  it("人工智能 × ACM 竞赛 → 高分（math/engineering 轴匹配）", () => {
     const f = majorMatch(
-      profile({ majorDirection: "ai_general" }),
-      opp({ category: "competition" }),
+      profile({ majorText: "人工智能" }),
+      opp({ category: "competition", title: "ACM-ICPC 国际大学生程序设计竞赛" }),
     );
-    // 竞赛按 category 兜底为 math-modeling → A(+10)
-    expect(f.score).toBe(10); // MAJOR_TIER_SCORE.A
+    expect(f.score).toBeGreaterThanOrEqual(20); // 接近枚举版 S=25
   });
 
-  it("经管保研 + 竞赛 → knowledge null → 0（非 AI 回退 base）", () => {
+  it("康复治疗学 × 临床实习 → 高分（clinical 轴主导匹配）", () => {
     const f = majorMatch(
-      profile({ majorDirection: "business_general" }),
-      opp({ category: "competition" }),
+      profile({ majorText: "康复治疗学" }),
+      opp({ category: "internship", title: "临床实习/规培" }),
     );
-    expect(f.score).toBe(0);
-    expect(f.source).toContain("null");
+    expect(f.score).toBeGreaterThanOrEqual(20); // clinical 0.9×1.0 主导
+    expect(f.reason).toContain("临床实践");
   });
 
-  it("majorMatch tier 映射集中可审", () => {
+  it("康复治疗学 × ACM → 低分（临床轴错配，不特调）", () => {
+    const f = majorMatch(
+      profile({ majorText: "康复治疗学" }),
+      opp({ category: "competition", title: "ACM-ICPC 国际大学生程序设计竞赛" }),
+    );
+    expect(f.score).toBeLessThan(20); // 远低于康复×临床
+    // 证明不靠"康复"在枚举表，靠 clinical 轴点积自然分流
+  });
+
+  it("归一失败（生僻专业）→ 落中性向量，不报错不 0 分", () => {
+    const f = majorMatch(
+      profile({ majorText: "xxx不存在的专业yyy" }),
+      opp({ category: "competition", title: "ACM-ICPC" }),
+    );
+    expect(f.score).toBeGreaterThan(0); // 中性向量与任何机会点积都中等分
+    expect(f.score).toBeLessThan(20);
+  });
+
+  it("电气工程 × 电子设计竞赛 → 高分（engineering 轴匹配，nit-12）", () => {
+    const f = majorMatch(
+      profile({ majorText: "电气工程及其自动化" }),
+      opp({ category: "competition", title: "全国大学生电子设计竞赛" }),
+    );
+    expect(f.score).toBeGreaterThanOrEqual(20); // engineering 轴高匹配（electronic-design 向量 engineering=1.0）
+  });
+
+  it("majorMatch reason 取 dominantAxis 可解释（铁律②）", () => {
+    const f = majorMatch(
+      profile({ majorText: "康复治疗学" }),
+      opp({ category: "internship", title: "临床实习/规培" }),
+    );
+    expect(f.source).toContain("dot"); // source 追到向量点积
+    expect(f.reason).toMatch(/轴|价值|匹配/); // 含主导轴说明
+  });
+
+  it("majorMatch tier 映射常量保留（向后兼容）", () => {
     expect(MAJOR_TIER_SCORE).toEqual({ S: 25, A: 10, B: 2 });
   });
 });
@@ -292,16 +323,18 @@ describe("集成：南航 AI 大一保研（对照基准分表方案 A）", () =
       recognition: "normal",
     });
     const gm = goalMatch("baoyan", o)!; // S +30
-    const mm = majorMatch(p, o); // knowledge S +25
+    const mm = majorMatch(p, o); // 向量点积 AI×夏令营≈24（dominantAxis engineering）
     const gf = gradeFit(p, o); // freshman+了解 -15（方案A）
     const sf = schoolFit(p, o); // 211+北大夏令营 -8
     const r = roi(p, o); // 低投入优秀营员 +12
     const tc = timeConflict(o, NOW); // 0
     const fitScore = gm.score + mm.score + gf.score + sf.score + r.score - tc.score;
-    expect(fitScore).toBe(44); // 对照基准分表方案 A
+    // 向量版 majorMatch=24（非枚举 25），fitScore=30+24-15-8+12-0=43，仍在末位区
+    expect(fitScore).toBe(43);
+    expect(mm.score).toBe(24); // 向量点积量级确认
   });
 
-  it("大三 + 北大夏令营 → gradeFit +20，fitScore 升首位区(79)", () => {
+  it("大三 + 北大夏令营 → gradeFit +20，fitScore 升首位区", () => {
     const pJunior = profile({ grade: "junior" });
     const o = opp({
       id: "baoyan-1",
@@ -311,8 +344,8 @@ describe("集成：南航 AI 大一保研（对照基准分表方案 A）", () =
     });
     const gf = gradeFit(pJunior, o);
     expect(gf.score).toBe(20); // junior+冲刺
-    // 注：大三时 tier 修正为 S（专业价值不随年级降），majorMatch +25
-    // fitScore = 30(goalMatch S) + 25(majorMatch S) + 20(gradeFit 冲刺) - 8(schoolFit 错配) + 12(roi) - 0(timeConflict) = 79
+    // 向量版 majorMatch=24（AI×夏令营，dominantAxis engineering）
+    // fitScore = 30(goalMatch S) + 24(majorMatch) + 20(gradeFit 冲刺) - 8(schoolFit 错配) + 12(roi) - 0(timeConflict) = 78
     const fitScore =
       goalMatch("baoyan", o)!.score +
       majorMatch(pJunior, o).score +
@@ -320,6 +353,6 @@ describe("集成：南航 AI 大一保研（对照基准分表方案 A）", () =
       schoolFit(pJunior, o).score +
       roi(pJunior, o).score -
       timeConflict(o, NOW).score;
-    expect(fitScore).toBe(79);
+    expect(fitScore).toBe(78); // 向量版 majorMatch 24 而非枚举 25
   });
 });

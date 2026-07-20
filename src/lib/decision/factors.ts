@@ -19,10 +19,18 @@ import type {
 import { VALUE_MATRIX, type ValueEntry } from "@/lib/recommend";
 import {
   queryKnowledge,
+  inferSubtype,
   type OpportunityKnowledge,
+  type OpportunitySubtype,
   type StageRole,
   type Tier,
 } from "@/lib/knowledge/opportunity-knowledge";
+import {
+  classifyMajor,
+  majorMatchScore,
+  getOpportunityVector,
+  type MajorVector,
+} from "@/lib/knowledge/major-vector";
 import type { CompetitionLevel, CompetitionRecognition } from "@/lib/search";
 
 /** 单个因子三元组（铁律②可解释） */
@@ -52,6 +60,8 @@ export interface DecisionProfile {
   schoolTier: SchoolTier | null;
   majorDirection: MajorDirection | null;
   grade: GoalGrade | null;
+  /** 专业名文本（Phase A 4.2：向量归一用，复用 user_profiles.major） */
+  majorText?: string | null;
 }
 
 /** tier → 分值映射（集中一处可审，铁律②） */
@@ -89,50 +99,14 @@ export function goalMatch(goal: Goal, opp: DecisionOpportunity): Factor | null {
 }
 
 // ============================================================
-// 因子 2：majorMatch — 专业方向分流（owner 痛点①核心）
-// 来源：queryKnowledge({goal,majorDirection,grade,category}).tier
-// AI 走 knowledge（数模对 AI=A 降级），非 AI null=0 走 base 不退化
+// 向后兼容：枚举版 majorMatchWithKnowledge（Phase A 第三步枚举架构，4.3 engine 重做后移除）
+// Phase A 4.2 majorMatch 改向量点积，engine.ts 枚举版引用此旧函数。
+// 4.3 重做 engine 时改用 majorMatchWithVector，本函数届时删除。
+// 暂时保留以免 engine.ts（枚举版留参考）编译断裂——但 engine.ts 4.3 会重写，不实际调用。
 // ============================================================
-
 /**
- * majorMatch：查知识库得专业方向 tier → 分值。
- * 回答"这个专业方向下价值多大"。AI 保研数模=A（降级），ACM=S（核心）。
- *
- * engine 层应先 inferSubtype(category, title) 推断 subtype 后通过 knowledge 传入
- * （或 engine 调 queryKnowledge 传 subtype），使 ACM→acm→S、犀牛鸟→ai-training-camp→A。
- * factors.ts 本函数接收 engine 已注入 subtype 的 knowledge（见 majorMatchWithKnowledge）。
- */
-export function majorMatch(
-  profile: DecisionProfile,
-  opp: DecisionOpportunity,
-): Factor {
-  const knowledge: OpportunityKnowledge | null = queryKnowledge({
-    goal: profile.goal,
-    majorDirection: profile.majorDirection,
-    grade: profile.grade,
-    category: opp.category,
-  });
-  if (!knowledge) {
-    // 知识库未覆盖（非 AI 方向 / 未打通 goal）→ 走 base，不加分不扣分（非 AI 不退化）
-    return {
-      name: "majorMatch",
-      score: 0,
-      reason: "专业方向未覆盖，按通用价值判断",
-      source: "knowledge:null(回退base)",
-    };
-  }
-  return {
-    name: "majorMatch",
-    score: MAJOR_TIER_SCORE[knowledge.tier],
-    reason: knowledge.reason,
-    source: `knowledge:${profile.majorDirection}/${opp.category}.tier=${knowledge.tier}`,
-  };
-}
-
-/**
- * majorMatch（engine 注入已推断 subtype 的 knowledge 版本）。
- * engine 层用 inferSubtype(category, title) 推断 subtype 后查 knowledge，传入本函数。
- * 解决偏差1/2：ACM→acm subtype→tier S→+25；犀牛鸟→ai-training-camp→tier A→+10。
+ * @deprecated 枚举版 majorMatch（Phase A 第三步），4.3 engine 重做后移除。
+ * 保留仅为 engine.ts 枚举版编译通过，不再用于新逻辑。
  */
 export function majorMatchWithKnowledge(
   profile: DecisionProfile,
@@ -152,6 +126,54 @@ export function majorMatchWithKnowledge(
     score: MAJOR_TIER_SCORE[knowledge.tier],
     reason: knowledge.reason,
     source: `knowledge:${profile.majorDirection}/${opp.category}(subtype).tier=${knowledge.tier}`,
+  };
+}
+
+/**
+ * majorMatch（向量点积版，Phase A 4.2）。
+ *
+ * 流程：classifyMajor(profile.majorText) → 专业向量；
+ *       inferSubtype(category, title) → subtype → getOpportunityVector(subtype) → 机会向量；
+ *       majorMatchScore(两向量) → {score 0-25, dominantAxis, reason}。
+ *
+ * 任意专业都能算：康复 clinical 轴高 × 临床实习 clinical=1.0 = 高；康复 × ACM = 低。
+ * 不靠"康复"在枚举表（owner 否决枚举特调后改此）。
+ *
+ * reason 取 dominantAxis（点积贡献最大轴）+ 两向量该轴值，措辞合规（无 AI/智能/精准）。
+ */
+export function majorMatch(
+  profile: DecisionProfile,
+  opp: DecisionOpportunity,
+): Factor {
+  const majorVec = classifyMajor(profile.majorText ?? null).vector;
+  return majorMatchWithVector(majorVec, opp);
+}
+
+/**
+ * majorMatch（engine 注入已算专业向量 + 已推断 subtype 的版本）。
+ * engine 步骤3 算一次专业向量（循环外），步骤4 每候选 inferSubtype 得 subtype 取机会向量，
+ * 调本函数注入专业向量（避免每候选重复 classifyMajor）。
+ */
+export function majorMatchWithVector(
+  majorVec: MajorVector,
+  opp: DecisionOpportunity,
+): Factor {
+  const subtype = inferSubtype(opp.category, opp.title);
+  return majorMatchWithSubtype(majorVec, subtype);
+}
+
+/** majorMatch（subtype 显式传入版，单测/复用） */
+export function majorMatchWithSubtype(
+  majorVec: MajorVector,
+  subtype: OpportunitySubtype,
+): Factor {
+  const oppVec = getOpportunityVector(subtype);
+  const result = majorMatchScore(majorVec, oppVec);
+  return {
+    name: "majorMatch",
+    score: result.score,
+    reason: result.reason,
+    source: `majorVector.dot(opportunityVector[${subtype}])=${result.dotSum.toFixed(2)}`,
   };
 }
 

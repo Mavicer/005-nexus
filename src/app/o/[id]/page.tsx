@@ -52,7 +52,7 @@ export default async function CompetitionDetailPage({
     : [];
   const profile = user ? await getProfile(user.userId) : null;
   const matchReason = categoryTyped
-    ? getMatchReason(categoryTyped, profile)
+    ? getMatchReason(categoryTyped, profile, detail.title)
     : { matched: false, reason: null };
 
   const deadlineState = detail.expireAt ?? c?.signUpEnd ?? null;

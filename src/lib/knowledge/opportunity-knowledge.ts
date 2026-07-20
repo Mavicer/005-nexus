@@ -168,6 +168,13 @@ const AI_BAOYAN_BY_SUBTYPE: {
     outcome: "国家级/省级奖",
     stageRole: "准备",
   },
+  "electronic-design": {
+    tier: "A",
+    reason: "电子工程能力展示，电气/电子方向区分度",
+    cost: "中",
+    outcome: "国家级/省级奖",
+    stageRole: "准备",
+  },
 };
 
 /**
@@ -229,6 +236,7 @@ export type OpportunitySubtype =
   | "clinical-internship"
   | "case-competition"
   | "arts-competition"
+  | "electronic-design"
   | "other";
 
 /**
@@ -253,12 +261,15 @@ export function inferSubtype(
     return "internship";
   }
   if (category === "competition") {
+    // 电子设计/电赛 先判（"设计"关键词与 arts-competition 的"设计"冲突，须先匹配电赛）
+    if (/电子设计|电赛|nuedc|电子竞赛/i.test(hay)) return "electronic-design";
     if (/acm|icpc|ccpc|程序设计/i.test(hay)) return "acm";
     if (/数学建模|数模|cumcm/i.test(hay)) return "math-modeling";
     if (/挑战杯/i.test(hay)) return "challenge-cup";
     if (/大创|创新创业训练|国家级创新/i.test(hay)) return "dachuang";
     if (/案例|商业|市场调查|营销/i.test(hay)) return "case-competition";
-    if (/广告|艺术|设计|美术|动画/i.test(hay)) return "arts-competition";
+    if (/广告|艺术|美术|动画/i.test(hay)) return "arts-competition";
+    if (/设计/i.test(hay)) return "arts-competition"; // 含"设计"但非电子设计 → 艺术设计类
     return "math-modeling"; // 通用竞赛兜底归到数模型
   }
   if (/开源|github|gsoc/i.test(hay)) return "open-source";
