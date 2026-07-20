@@ -59,6 +59,8 @@ export interface DecisionResult {
   rank: number;
   /** 步骤1 派生的成长阶段 */
   growthStage: GrowthStage;
+  /** Phase A 4.6.1：多目标贡献分解（透明展示每 goal 的 goalMatch） */
+  goalBreakdown: { goal: Goal; weight: number; goalMatchScore: number }[];
   /** 步骤7 生成的个性化原因（从 factors 拼接，非静态模板） */
   reason: string;
 }
@@ -234,24 +236,63 @@ export async function decide(
   // 步骤3：classifyMajor 循环外算一次专业向量（不每候选重复算）
   const majorVec = classifyMajor(profile.majorText ?? null).vector;
 
-  // 步骤2-5：逐候选评估
+  // Phase A 4.6.1：多目标分解。goals[0]=主(0.7)/goals[1]=次(0.3)，空回退 goal 单选
+  const goals = resolveGoals(profile);
+
+  // 步骤2-5：逐候选评估（按多目标分别算 goalMatch，加权合并）
   const evaluated = candidates.map((opp) => {
+    // 多目标 goalMatch 加权：每 goal 一套 goalMatch，按权重合并
+    const goalMatchResults = goals.map(({ goal, weight }) => ({
+      goal,
+      weight,
+      factor: goalMatch(goal, opp),
+    }));
+    // 任一 goal 不适用则跳过该候选（保留至少一 goal 适用）
+    const applicable = goalMatchResults.filter((g) => g.factor !== null);
+    if (applicable.length === 0) return null;
+
+    // 加权 goalMatch（主0.7+次0.3，归一到单 goalMatch 量级 0-30）
+    const totalWeight = applicable.reduce((s, g) => s + g.weight, 0);
+    const weightedGoalScore =
+      applicable.reduce((s, g) => s + (g.factor!.score * g.weight), 0) / totalWeight;
+    const weightedGoalReason = applicable
+      .map((g) => `${g.factor!.reason}（权重${(g.weight * 10).toFixed(0)}%）`)
+      .join("；");
+
+    // 用合并的 goalMatch 替换原 factors 中的 goalMatch
     const { factors, knowledge } = evaluateOpportunity(profile, opp, majorVec, now);
-    if (factors.length === 0) return null; // goalMatch 不适用，跳过
+    if (factors.length === 0) return null;
 
-    // 步骤6：fitScore = 6 因子求和（timeConflict 在 factors 内已是负值，直接求和）
-    const fitScore = factors.reduce((sum, f) => sum + f.score, 0);
+    const mergedFactors = factors.map((f) =>
+      f.name === "goalMatch"
+        ? {
+            ...f,
+            score: Math.round(weightedGoalScore),
+            reason: weightedGoalReason,
+            source: `goalMatch:多目标加权(${goals.map((g) => g.goal).join("+")})`,
+          }
+        : f,
+    );
 
-    // tier：按 majorMatch 量级（向量版无 knowledge tier，用 majorMatch score 量级分层）
-    const tier = extractTierFromFactors(factors);
+    // 步骤6：fitScore = 7 因子求和
+    const fitScore = mergedFactors.reduce((sum, f) => sum + f.score, 0);
+    const tier = extractTierFromFactors(mergedFactors);
+
+    // goalBreakdown：透明展示多目标贡献
+    const goalBreakdown = applicable.map((g) => ({
+      goal: g.goal,
+      weight: g.weight,
+      goalMatchScore: g.factor!.score,
+    }));
 
     return {
       recommendation: opp,
-      factors,
+      factors: mergedFactors,
       fitScore,
       tier,
       knowledge,
       growthStage,
+      goalBreakdown,
     };
   });
 
@@ -268,6 +309,7 @@ export async function decide(
     tier: r.tier,
     rank: i + 1,
     growthStage: r.growthStage ?? "探索",
+    goalBreakdown: r.goalBreakdown ?? [],
     reason: explainReason(
       profile,
       r.recommendation,
@@ -276,6 +318,22 @@ export async function decide(
       r.growthStage,
     ),
   }));
+}
+
+/** Phase A 4.6.1：解析多目标（goals[0]=主0.7/goals[1]=次0.3，空回退 goal 单选） */
+function resolveGoals(
+  profile: DecisionProfile,
+): { goal: Goal; weight: number }[] {
+  if (profile.goals && profile.goals.length > 0) {
+    const goals = profile.goals.slice(0, 2);
+    if (goals.length === 1) return [{ goal: goals[0]!, weight: 1 }];
+    return [
+      { goal: goals[0]!, weight: 0.7 },
+      { goal: goals[1]!, weight: 0.3 },
+    ];
+  }
+  // 回退 goal 单选
+  return [{ goal: profile.goal, weight: 1 }];
 }
 
 /**

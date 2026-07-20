@@ -39,6 +39,8 @@ export default async function SettingsPage() {
     internshipLevel: profile?.internshipLevel ?? null,
     grade: profile?.grade ?? null,
     goal: profile?.goal ?? null,
+    goals: profile?.goals ?? null,
+    hardConstraints: profile?.hardConstraints ?? null,
     interests: profile?.interests ?? [],
   };
 

@@ -48,3 +48,20 @@ export type EnglishLevel =
   (typeof englishLevelEnum)["enumValues"][number];
 export type InternshipLevel =
   (typeof internshipLevelEnum)["enumValues"][number];
+
+// Phase A 4.6：硬约束类型（source 强约束 user_declared，system_inferred 禁止进 priority）
+export interface HardConstraint {
+  id: string;
+  type:
+    | "language_requirement"
+    | "gpa_requirement"
+    | "internship_requirement"
+    | "certificate"
+    | "personal_plan";
+  title: string; // "雅思≥6.5大二前"
+  value: string; // "ielts_6.5"（经验区间，非固定分数线）
+  deadline: string | null; // "sophomore_end"（大二结束前）
+  consequence: string; // "影响出国/保研资格"
+  priority: "high" | "mid" | "low";
+  source: "user_declared"; // 强约束：只 user_declared，system_inferred 禁止
+}

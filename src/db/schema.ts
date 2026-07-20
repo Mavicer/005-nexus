@@ -30,6 +30,7 @@ import {
   index,
   uniqueIndex,
   customType,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -430,6 +431,11 @@ export const userProfiles = pgTable(
     grade: goalGradeEnum("grade"),
     goal: goalEnum("goal"),
     interests: text("interests").array(),
+    // Phase A 4.6：多目标 + 硬约束（owner 授权打磨例外，Agent B 第 55 条放行）
+    // goals: 多目标数组（goals[0]=主目标权重0.7，goals[1]=次目标0.3，空回退 goal 单选）
+    goals: text("goals").array(),
+    // hardConstraints: 硬约束 JSON 数组，source 必须 user_declared（system_inferred 禁止进 priority）
+    hardConstraints: jsonb("hard_constraints"),
     onboardingCompleted: boolean("onboarding_completed")
       .notNull()
       .default(false),

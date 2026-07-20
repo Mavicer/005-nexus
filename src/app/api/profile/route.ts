@@ -13,6 +13,7 @@ import type {
   CompetitionCapability,
   EnglishLevel,
   InternshipLevel,
+  HardConstraint,
 } from "@/db/schema-enums";
 
 const VALID_GRADES: GoalGrade[] = [
@@ -123,6 +124,45 @@ export async function POST(req: NextRequest) {
   }
   if (body.interests && !Array.isArray(body.interests)) {
     return NextResponse.json({ error: "兴趣需为数组" }, { status: 400 });
+  }
+  // Phase A 4.6.1：goals 多目标校验（数组元素 ∈ VALID_GOALS，长度 ≤2）
+  if (body.goals) {
+    if (!Array.isArray(body.goals) || body.goals.length > 2) {
+      return NextResponse.json({ error: "目标最多选 2 个" }, { status: 400 });
+    }
+    for (const g of body.goals) {
+      if (!VALID_GOALS.includes(g)) {
+        return NextResponse.json({ error: `无效目标 ${g}` }, { status: 400 });
+      }
+    }
+  }
+  // Phase A 4.6.1：hardConstraints 校验（source 强约束 user_declared，system_inferred 拒绝）
+  if (body.hardConstraints) {
+    if (!Array.isArray(body.hardConstraints)) {
+      return NextResponse.json({ error: "硬约束需为数组" }, { status: 400 });
+    }
+    const validTypes: HardConstraint["type"][] = [
+      "language_requirement",
+      "gpa_requirement",
+      "internship_requirement",
+      "certificate",
+      "personal_plan",
+    ];
+    for (const hc of body.hardConstraints) {
+      if (hc.source !== "user_declared") {
+        // 强约束：只 user_declared 进 priority，system_inferred 禁止
+        return NextResponse.json(
+          { error: "硬约束 source 必须 user_declared，系统推断不允许进优先级" },
+          { status: 400 },
+        );
+      }
+      if (!validTypes.includes(hc.type)) {
+        return NextResponse.json({ error: `无效硬约束类型 ${hc.type}` }, { status: 400 });
+      }
+      if (!["high", "mid", "low"].includes(hc.priority)) {
+        return NextResponse.json({ error: "硬约束 priority 需为 high/mid/low" }, { status: 400 });
+      }
+    }
   }
 
   const profile = await upsertProfile(user.userId, body);

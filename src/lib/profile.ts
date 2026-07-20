@@ -18,6 +18,7 @@ import type {
   CompetitionCapability,
   EnglishLevel,
   InternshipLevel,
+  HardConstraint,
 } from "@/db/schema-enums";
 
 export interface ProfileInput {
@@ -34,6 +35,8 @@ export interface ProfileInput {
   internshipLevel?: InternshipLevel | null;
   grade?: GoalGrade | null;
   goal?: Goal | null;
+  goals?: Goal[] | null;
+  hardConstraints?: HardConstraint[] | null;
   interests?: string[] | null;
   onboardingCompleted?: boolean;
 }
@@ -53,6 +56,8 @@ export interface Profile {
   internshipLevel: InternshipLevel | null;
   grade: GoalGrade | null;
   goal: Goal | null;
+  goals: Goal[] | null;
+  hardConstraints: HardConstraint[] | null;
   interests: string[] | null;
   onboardingCompleted: boolean;
 }
@@ -80,6 +85,8 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     internshipLevel: row.internshipLevel,
     grade: row.grade,
     goal: row.goal,
+    goals: row.goals as Goal[] | null,
+    hardConstraints: row.hardConstraints as HardConstraint[] | null,
     interests: row.interests,
     onboardingCompleted: row.onboardingCompleted,
   };
@@ -107,6 +114,8 @@ export async function upsertProfile(
       internshipLevel: input.internshipLevel ?? null,
       grade: input.grade ?? null,
       goal: input.goal ?? null,
+      goals: input.goals ?? null,
+      hardConstraints: input.hardConstraints ?? null,
       interests: input.interests ?? null,
       onboardingCompleted: input.onboardingCompleted ?? false,
     })
@@ -126,6 +135,8 @@ export async function upsertProfile(
         internshipLevel: input.internshipLevel ?? null,
         grade: input.grade ?? null,
         goal: input.goal ?? null,
+        goals: input.goals ?? null,
+        hardConstraints: input.hardConstraints ?? null,
         interests: input.interests ?? null,
         ...(input.onboardingCompleted !== undefined && {
           onboardingCompleted: input.onboardingCompleted,
@@ -151,6 +162,8 @@ export async function upsertProfile(
     internshipLevel: row.internshipLevel,
     grade: row.grade,
     goal: row.goal,
+    goals: row.goals as Goal[] | null,
+    hardConstraints: row.hardConstraints as HardConstraint[] | null,
     interests: row.interests,
     onboardingCompleted: row.onboardingCompleted,
   };

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type {
+  HardConstraint,
   GoalGrade,
   Goal,
   SchoolTier,
@@ -123,6 +124,8 @@ interface ProfileData {
   internshipLevel: InternshipLevel | null;
   grade: GoalGrade | null;
   goal: Goal | null;
+  goals: Goal[] | null;
+  hardConstraints: HardConstraint[] | null;
   interests: string[];
 }
 
@@ -147,6 +150,8 @@ export function OnboardingForm({ next }: { next: string }) {
     internshipLevel: null,
     grade: null,
     goal: null,
+    goals: null,
+    hardConstraints: null,
     interests: [],
   });
   const [saving, setSaving] = useState(false);
@@ -172,7 +177,8 @@ export function OnboardingForm({ next }: { next: string }) {
           englishLevel: data.englishLevel,
           internshipLevel: data.internshipLevel,
           grade: data.grade,
-          goal: data.goal,
+          goal: data.goals?.[0] ?? data.goal,
+          goals: data.goals,
           interests: data.interests,
           onboardingCompleted: completed,
         }),
@@ -370,32 +376,50 @@ export function OnboardingForm({ next }: { next: string }) {
             你的主目标
           </h2>
           <p className="text-xs text-neutral-400">
-            单选，决定你的成长路线推荐（必选，完成后才能继续）
+            选 1-2 个目标（主目标权重高，次目标补充），必选至少 1 个才能继续
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {GOALS.map((g) => (
-              <button
-                key={g.value}
-                type="button"
-                onClick={() => setData({ ...data, goal: g.value })}
-                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                  data.goal === g.value
-                    ? "border-neutral-900 bg-neutral-50"
-                    : "border-neutral-200 hover:border-neutral-300"
-                }`}
-              >
-                <p className="text-sm font-medium text-neutral-900">{g.label}</p>
-                <p className="mt-0.5 text-xs text-neutral-500">{g.desc}</p>
-              </button>
-            ))}
+            {GOALS.map((g) => {
+              const isSelected = data.goals?.includes(g.value) ?? false;
+              const isPrimary = data.goals?.[0] === g.value;
+              return (
+                <button
+                  key={g.value}
+                  type="button"
+                  onClick={() => {
+                    const current = data.goals ?? [];
+                    // 已选→取消；未选→追加（最多2）
+                    if (isSelected) {
+                      setData({ ...data, goals: current.filter((x) => x !== g.value), goal: current[0] ?? data.goal });
+                    } else if (current.length < 2) {
+                      const next = [...current, g.value];
+                      setData({ ...data, goals: next, goal: next[0]! });
+                    }
+                  }}
+                  className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                    isSelected
+                      ? "border-neutral-900 bg-neutral-50"
+                      : "border-neutral-200 hover:border-neutral-300"
+                  }`}
+                >
+                  <p className="text-sm font-medium text-neutral-900">
+                    {g.label}
+                    {isPrimary && <span className="ml-1 text-xs text-neutral-500">（主）</span>}
+                    {isSelected && !isPrimary && <span className="ml-1 text-xs text-neutral-400">（次）</span>}
+                  </p>
+                  <p className="mt-0.5 text-xs text-neutral-500">{g.desc}</p>
+                </button>
+              );
+            })}
           </div>
           <NavRow
             onBack={() => setStep(2)}
             onSkip={() => submit(false)}
             onNext={() => {
               // Phase A 4.5：goal 强制选（owner 决策3），不选不能进步骤4
-              if (!data.goal) {
-                setError("请选择你的主目标，系统据此推荐");
+              const hasGoal = (data.goals && data.goals.length > 0) || data.goal;
+              if (!hasGoal) {
+                setError("请选择至少 1 个主目标，系统据此推荐");
                 return;
               }
               setError(null);

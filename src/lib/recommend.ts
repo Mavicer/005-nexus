@@ -173,19 +173,35 @@ export async function getRecommendations(
   profile:
     | {
         goal: Goal | null;
+        goals?: Goal[] | null;
         schoolTier?: string | null;
         majorDirection?: string | null;
         major?: string | null;
         grade?: GoalGrade | null;
         interests?: string[] | null;
+        programMode?: string | null;
+        isGoAbroad?: boolean | null;
+        gpaTier?: string | null;
+        researchLevel?: string | null;
+        competitionCapability?: string | null;
+        englishLevel?: string | null;
+        internshipLevel?: string | null;
       }
     | null,
   limit = 6,
 ): Promise<Recommendation[]> {
-  if (!profile?.goal) return [];
+  if (!profile?.goal && !(profile?.goals && profile.goals.length > 0)) return [];
 
-  // 1. 取该 goal 下高价值 category
-  const goalCats = analyzeGoal(profile.goal);
+  // 1. 取多目标下高价值 category（合并去重）
+  const allGoals = profile.goals && profile.goals.length > 0 ? profile.goals : [profile.goal];
+  const goalCatsMap = new Map<InfoCategory, { category: InfoCategory; tier: "S" | "A" | "B" }>();
+  for (const g of allGoals) {
+    if (!g) continue;
+    for (const cat of analyzeGoal(g)) {
+      if (!goalCatsMap.has(cat.category)) goalCatsMap.set(cat.category, cat);
+    }
+  }
+  const goalCats = Array.from(goalCatsMap.values());
   if (goalCats.length === 0) return [];
 
   // 2. 各 category 复用 searchItems 查候选（护栏2，不写裸 SQL）
@@ -228,13 +244,21 @@ export async function getRecommendations(
     signUpEnd: h.signUpEnd,
   }));
 
-  // 3. decision engine 跑 7 步推理链
+  // 3. decision engine 跑 7 步推理链（多目标 profile）
   const decisionProfile: DecisionProfile = {
-    goal: profile.goal,
+    goal: (profile.goals?.[0] ?? profile.goal) as Goal,
+    goals: profile.goals as Goal[] | null,
     schoolTier: (profile.schoolTier as SchoolTier | null) ?? null,
     majorDirection: (profile.majorDirection as MajorDirection | null) ?? null,
     majorText: profile.major ?? null,
     grade: profile.grade ?? null,
+    programMode: (profile.programMode as Parameters<typeof decide>[0]["programMode"]) ?? null,
+    isGoAbroad: profile.isGoAbroad ?? null,
+    gpaTier: profile.gpaTier as Parameters<typeof decide>[0]["gpaTier"],
+    researchLevel: profile.researchLevel as Parameters<typeof decide>[0]["researchLevel"],
+    competitionCapability: profile.competitionCapability as Parameters<typeof decide>[0]["competitionCapability"],
+    englishLevel: profile.englishLevel as Parameters<typeof decide>[0]["englishLevel"],
+    internshipLevel: profile.internshipLevel as Parameters<typeof decide>[0]["internshipLevel"],
   };
   const decisionResults = await decide(decisionProfile, candidates);
 

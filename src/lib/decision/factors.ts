@@ -63,6 +63,8 @@ export interface DecisionOpportunity {
 /** 决策画像（从 user_profiles + profile.ts 取） */
 export interface DecisionProfile {
   goal: Goal;
+  /** Phase A 4.6.1：多目标（goals[0]=主0.7/goals[1]=次0.3，空回退 goal 单选） */
+  goals?: Goal[] | null;
   schoolTier: SchoolTier | null;
   majorDirection: MajorDirection | null;
   grade: GoalGrade | null;
