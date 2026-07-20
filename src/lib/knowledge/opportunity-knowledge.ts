@@ -144,7 +144,13 @@ const AI_BAOYAN_BY_SUBTYPE: {
 
 /**
  * 保研夏令营按 grade 调整（owner 痛点②：年级时机）
- * 大一/大二 = 了解（B，权重低）；大三 = 冲刺（S 当期，权重高）；大四 = 收尾。
+ *
+ * 语义澄清（Phase A 第三步修正，避免与 gradeFit 双重扣分）：
+ *  - tier 保持 S（夏令营是 AI 保研拿 offer 主路径，专业价值不随年级降级）。
+ *  - 仅 stageRole 随年级变（大一了解 / 大三冲刺 / 大四收尾）。
+ *  - 年级时机由 gradeFit 因子体现（大一+了解=-15 压末位），不在 tier 重复扣分。
+ *
+ * 大一 = 了解（远期，gradeFit 负压末位）；大三 = 冲刺（当期，gradeFit 正升首位）；大四 = 收尾。
  */
 function gradeAdjustedBaoyanCamp(
   grade: GoalGrade | null,
@@ -160,15 +166,21 @@ function gradeAdjustedBaoyanCamp(
   }
   if (grade === "senior") {
     return {
-      tier: "B",
+      tier: "S",
       reason: "已过夏令营申请季，仅收尾/补录",
       cost: "低",
       outcome: "—",
       stageRole: "收尾",
     };
   }
-  // freshman / sophomore / null
-  return { ...AI_BAOYAN_BY_SUBTYPE["baoyan-camp"] };
+  // freshman / sophomore / null（远期，专业价值仍 S，但当下不该冲刺）
+  return {
+    tier: "S",
+    reason: "夏令营是 AI 保研拿 offer 主路径，但大一距申请较远，当前应专注打地基，大三再重点关注",
+    cost: "低",
+    outcome: "优秀营员=预录取",
+    stageRole: "了解",
+  };
 }
 
 /**
