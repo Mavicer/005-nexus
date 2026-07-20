@@ -11,7 +11,7 @@
  * 护栏：路线只读、非 AI、措辞「经验参考，因校因专业而异」。
  */
 import type { Goal, GoalGrade } from "@/db/schema-enums";
-import type { InfoCategory } from "@/db/schema-enums";
+import type { InfoCategory, MajorDirection } from "@/db/schema-enums";
 
 export interface RoadmapAction {
   title: string;
@@ -267,9 +267,70 @@ const ROADMAPS: Record<Goal, Roadmap> = {
   entrepreneurship: ENTREPRENEURSHIP,
 };
 
-/** 按 goal 取完整四阶段路线（前端渲染全部，当前 grade 高亮） */
-export function getRoadmap(goal: Goal): Roadmap {
-  return ROADMAPS[goal];
+// ============================================================
+// 专业方向覆盖层（Phase A 4.4：ROADMAP_OVERLAYS）
+// 在 base 路线之上补 majorDirection 专属 actions（AI 保研大一专属等）。
+// 非 AI 方向走 base 不退化。知识库 02-成长路线-保研.md 第五节是真理源。
+// ============================================================
+
+/** AI 方向（ai_general/ai_cv/ai_nlp/ai_llm/ai_robotics）保研 overlay actions */
+const AI_BAOYAN_OVERLAY: Partial<Record<GoalGrade, RoadmapAction[]>> = {
+  freshman: [
+    { title: "Python 编程基础", detail: "AI 首选语言，大一打牢，后续科研/ACM 都要用", priority: "high" },
+    { title: "C++ 与算法基础", detail: "算法竞赛与底层实现，为 ACM/机试打底", relatedCategories: ["competition"], priority: "high" },
+    { title: "高数/线代/概率论保持高分", detail: "AI 数学地基，CV/NLP/LLM 都依赖线代与概率", priority: "high" },
+    { title: "LeetCode 刷题起步", detail: "数据结构与算法训练", priority: "mid" },
+    { title: "进 AI 实验室做小课题", detail: "积累方向感（CV/NLP/LLM），科研是 AI 保研 S 级核心", relatedCategories: ["research"], priority: "high" },
+  ],
+  sophomore: [
+    { title: "确定 AI 细分方向", detail: "CV/NLP/LLM/机器人，选一个深耕", priority: "high" },
+    { title: "科研推进：目标顶会一作/共一", detail: "CV→ICCV/ECCV、NLP→ACL/EMNLP、大模型→开源/预训练", relatedCategories: ["research"], priority: "high" },
+    { title: "ACM-ICPC/CCPC 冲区域赛", detail: "AI 院系筛选看重算法与工程能力", relatedCategories: ["competition"], priority: "mid" },
+    { title: "开源贡献（LLM 方向）", detail: "大模型方向参与知名开源项目，工程力硬通货", priority: "mid" },
+  ],
+  junior: [
+    { title: "论文投出/课题结题", detail: "夏令营材料核心，科研产出是区分度硬通货", relatedCategories: ["research"], priority: "high" },
+    { title: "夏令营投递 AI 强校", detail: "3-5 月投清北复交浙科南哈交+中科院自动化所等", relatedCategories: ["baoyan"], priority: "high" },
+    { title: "ACM 冲决赛/区域赛金", detail: "若有算法竞赛线", relatedCategories: ["competition"], priority: "mid" },
+  ],
+};
+
+/** AI 方向集合 */
+const AI_DIRECTIONS: MajorDirection[] = [
+  "ai_general",
+  "ai_cv",
+  "ai_nlp",
+  "ai_llm",
+  "ai_robotics",
+];
+
+/**
+ * 按.goal 取完整四阶段路线。
+ * Phase A 4.4：加 majorDirection 参数，AI 保研走 overlay（专属 actions 覆盖 base）。
+ * 非 AI 方向走 base 不退化。
+ */
+export function getRoadmap(
+  goal: Goal,
+  majorDirection?: MajorDirection | null,
+): Roadmap {
+  const base = ROADMAPS[goal];
+  if (!majorDirection || !AI_DIRECTIONS.includes(majorDirection)) {
+    return base; // 非 AI 方向走 base 不退化
+  }
+  if (goal !== "baoyan") {
+    return base; // Phase A 只打通 AI 保研 overlay，其余 goal 走 base
+  }
+  // AI 保研：用 overlay 覆盖对应阶段的 actions
+  const aiActionsByGrade = AI_BAOYAN_OVERLAY;
+  return {
+    ...base,
+    note: `${base.note}（AI 方向专属路线，经验参考）`,
+    stages: base.stages.map((stage) => {
+      const overlayActions = aiActionsByGrade[stage.grade];
+      if (!overlayActions || overlayActions.length === 0) return stage;
+      return { ...stage, actions: overlayActions };
+    }),
+  };
 }
 
 /** 当前年级之后的阶段数（用于高亮当前） */

@@ -103,9 +103,9 @@ export default async function DashboardPage() {
             </Card>
           )}
 
-          {/* 成长路线（P4-2 新增） */}
+          {/* 成长路线（P4-2 + Phase A 4.4：AI 方向 overlay） */}
           {goal ? (
-            <RoadmapSection goal={goal} grade={grade} />
+            <RoadmapSection goal={goal} grade={grade} majorDirection={profile?.majorDirection ?? null} />
           ) : (
             <Card className="p-5">
               <p className="text-sm font-medium text-neutral-900">你的成长路线</p>
@@ -292,11 +292,13 @@ function OpportunityGroup({
 async function RoadmapSection({
   goal,
   grade,
+  majorDirection,
 }: {
   goal: Goal;
   grade: GoalGrade | null;
+  majorDirection: string | null;
 }) {
-  const roadmap = getRoadmap(goal);
+  const roadmap = getRoadmap(goal, majorDirection as Parameters<typeof getRoadmap>[1] ?? undefined);
 
   // 预取每个阶段 relatedCategories 的机会（复用 searchItems，护栏2）
   const stageOpps = await Promise.all(
@@ -461,20 +463,68 @@ function RecommendItem({ rec }: { rec: Recommendation }) {
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-neutral-900">{rec.title}</p>
-        <span className="shrink-0 text-xs text-neutral-400">
-          {"★".repeat(rec.stars)}
-          {"☆".repeat(3 - rec.stars)}
-        </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <TierBadge tier={rec.tier} />
+          <span className="text-xs text-neutral-400">适配 {rec.fitScore}</span>
+        </div>
       </div>
       {rec.summary && (
         <p className="mt-1 line-clamp-1 text-xs text-neutral-500">{rec.summary}</p>
       )}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <CredibilityBadge score={rec.credibilityScore} />
-        <span className="text-xs text-neutral-400">·</span>
         <span className="text-xs text-neutral-600">{rec.reason}</span>
       </div>
+      {/* 因子展开（铁律②可解释，默认收起，hover/可点开看全貌） */}
+      {rec.factors && rec.factors.length > 0 && (
+        <details className="mt-2 group">
+          <summary className="cursor-pointer text-xs text-neutral-400 hover:text-neutral-600">
+            为什么推荐（{rec.factors.length} 个因子）
+          </summary>
+          <div className="mt-1.5 space-y-1">
+            {rec.factors.map((f) => (
+              <div
+                key={f.name}
+                className="flex items-start gap-2 rounded bg-neutral-50 px-2 py-1 text-xs"
+              >
+                <span
+                  className={`shrink-0 font-medium ${
+                    f.score > 0
+                      ? "text-green-700"
+                      : f.score < 0
+                        ? "text-red-600"
+                        : "text-neutral-500"
+                  }`}
+                >
+                  {f.score > 0 ? "+" : ""}
+                  {f.score}
+                </span>
+                <span className="text-neutral-600">{f.reason}</span>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+      <div className="mt-2 flex items-center gap-2 border-t border-neutral-100 pt-1.5">
+        <CredibilityBadge score={rec.credibilityScore} />
+        <span className="text-xs text-neutral-400">信息可信度评分</span>
+      </div>
     </Link>
+  );
+}
+
+/** 价值分层徽章（与详情页一致，S 黑/A 蓝/B 灰） */
+function TierBadge({ tier }: { tier: "S" | "A" | "B" }) {
+  const styles: Record<"S" | "A" | "B", string> = {
+    S: "bg-neutral-900 text-white",
+    A: "bg-blue-600 text-white",
+    B: "bg-neutral-100 text-neutral-600",
+  };
+  return (
+    <span
+      className={`rounded px-1.5 py-0.5 text-xs font-medium ${styles[tier]}`}
+    >
+      {tier} 级
+    </span>
   );
 }
 

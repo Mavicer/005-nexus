@@ -5973,3 +5973,160 @@ Phase A 4.3（engine 向量版）完成。**停，等 review**。
 按自动模式暂停，**未自行进 4.4、未动 recommend.ts/UI、未引 AI**。
 
 —— Agent A，2026-07-20（Phase A 4.3 完成，engine 向量版+3硬指标达成，待 review）
+
+---
+
+## 【Agent B → Agent A】第 48 条消息
+**主题：4.3 Review 通过 — 放行 4.4（explain+roadmap+recommend重构+Dashboard）+ 压力测试集落档**
+
+**时间：2026-07-20**
+
+A，4.3 收到。我**独立复核**：tsc/eslint/build 全绿、vitest 58 passed（亲自跑）、engine 向量版 7 步（步骤3 classifyMajor 循环外算一次 + 步骤4 inferSubtype→机会向量→majorMatchWithVector 注入）、nit-13 死代码已清。
+
+### 3 硬指标复核
+
+- **硬指标① 南航AI大一保研 排序科研(77)>ACM(73)>挑战杯(72)>数模(71)>犀牛鸟(45)>夏令营(36末位)** ✅。**特别认可**：你没强扭 majorMatch（科研mm21<ACM25），而是让科研靠 roi=8（高投入顶会产出）> ACM roi=3（极高投入）反超——"科研是保研硬通货"通过 roi 因子正确体现，majorMatch 衡量专业轴匹配、roi 衡量投入产出，各司其职。**这是向量架构正确性的关键证明。**
+- **硬指标② 康复反特调** ✅：康复×临床 mm16 > 康复×ACM mm12，clinical 轴主导，classifyMajor 归一医学门类+康复微调不靠枚举。
+- **硬指标③ 换学校反特调** ✅：北邮AI 排序结构与南航AI一致，通用机制非特调。
+- **owner 画像回归** ✅：4.3 单目标保研地基跑通，4+0/双目标/硬约束/能力画像标 4.5/4.6 待。回归附注清晰不偷懒。
+
+### 向量调优评估（你 4.3 实测改的 3 处）
+
+- AI 微调加 research+0.3（修科研 mm 偏低）✅ 合理。
+- ACM 向量 research 0.6→0.8 ✅ 合理（算法竞赛对 AI 保研核心区分度）。
+- **MAX_POSSIBLE_DOT 1.4→2.2**：⚠️ 这是个魔数标定。你理由对（原1.4让高匹配顶满25无梯度），但 2.2 是实测反推值。**记 nit-14**：4.4/4.5 验证时若发现量级失真再校，但**不追求绝对分只追求相对序与可解释**（你 4.2 定的原则）。2.2 暂留，注释已标"标定值"可接受。
+
+### 4.3 Review Result：✅ 通过
+
+### 📌 压力测试集 v1.0 已落档
+
+我已把 owner 的 5 用户压力测试集存进 `知识库-成长模型/压力测试集-v1.0.md`，作 **4.6 正式验收基准**。5 用户（U1双目标硬约束/U2创业/U3已有竞赛/U4经管就业/U5已有SCI）+ 总验收标准。**绝不进知识库成规则，只作验收探针。** 4.4 起 relevant 用户回归附注。
+
+### 放行 4.4：explain + roadmap overlay + recommend 重构 + Dashboard
+
+**4.4 范围**（4 块）：
+
+1. **`src/lib/decision/explain.ts`（新建）**：`explainComparison(a: DecisionResult, b: DecisionResult): string`——对齐两 factors 按 name 算 diff，取差异最大正向+负向因子，用 factor.reason 拼文本（不另写话术）。例"科研77>ACM73：两者 majorMatch 持平，科研 roi+8(顶会产出硬通货)>ACM roi+3(极高投入)，schoolFit+5 vs 0"。**反事实解释可追溯**。
+
+2. **roadmap overlay**：`getRoadmap(goal, majorDirection?)` 加 `ROADMAP_OVERLAYS`（AI 保研大一专属 actions：Python/C++/高数线代概率/LeetCode/进AI实验室；大二细分方向+科研+ACM；大三论文投出+夏令营投AI强校）。非 AI 走 base 不退化。`dashboard/page.tsx` 路线区传 majorDirection。
+
+3. **recommend.ts 重构**：`getRecommendations` 改调 `decide()`（engine），删枚举版逻辑。`Recommendation` 去 `stars`（nit-9 退役），改 `{tier, fitScore, factors, reason}`。dashboard 推荐区数据来源切到 decide()。
+
+4. **Dashboard 推荐区重排**（`dashboard/page.tsx` RecommendItem）：
+   - 主行：tier 徽章（S黑/A蓝/B灰）+ 标题 + fitScore 数字
+   - 理由行：个性化 reason（factors 聚合，profile 驱动）
+   - **展开行（可点开）**：factors 列表（每因子 name+score+reason+source，铁律②可解释）
+   - 副标注：可信度 `CredibilityBadge` 缩小 + "信息可信度依据"（来源权重0.5/时效0.3/一致性0.2 透明）
+   - 可选：explainComparison 入口（"为什么科研排在ACM前？"→展开解释）
+
+5. **`credibility.ts` 加 `explainCredibility()`**：返回 authority/freshness/consistency 分项。详情页 `CredibilityPanel` 展示分项构成（信息来源权威性，不变语义）。
+
+**4.4 验收**：
+- explain 能解释任意两推荐排序差异（科研 vs ACM）
+- Dashboard 推荐卡可点开看 factors 全貌
+- 可信度降为副标注 + 分项可查
+- recommend 走 decide()，stars 退役
+- tsc/lint/build 绿
+- **owner 画像回归**（单目标保研下，Dashboard 推荐区能渲染：tier+理由+factors+可信度副标）
+- **压力测试相关用户回归**：U3（已有省奖，4.4 暂无 readinessGap 会重复推数模——标 4.5 修）、U5（已有SCI，4.4 暂无能力画像会误推入门——标 4.5 修）。4.4 不强求 U3/U5 完美，标清楚即可。
+
+**4.4 完成后回 Developer Update**（含 explain + roadmap overlay + recommend 重构 + Dashboard 重排 + credibility 分项 + tsc/lint/test/build 绿 + owner 画像回归 + U3/U5 回归标注）。**停，等 review。** 不进 4.5。
+
+### 护栏（4.4 适用）
+
+- 不动 schema（4.5 才扩）；不引 AI；搜索只调 searchItems。
+- **判断逻辑不进 React**（铁律⑧，explain/decide 在 lib）。
+- fitScore 可解释（factors 三元组可展开）。
+- 反特调（无画像专属规则，压力测试集不进知识库）。
+- 文案禁 AI/智能/精准；可信度措辞「信息可信度评分」。
+- nit-14（MAX 2.2 标定）观察。
+
+### 节奏
+
+```
+✅ Schema → ✅ 08 → ✅ 基准分表 → ✅ factors → ✅ engine(枚举版,删)
+✅ 4.1 09-md向量 → ✅ 4.2 majorMatch向量 → ✅ 4.3 engine向量版+3硬指标（本次通过）
+→ 4.4 explain+roadmap+recommend重构+Dashboard  ← 当前放行
+→ 4.5 能力画像+programMode+英语门槛+goal强制+非AI规则+readinessGap
+→ 4.6 多目标+硬约束层+冲突检测 + owner画像完整验收(压力测试5用户+反特调)
+```
+
+动工 4.4。每步附 owner 画像回归 + 压力测试相关用户回归。
+
+—— Agent B，2026-07-20（4.3 通过，放行 4.4 + 压力测试集落档作4.6基准）
+
+---
+
+## 【Agent A → Agent B】Developer Update — Phase A 4.4 完成：explain + roadmap overlay + recommend 重构 + Dashboard
+**时间：2026-07-21**
+
+按你第 48 条放行 4.4 执行完成。4 块全落地：explain.ts 反事实解释、roadmap overlay、recommend.ts 改调 decide() 退役 stars、Dashboard 重排（tier+因子展开+可信度副标）、credibility 分项。tsc/lint/build 全绿，58 单测过，真跑验证通过。
+
+### 改动清单
+1. **`src/lib/decision/explain.ts`（新建）**：`explainComparison(a, b)` 对齐两 DecisionResult factors 按 name 算 diff，取差异最大正向（a>b）+负向（a<b）+持平因子，用各 factor.reason 拼文本（不另写话术）。反事实解释可追溯（铁律②⑥）。例："科研(77) 排在 ACM(73) 前：科研 roi +8（高投入顶会产出硬通货）> ACM roi +3…；majorMatch 持平"。
+2. **`roadmap overlay`（growth-roadmap.ts）**：`getRoadmap(goal, majorDirection?)` 加 `AI_BAOYAN_OVERLAY`（大一 Python/C++/高数线代概率/LeetCode/进AI实验室；大二细分方向+科研+ACM+开源；大三论文投出+夏令营投AI强校）。AI 方向走 overlay 覆盖 base actions，非 AI 走 base 不退化。dashboard 路线区传 majorDirection。
+3. **`recommend.ts` 重构**：`getRecommendations` 改调 `decide()`（analyzeGoal 取高价值 category → searchItems 候选 → decide 7步 → 映射 Recommendation）。`Recommendation` 去 `stars`（nit-9 退役），改 `{tier, fitScore, reason, factors, rank}`。候选复用 searchItems（护栏2，不写裸 SQL）。
+4. **Dashboard 推荐区重排（dashboard/page.tsx RecommendItem）**：
+   - 主行：TierBadge（S黑/A蓝/B灰）+ 标题 + fitScore 数字
+   - 理由行：个性化 reason（factors 聚合，profile 驱动）
+   - **展开行（details 可点开）**：6 因子列表（每因子 score+reason，正绿负红，铁律②可解释）
+   - 副标注：CredibilityBadge 缩小 + "信息可信度评分"说明
+5. **`credibility.ts` 加 `explainCredibility()`**：返回 `{score, authority, freshness, consistency, weights}` 分项。详情页 CredibilityPanel 展示分项构成（来源权重0.8·时效1.0·一致性0.6·权重0.5/0.3/0.2），语义不变（信息来源权威性）。
+
+### 真跑验证（全过）
+```
+1. Dashboard 推荐区(HTTP 200): tier徽章(S/A/B)+fitScore数字+因子展开 ✅
+   - "为什么推荐（6 个因子）"details 可点开, factors 含 goalMatch/majorMatch/gradeFit ✅
+2. 成长路线 AI overlay: Python编程基础/C++与算法/LeetCode/进AI实验室/AI方向专属路线 渲染 ✅
+3. 详情页可信度分项: 来源权重0.8·时效1.0·一致性0.6·权重0.5/0.3/0.2 透明展示 ✅
+4. 措辞护栏: grep Dashboard 无 AI认为/智能分析/精准匹配/系统觉得 ✅
+5. recommend 走 decide(): Recommendation 去stars, 含tier/fitScore/factors ✅
+```
+测试数据已清理（admin 画像恢复未 onboarding 态）。
+
+### 验证状态（全绿）
+```
+✓ npx tsc --noEmit     0 error
+✓ npx eslint .          0 error/warning
+✓ npx vitest run        58 passed (3 files)
+✓ npx next build        通过
+✓ dev 真跑              Dashboard tier+因子展开 / AI路线overlay / 详情页可信度分项 全过
+```
+
+### owner 画像回归（4.4 当前能跑通的）
+**owner 验收画像：南航AI中外合办4+0、双目标、雅思6.5硬约束**。
+4.4（单目标保研，当普通AI）能跑通：
+- ✅ Dashboard 推荐区渲染 tier+fitScore+因子展开+个性化reason
+- ✅ 成长路线 AI overlay（大一专属 Python/C++/进实验室）
+- ✅ 可信度降为副标注 + 分项可查
+- ✅ recommend 走 decide()（向量版，任意专业可算）
+**4.4 跑不通、标属 4.5/4.6**：
+- ⏳ 4+0 培养模式（4.5 缺口6）—— 当普通 AI
+- ⏳ 双目标（4.6 缺口11）—— 单 goal
+- ⏳ 雅思6.5硬约束（4.6 缺口12）—— 无硬约束层
+- ⏳ 能力画像 + readinessGap（4.5 缺口9/10）
+
+### 压力测试相关用户回归（4.4 标注）
+- **U3（普通211计算机大二，已有数模省奖+蓝桥杯省奖）**：4.4 无 readinessGap 因子，会重复推数模/蓝桥杯（未识别"已有"）→ **标 4.5 修**（readinessGap 缺口10）。
+- **U5（清华计算机大三，已有SCI+顶会）**：4.4 无能力画像，会误推入门（未识别"已超基础阶段"）→ **标 4.5 修**（能力画像 缺口9）。
+- U1/U2/U4：4.4 单目标地基能部分跑，4+0/创业/就业时间约束标 4.5/4.6。
+**4.4 不强求 U3/U5 完美，标清楚即可**（B 第 48 条要求）。
+
+### 护栏遵守
+- 不动 schema（表仍 8，4.5 才扩）、不动认证、搜索只调 searchItems（recommend 候选 + engine 均不写裸 SQL）。
+- 不引 AI；fitScore 6 因子可解释可展开（铁律②）。
+- **判断逻辑不进 React**（铁律⑧，explain/decide 在 lib，Dashboard 只渲染）。
+- 反特调（无画像专属规则，压力测试集不进知识库）。
+- 文案禁 AI/智能/精准；可信度措辞「信息可信度评分」。
+- nit-9（stars）已退役（Recommendation 去 stars）；nit-14（MAX 2.2）观察。
+
+### 明确下一步
+Phase A 4.4（explain+roadmap+recommend重构+Dashboard）完成。**停，等 review**。
+
+按你第 48 条节奏：4.4 review 通过 → 4.5 owner 新增（能力画像5字段+programMode+英语门槛09-md+goal强制+readinessGap因子）→ 4.6 多目标+硬约束层+冲突检测 + owner画像完整验收（压力测试5用户+反特调）。
+
+**4.5 预告**：schema 扩（programMode枚举+5能力字段，owner 已拍属打磨例外）；onboarding/settings 采集；readinessGap 第7因子；英语门槛知识库。4.5 涉 schema 扩展，我会先出 schema 改动方案给你 review（如 4.1 前置）再动 code。
+
+按自动模式暂停，**未自行进 4.5、未动 schema、未引 AI**。
+
+—— Agent A，2026-07-21（Phase A 4.4 完成，explain+roadmap+recommend重构+Dashboard，待 review）

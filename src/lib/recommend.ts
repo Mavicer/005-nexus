@@ -1,22 +1,21 @@
 /**
- * 规则化推荐（P4-3，非 AI，从价值矩阵提取）
+ * 推荐入口（Phase A 4.4：改调 decision engine decide()，退役枚举版）。
  *
- * 价值矩阵：VALUE_MATRIX[goal][category] = { tier: S/A/B, reason }
+ * 价值矩阵：VALUE_MATRIX[goal][category] = { tier: S/A/B, reason }（base 维度，goalMatch 用）。
  * 数据源：`知识库-成长模型/01-机会价值矩阵.md` 手动结构化。
  *
- * Phase A 升级（B 第 36 条疑点 3 拍板）：
- *  - 退役 stars，改用 tier（S/A/B）。详情页与推荐列表统一 tier，避免双轨（铁律②）。
- *  - majorReason：专业方向专属理由（至少 AI 类），majorMatch 因子查询 knowledge 库的 tier，
- *    reason 用于个性化文案。Phase A 打通 AI 保研，其余方向走 base。
- *  - 注：getRecommendations 当前仍按 goal×category tier 取候选（向后兼容），
- *    Phase A 第三步 decision engine 接管后，本函数将改为调 decision engine。
+ * Phase A 4.4 升级（B 第 48 条）：
+ *  - getRecommendations 改调 decide()（decision engine 7 步推理链，向量版 majorMatch）。
+ *  - Recommendation 去 stars（nit-9 退役），改 {tier, fitScore, reason, factors}。
+ *  - 候选来源复用 searchItems（护栏2，engine 不写裸 SQL）。
  *
  * 护栏：复用 searchItems（不写裸 SQL）；文案无 AI/智能/精准；
  *       措辞「根据你的目标推荐」「适合你的机会」「经验参考」。
  */
-import type { Goal } from "@/db/schema-enums";
-import type { InfoCategory } from "@/db/schema-enums";
+import type { Goal, GoalGrade, InfoCategory, MajorDirection, SchoolTier } from "@/db/schema-enums";
 import { searchItems } from "@/lib/search";
+import { decide, analyzeGoal } from "@/lib/decision/engine";
+import type { DecisionProfile, DecisionOpportunity } from "@/lib/decision/factors";
 
 export interface ValueEntry {
   tier: "S" | "A" | "B"; // 价值分层（Phase A 替代 stars）
@@ -136,74 +135,117 @@ export interface Recommendation {
   credibilityScore: string | null;
   signUpEnd: Date | null;
   level: string | null;
-  /** Phase A：tier 替代 stars（向后兼容期，第三步 decision engine 接管后改 fitScore 主排序） */
+  /** Phase A 4.4：tier（来自 decision engine，S/A/B） */
   tier: "S" | "A" | "B";
-  /** @deprecated Phase A 退役 stars，保留只为 dashboard RecommendItem 过渡（第三步移除） */
-  stars: number;
+  /** 适配度总分（decision engine fitScore） */
+  fitScore: number;
+  /** 个性化理由（factors 聚合，profile 驱动，非静态模板） */
   reason: string;
+  /** 6 因子三元组（铁律②可展开，UI 可点开看全貌） */
+  factors?: { name: string; score: number; reason: string; source: string }[];
+  /** 排名（1-based） */
+  rank?: number;
 }
 
 /**
- * 按用户画像生成推荐
- * - 按 goal 查价值矩阵得高价值 category（S 优先）
- * - 各 category 复用 searchItems 查 top（按认可度/可信度）
- * - 合并 + 去重 + 按价值 tier 排序
+ * 按用户画像生成推荐（Phase A 4.4：改调 decision engine decide()，退役枚举版）。
  *
- * Phase A 过渡：本函数暂保留，第三步 decision engine 接管后改为调 decide()。
+ * 流程：
+ * 1. analyzeGoal(goal) 取该 goal 下高价值 category（tier 降序）
+ * 2. 各 category 复用 searchItems 查 top 候选（护栏2，不写裸 SQL）
+ * 3. decide(profile, candidates) 跑 7 步推理链 → DecisionResult[]
+ * 4. 映射为 Recommendation[]（带 tier/fitScore/reason/factors）
+ *
+ * 护栏：复用 searchItems（不写裸 SQL）；文案无 AI/智能/精准；
+ *       措辞「根据你的目标推荐」「适合你的机会」「经验参考」。
  */
 export async function getRecommendations(
-  profile: { goal: Goal | null; grade?: string | null; interests?: string[] | null } | null,
+  profile:
+    | {
+        goal: Goal | null;
+        schoolTier?: string | null;
+        majorDirection?: string | null;
+        major?: string | null;
+        grade?: GoalGrade | null;
+        interests?: string[] | null;
+      }
+    | null,
   limit = 6,
 ): Promise<Recommendation[]> {
   if (!profile?.goal) return [];
-  const goalMatrix = VALUE_MATRIX[profile.goal];
-  if (!goalMatrix) return [];
 
-  const tierRank: Record<"S" | "A" | "B", number> = { S: 3, A: 2, B: 1 };
+  // 1. 取该 goal 下高价值 category
+  const goalCats = analyzeGoal(profile.goal);
+  if (goalCats.length === 0) return [];
 
-  // 取该 goal 下所有有价值条目，按 tier 降序
-  const entries = Object.entries(goalMatrix)
-    .map(([cat, entry]) => ({
-      category: cat as InfoCategory,
-      entry: entry as ValueEntry,
-    }))
-    .sort((a, b) => tierRank[b.entry.tier] - tierRank[a.entry.tier]);
-
-  // 各 category 查 top 2（复用 searchItems，护栏2）
+  // 2. 各 category 复用 searchItems 查候选（护栏2，不写裸 SQL）
   const results = await Promise.all(
-    entries.map(async ({ category, entry }) => {
+    goalCats.map(async ({ category }) => {
       const r = await searchItems({
         filters: { category },
         sort: { by: "credibility" },
-        pageSize: 2,
+        pageSize: 3,
       });
-      return r.hits.map((h) => ({
-        id: h.id,
-        title: h.title,
-        summary: h.summary,
-        category: h.category as InfoCategory,
-        credibilityScore: h.credibilityScore,
-        signUpEnd: h.signUpEnd,
-        level: h.level,
-        tier: entry.tier,
-        stars: tierRank[entry.tier], // 过渡兼容（第三步移除）
-        reason: entry.reason,
-      }));
+      return r.hits;
     }),
   );
-
-  // 合并 + 去重 + 按 tier 降序
+  // 合并 + 去重（保留 hit 原始字段 summary/credibilityScore 供 Recommendation 用）
   const seen = new Set<string>();
-  const merged: Recommendation[] = [];
+  const candidateHits: {
+    id: string;
+    title: string;
+    summary: string | null;
+    category: string;
+    credibilityScore: string | null;
+    signUpEnd: Date | null;
+    level: string | null;
+  }[] = [];
   for (const items of results) {
     for (const it of items) {
       if (seen.has(it.id)) continue;
       seen.add(it.id);
-      merged.push(it);
+      candidateHits.push(it);
     }
   }
-  merged.sort((a, b) => tierRank[b.tier] - tierRank[a.tier]);
-  return merged.slice(0, limit);
+
+  // 转 DecisionOpportunity（level 需 cast 为 CompetitionLevel）
+  const candidates: DecisionOpportunity[] = candidateHits.map((h) => ({
+    id: h.id,
+    title: h.title,
+    category: h.category as InfoCategory,
+    level: h.level as DecisionOpportunity["level"],
+    recognition: undefined,
+    signUpEnd: h.signUpEnd,
+  }));
+
+  // 3. decision engine 跑 7 步推理链
+  const decisionProfile: DecisionProfile = {
+    goal: profile.goal,
+    schoolTier: (profile.schoolTier as SchoolTier | null) ?? null,
+    majorDirection: (profile.majorDirection as MajorDirection | null) ?? null,
+    majorText: profile.major ?? null,
+    grade: profile.grade ?? null,
+  };
+  const decisionResults = await decide(decisionProfile, candidates);
+
+  // 4. 映射为 Recommendation[]
+  return decisionResults.slice(0, limit).map((dr) => {
+    const hit = candidateHits.find((c) => c.id === dr.recommendation.id);
+    return {
+      id: dr.recommendation.id,
+      title: dr.recommendation.title,
+      summary: hit?.summary ?? null,
+      category: dr.recommendation.category,
+      credibilityScore: hit?.credibilityScore ?? null,
+      signUpEnd: dr.recommendation.signUpEnd ?? null,
+      level: dr.recommendation.level ?? null,
+      tier: dr.tier,
+      fitScore: dr.fitScore,
+      reason: dr.reason,
+      factors: dr.factors,
+      rank: dr.rank,
+    };
+  });
 }
 
 /** 推荐理由前缀（措辞合规，无 AI/智能/精准） */

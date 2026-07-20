@@ -20,6 +20,7 @@
 import { OFFICIAL_SOURCE_TYPES, SOURCE_TYPE_LABEL } from "@/lib/labels";
 import { HIGH_WEIGHT_THRESHOLD } from "@/lib/source-weights";
 import { getCredibilityTier } from "@/lib/design";
+import { explainCredibility, type CredibilityInput } from "@/lib/credibility";
 import type { InfoDetail } from "@/lib/info";
 
 type VerifyState = "yes" | "warn" | "no";
@@ -56,6 +57,17 @@ export function CredibilityPanel({ detail }: { detail: InfoDetail }) {
       <p className="mt-1 text-xs text-neutral-400">
         基于来源权重·时效·多源一致性综合评估，仅供参考，非真实性裁决。
       </p>
+
+      {/* 分项构成（Phase A 4.4：explainCredibility 透明展示，铁律②） */}
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-400">
+        <span>来源权重 {Number(verifications.authority).toFixed(1)}</span>
+        <span>·</span>
+        <span>时效 {Number(verifications.freshnessValue).toFixed(1)}</span>
+        <span>·</span>
+        <span>一致性 {Number(verifications.consistency).toFixed(1)}</span>
+        <span>·</span>
+        <span>权重 0.5/0.3/0.2</span>
+      </div>
 
       {/* 三验证 */}
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -220,6 +232,9 @@ function computeVerifications(detail: InfoDetail): {
   hasOfficial: VerifyState;
   crossVerified: VerifyState;
   freshness: VerifyState;
+  authority: number;
+  freshnessValue: number;
+  consistency: number;
 } {
   const sources = detail.sources;
 
@@ -239,7 +254,25 @@ function computeVerifications(detail: InfoDetail): {
   // 3. 最近更新（三态）
   const freshness = computeFreshnessState(detail);
 
-  return { hasOfficial, crossVerified, freshness };
+  // 分项（Phase A 4.4：explainCredibility 同源，铁律②透明）
+  const input: CredibilityInput = {
+    sources: sources.map((s) => ({
+      sourceType: s.sourceType as Parameters<typeof explainCredibility>[0]["sources"][number]["sourceType"],
+      authorityWeight: Number(s.authorityWeight),
+    })),
+    lastVerifiedAt: detail.lastVerifiedAt,
+    expireAt: detail.expireAt,
+  };
+  const breakdown = explainCredibility(input);
+
+  return {
+    hasOfficial,
+    crossVerified,
+    freshness,
+    authority: breakdown.authority,
+    freshnessValue: breakdown.freshness,
+    consistency: breakdown.consistency,
+  };
 }
 
 function computeFreshnessState(detail: InfoDetail): VerifyState {

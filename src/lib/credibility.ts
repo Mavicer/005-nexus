@@ -59,6 +59,34 @@ export function computeCredibilityScore(input: CredibilityInput): number {
   return Math.round(score * 100) / 100;
 }
 
+/** 可信度分项结果（Phase A 4.4：explainCredibility 透明展示，铁律②） */
+export interface CredibilityBreakdown {
+  /** 综合分（0-1） */
+  score: number;
+  /** 来源权威性（最高权重来源，0-1） */
+  authority: number;
+  /** 时效（≤6月1.0/6-12月0.7/>12月0.4/超期0.1） */
+  freshness: number;
+  /** 多源一致性（0.6-1.0） */
+  consistency: number;
+  /** 权重（来源0.5/时效0.3/一致性0.2，护栏3预留 feedback 扩展位） */
+  weights: Weights;
+}
+
+/**
+ * 可信度分项（Phase A 4.4）：返回 authority/freshness/consistency 各自分 + 综合分 + 权重。
+ * 供详情页 CredibilityPanel 透明展示「信息可信度评分依据」（护栏3：评分体系非真值，可解释）。
+ */
+export function explainCredibility(input: CredibilityInput): CredibilityBreakdown {
+  const { sources, lastVerifiedAt, expireAt } = input;
+  const now = input.now ?? new Date();
+  const authority = computeAuthority(sources);
+  const freshness = computeFreshness(lastVerifiedAt, expireAt, now);
+  const consistency = computeConsistency(sources);
+  const score = computeCredibilityScore(input);
+  return { score, authority, freshness, consistency, weights: CREDIBILITY_WEIGHTS };
+}
+
 /** authority = 最高权重来源的权重 */
 function computeAuthority(sources: SourceInfo[]): number {
   if (sources.length === 0) return 0;
