@@ -19,6 +19,9 @@ import type {
   EnglishLevel,
   InternshipLevel,
   HardConstraint,
+  MajorSubDirection,
+  TargetDirection,
+  TargetRole,
 } from "@/db/schema-enums";
 
 export interface ProfileInput {
@@ -37,6 +40,9 @@ export interface ProfileInput {
   goal?: Goal | null;
   goals?: Goal[] | null;
   hardConstraints?: HardConstraint[] | null;
+  majorSubDirection?: MajorSubDirection | null;
+  targetDirection?: TargetDirection | null;
+  targetRole?: TargetRole | null;
   interests?: string[] | null;
   onboardingCompleted?: boolean;
 }
@@ -58,6 +64,9 @@ export interface Profile {
   goal: Goal | null;
   goals: Goal[] | null;
   hardConstraints: HardConstraint[] | null;
+  majorSubDirection: MajorSubDirection | null;
+  targetDirection: TargetDirection | null;
+  targetRole: TargetRole | null;
   interests: string[] | null;
   onboardingCompleted: boolean;
 }
@@ -87,6 +96,9 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     goal: row.goal,
     goals: row.goals as Goal[] | null,
     hardConstraints: row.hardConstraints as HardConstraint[] | null,
+    majorSubDirection: row.majorSubDirection,
+    targetDirection: row.targetDirection,
+    targetRole: row.targetRole,
     interests: row.interests,
     onboardingCompleted: row.onboardingCompleted,
   };
@@ -116,6 +128,9 @@ export async function upsertProfile(
       goal: input.goal ?? null,
       goals: input.goals ?? null,
       hardConstraints: input.hardConstraints ?? null,
+      majorSubDirection: input.majorSubDirection ?? null,
+      targetDirection: input.targetDirection ?? null,
+      targetRole: input.targetRole ?? null,
       interests: input.interests ?? null,
       onboardingCompleted: input.onboardingCompleted ?? false,
     })
@@ -137,6 +152,9 @@ export async function upsertProfile(
         goal: input.goal ?? null,
         goals: input.goals ?? null,
         hardConstraints: input.hardConstraints ?? null,
+        majorSubDirection: input.majorSubDirection ?? null,
+        targetDirection: input.targetDirection ?? null,
+        targetRole: input.targetRole ?? null,
         interests: input.interests ?? null,
         ...(input.onboardingCompleted !== undefined && {
           onboardingCompleted: input.onboardingCompleted,
@@ -164,6 +182,9 @@ export async function upsertProfile(
     goal: row.goal,
     goals: row.goals as Goal[] | null,
     hardConstraints: row.hardConstraints as HardConstraint[] | null,
+    majorSubDirection: row.majorSubDirection,
+    targetDirection: row.targetDirection,
+    targetRole: row.targetRole,
     interests: row.interests,
     onboardingCompleted: row.onboardingCompleted,
   };

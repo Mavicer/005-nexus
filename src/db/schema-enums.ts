@@ -16,6 +16,9 @@ import type {
   competitionCapabilityEnum,
   englishLevelEnum,
   internshipLevelEnum,
+  majorSubDirectionEnum,
+  targetDirectionEnum,
+  targetRoleEnum,
 } from "./schema";
 
 export type InfoCategory =
@@ -48,6 +51,14 @@ export type EnglishLevel =
   (typeof englishLevelEnum)["enumValues"][number];
 export type InternshipLevel =
   (typeof internshipLevelEnum)["enumValues"][number];
+
+// Phase A+ A1：专业子方向 + 目标方向/岗位（owner 授权打磨例外）
+export type MajorSubDirection =
+  (typeof majorSubDirectionEnum)["enumValues"][number];
+export type TargetDirection =
+  (typeof targetDirectionEnum)["enumValues"][number];
+export type TargetRole =
+  (typeof targetRoleEnum)["enumValues"][number];
 
 // Phase A 4.6：硬约束类型（source 强约束 user_declared，system_inferred 禁止进 priority）
 export interface HardConstraint {

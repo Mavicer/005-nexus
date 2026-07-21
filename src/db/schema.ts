@@ -185,6 +185,51 @@ export const internshipLevelEnum = pgEnum("internship_level", [
   "has",
 ]);
 
+// Phase A+ A1：专业子方向 + 目标方向/岗位两级（owner 授权打磨例外，Agent B 第 62 条放行）
+// majorSubDirection：专业大类下的子方向（覆盖压力测试5模型全学科）
+export const majorSubDirectionEnum = pgEnum("major_sub_direction", [
+  // 自动化类
+  "auto_control", "auto_embedded", "auto_robotics", "auto_ai_cross",
+  // CS 类
+  "cs_frontend", "cs_backend", "cs_security", "cs_data",
+  // EE 类（非自动化）
+  "ee_signal", "ee_power", "ee_comm",
+  // AI 类细分
+  "ai_vision_dev", "ai_nlp_dev", "ai_llm_eng",
+  // 经管类
+  "biz_finance", "biz_marketing", "biz_ops",
+  // 医学类（压力测试模型1）
+  "med_clinical", "med_research", "med_basic",
+  // 艺术类（模型3）
+  "art_visual", "art_digital", "art_product",
+  // 文学类（模型5）
+  "eng_translation", "eng_education", "eng_business", "eng_literature",
+  // 兜底
+  "other",
+]);
+
+// targetDirection：目标方向（1级必填，含 exploration 覆盖迷茫用户）
+export const targetDirectionEnum = pgEnum("target_direction", [
+  "tech_research",
+  "tech_engineering",
+  "product_design",
+  "business_ops",
+  "research_academic",
+  "public_service",
+  "exploration",
+]);
+
+// targetRole：目标岗位（2级可选，含 undecided）
+export const targetRoleEnum = pgEnum("target_role", [
+  "embedded_engineer", "control_engineer", "algorithm_engineer",
+  "frontend_engineer", "backend_engineer", "data_engineer",
+  "product_manager", "designer",
+  "researcher", "phd_candidate",
+  "operations", "marketing",
+  "clinical_doctor", "teacher",
+  "undecided",
+]);
+
 // ============================================================
 // 1. info_items — 信息共享核心表
 // ============================================================
@@ -436,6 +481,10 @@ export const userProfiles = pgTable(
     goals: text("goals").array(),
     // hardConstraints: 硬约束 JSON 数组，source 必须 user_declared（system_inferred 禁止进 priority）
     hardConstraints: jsonb("hard_constraints"),
+    // Phase A+ A1：专业子方向 + 目标方向/岗位两级（owner 授权打磨例外）
+    majorSubDirection: majorSubDirectionEnum("major_sub_direction"),
+    targetDirection: targetDirectionEnum("target_direction"),
+    targetRole: targetRoleEnum("target_role"),
     onboardingCompleted: boolean("onboarding_completed")
       .notNull()
       .default(false),

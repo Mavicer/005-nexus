@@ -17,6 +17,9 @@ import type {
   CompetitionCapability,
   EnglishLevel,
   InternshipLevel,
+  MajorSubDirection,
+  TargetDirection,
+  TargetRole,
 } from "@/db/schema-enums";
 
 const GRADES: { value: GoalGrade; label: string }[] = [
@@ -110,6 +113,76 @@ const INTERNSHIP_LEVELS: { value: InternshipLevel; label: string }[] = [
   { value: "has", label: "有实习经历" },
 ];
 
+// Phase A+ A1：专业子方向（按 majorDirection 联动，二级下拉）
+const SUB_DIRECTIONS_BY_MAJOR: Record<string, { value: MajorSubDirection; label: string }[]> = {
+  ai_general: [
+    { value: "ai_vision_dev", label: "AI 视觉开发" },
+    { value: "ai_nlp_dev", label: "AI NLP 开发" },
+    { value: "ai_llm_eng", label: "大模型工程" },
+  ],
+  ai_cv: [{ value: "ai_vision_dev", label: "AI 视觉开发" }],
+  ai_nlp: [{ value: "ai_nlp_dev", label: "AI NLP 开发" }],
+  ai_llm: [{ value: "ai_llm_eng", label: "大模型工程" }],
+  ai_robotics: [{ value: "auto_robotics", label: "机器人方向" }],
+  cs_general: [
+    { value: "cs_frontend", label: "前端" },
+    { value: "cs_backend", label: "后端" },
+    { value: "cs_security", label: "安全" },
+    { value: "cs_data", label: "数据" },
+  ],
+  ee_general: [
+    { value: "auto_control", label: "自动化·控制" },
+    { value: "auto_embedded", label: "自动化·嵌入式" },
+    { value: "auto_robotics", label: "自动化·机器人" },
+    { value: "auto_ai_cross", label: "自动化·AI交叉" },
+    { value: "ee_signal", label: "信号处理" },
+    { value: "ee_power", label: "电力" },
+    { value: "ee_comm", label: "通信" },
+  ],
+  business_general: [
+    { value: "biz_finance", label: "金融" },
+    { value: "biz_marketing", label: "市场营销" },
+    { value: "biz_ops", label: "运营" },
+  ],
+  other: [],
+};
+
+// Phase A+ A1：目标方向（1级必填，含 exploration）+ 目标岗位（2级可选）
+const TARGET_DIRECTIONS: { value: TargetDirection; label: string; desc: string }[] = [
+  { value: "tech_research", label: "技术深造", desc: "读研/博士" },
+  { value: "tech_engineering", label: "技术研发工程", desc: "嵌入式/算法/前后端" },
+  { value: "product_design", label: "产品与设计", desc: "产品经理/设计师" },
+  { value: "business_ops", label: "商业运营", desc: "运营/市场" },
+  { value: "research_academic", label: "科研学术", desc: "科研/学术" },
+  { value: "public_service", label: "公共服务", desc: "考公/选调" },
+  { value: "exploration", label: "方向探索", desc: "还没确定方向，先探索" },
+];
+const TARGET_ROLES_BY_DIRECTION: Record<string, { value: TargetRole; label: string }[]> = {
+  tech_engineering: [
+    { value: "embedded_engineer", label: "嵌入式工程师" },
+    { value: "control_engineer", label: "控制工程师" },
+    { value: "algorithm_engineer", label: "算法工程师" },
+    { value: "frontend_engineer", label: "前端工程师" },
+    { value: "backend_engineer", label: "后端工程师" },
+    { value: "data_engineer", label: "数据工程师" },
+  ],
+  product_design: [
+    { value: "product_manager", label: "产品经理" },
+    { value: "designer", label: "设计师" },
+  ],
+  research_academic: [
+    { value: "researcher", label: "科研人员" },
+    { value: "phd_candidate", label: "博士候选人" },
+  ],
+  business_ops: [
+    { value: "operations", label: "运营" },
+    { value: "marketing", label: "市场" },
+  ],
+  tech_research: [{ value: "phd_candidate", label: "博士候选人" }],
+  public_service: [{ value: "undecided", label: "暂不确定" }],
+  exploration: [{ value: "undecided", label: "暂不确定" }],
+};
+
 interface ProfileData {
   school: string;
   major: string;
@@ -126,6 +199,9 @@ interface ProfileData {
   goal: Goal | null;
   goals: Goal[] | null;
   hardConstraints: HardConstraint[] | null;
+  majorSubDirection: MajorSubDirection | null;
+  targetDirection: TargetDirection | null;
+  targetRole: TargetRole | null;
   interests: string[];
 }
 
@@ -152,6 +228,9 @@ export function OnboardingForm({ next }: { next: string }) {
     goal: null,
     goals: null,
     hardConstraints: null,
+    majorSubDirection: null,
+    targetDirection: null,
+    targetRole: null,
     interests: [],
   });
   const [saving, setSaving] = useState(false);
@@ -179,6 +258,9 @@ export function OnboardingForm({ next }: { next: string }) {
           grade: data.grade,
           goal: data.goals?.[0] ?? data.goal,
           goals: data.goals,
+          majorSubDirection: data.majorSubDirection,
+          targetDirection: data.targetDirection,
+          targetRole: data.targetRole,
           interests: data.interests,
           onboardingCompleted: completed,
         }),
@@ -281,6 +363,7 @@ export function OnboardingForm({ next }: { next: string }) {
                 setData({
                   ...data,
                   majorDirection: (e.target.value || null) as MajorDirection | null,
+                  majorSubDirection: null, // 切换专业方向重置子方向
                 })
               }
               className={inputCls}
@@ -293,6 +376,31 @@ export function OnboardingForm({ next }: { next: string }) {
               ))}
             </select>
           </div>
+          {/* Phase A+ A1：专业子方向（二级联动，选 majorDirection 后显示对应子方向） */}
+          {data.majorDirection && (SUB_DIRECTIONS_BY_MAJOR[data.majorDirection] ?? []).length > 0 && (
+            <div>
+              <label className="mb-1 block text-xs text-neutral-500">
+                专业子方向（细化推荐，可跳过）
+              </label>
+              <select
+                value={data.majorSubDirection ?? ""}
+                onChange={(e) =>
+                  setData({
+                    ...data,
+                    majorSubDirection: (e.target.value || null) as MajorSubDirection | null,
+                  })
+                }
+                className={inputCls}
+              >
+                <option value="">选择子方向（可跳过）</option>
+                {(SUB_DIRECTIONS_BY_MAJOR[data.majorDirection] ?? []).map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Phase A 4.5：培养模式（programMode）+ isGoAbroad 联动 */}
           <div>
             <label className="mb-1 block text-xs text-neutral-500">
@@ -412,6 +520,62 @@ export function OnboardingForm({ next }: { next: string }) {
               );
             })}
           </div>
+          {/* Phase A+ A1：目标方向（1级必填）+ 目标岗位（2级可选联动） */}
+          <div>
+            <label className="mb-1 block text-xs text-neutral-500">
+              目标方向（成长方向，必选1个）
+            </label>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {TARGET_DIRECTIONS.map((d) => (
+                <button
+                  key={d.value}
+                  type="button"
+                  onClick={() =>
+                    setData({
+                      ...data,
+                      targetDirection: d.value as TargetDirection,
+                      targetRole: d.value === "exploration" ? "undecided" : null,
+                    })
+                  }
+                  className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                    data.targetDirection === d.value
+                      ? "border-neutral-900 bg-neutral-50"
+                      : "border-neutral-200 hover:border-neutral-300"
+                  }`}
+                >
+                  <p className="text-sm font-medium text-neutral-900">{d.label}</p>
+                  <p className="mt-0.5 text-xs text-neutral-400">{d.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* 目标岗位（2级，选 targetDirection 后联动，可跳过） */}
+          {data.targetDirection &&
+            data.targetDirection !== "exploration" &&
+            (TARGET_ROLES_BY_DIRECTION[data.targetDirection] ?? []).length > 0 && (
+              <div>
+                <label className="mb-1 block text-xs text-neutral-500">
+                  目标岗位（细化推荐，可跳过/暂不确定）
+                </label>
+                <select
+                  value={data.targetRole ?? ""}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      targetRole: (e.target.value || null) as TargetRole | null,
+                    })
+                  }
+                  className={inputCls}
+                >
+                  <option value="">选择岗位（可跳过）</option>
+                  {(TARGET_ROLES_BY_DIRECTION[data.targetDirection] ?? []).map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           <NavRow
             onBack={() => setStep(2)}
             onSkip={() => submit(false)}
@@ -420,6 +584,11 @@ export function OnboardingForm({ next }: { next: string }) {
               const hasGoal = (data.goals && data.goals.length > 0) || data.goal;
               if (!hasGoal) {
                 setError("请选择至少 1 个主目标，系统据此推荐");
+                return;
+              }
+              // Phase A+ A1：targetDirection 1级必填
+              if (!data.targetDirection) {
+                setError("请选择目标方向（或方向探索）");
                 return;
               }
               setError(null);
@@ -616,6 +785,9 @@ export {
   SCHOOL_TIERS,
   MAJOR_DIRECTIONS,
   PROGRAM_MODES,
+  SUB_DIRECTIONS_BY_MAJOR,
+  TARGET_DIRECTIONS,
+  TARGET_ROLES_BY_DIRECTION,
   GPA_TIERS,
   RESEARCH_LEVELS,
   COMPETITION_LEVELS,

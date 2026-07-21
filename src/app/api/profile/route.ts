@@ -3,6 +3,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { upsertProfile, type ProfileInput } from "@/lib/profile";
 import type {
+  MajorSubDirection,
+  TargetDirection,
+  TargetRole,
   GoalGrade,
   Goal,
   SchoolTier,
@@ -62,6 +65,29 @@ const VALID_COMPETITION_LEVELS: CompetitionCapability[] = [
 ];
 const VALID_ENGLISH_LEVELS: EnglishLevel[] = ["none", "cet", "ielts_toefl"];
 const VALID_INTERNSHIP_LEVELS: InternshipLevel[] = ["none", "has"];
+
+// Phase A+ A1：专业子方向 + 目标方向/岗位校验
+const VALID_MAJOR_SUB_DIRECTIONS: MajorSubDirection[] = [
+  "auto_control", "auto_embedded", "auto_robotics", "auto_ai_cross",
+  "cs_frontend", "cs_backend", "cs_security", "cs_data",
+  "ee_signal", "ee_power", "ee_comm",
+  "ai_vision_dev", "ai_nlp_dev", "ai_llm_eng",
+  "biz_finance", "biz_marketing", "biz_ops",
+  "med_clinical", "med_research", "med_basic",
+  "art_visual", "art_digital", "art_product",
+  "eng_translation", "eng_education", "eng_business", "eng_literature",
+  "other",
+];
+const VALID_TARGET_DIRECTIONS: TargetDirection[] = [
+  "tech_research", "tech_engineering", "product_design",
+  "business_ops", "research_academic", "public_service", "exploration",
+];
+const VALID_TARGET_ROLES: TargetRole[] = [
+  "embedded_engineer", "control_engineer", "algorithm_engineer",
+  "frontend_engineer", "backend_engineer", "data_engineer",
+  "product_manager", "designer", "researcher", "phd_candidate",
+  "operations", "marketing", "clinical_doctor", "teacher", "undecided",
+];
 
 /**
  * POST /api/profile — upsert 用户画像（登录守卫）
@@ -163,6 +189,27 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "硬约束 priority 需为 high/mid/low" }, { status: 400 });
       }
     }
+  }
+
+  // Phase A+ A1：专业子方向 + 目标方向/岗位校验
+  if (
+    body.majorSubDirection &&
+    !VALID_MAJOR_SUB_DIRECTIONS.includes(body.majorSubDirection)
+  ) {
+    return NextResponse.json({ error: "无效专业子方向" }, { status: 400 });
+  }
+  if (
+    body.targetDirection &&
+    !VALID_TARGET_DIRECTIONS.includes(body.targetDirection)
+  ) {
+    return NextResponse.json({ error: "无效目标方向" }, { status: 400 });
+  }
+  if (body.targetRole && !VALID_TARGET_ROLES.includes(body.targetRole)) {
+    return NextResponse.json({ error: "无效目标岗位" }, { status: 400 });
+  }
+  // exploration 时 targetRole 必须 undecided（探索态无岗位）
+  if (body.targetDirection === "exploration" && body.targetRole && body.targetRole !== "undecided") {
+    return NextResponse.json({ error: "方向探索态目标岗位须为 undecided" }, { status: 400 });
   }
 
   const profile = await upsertProfile(user.userId, body);

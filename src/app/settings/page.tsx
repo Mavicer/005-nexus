@@ -41,6 +41,9 @@ export default async function SettingsPage() {
     goal: profile?.goal ?? null,
     goals: profile?.goals ?? null,
     hardConstraints: profile?.hardConstraints ?? null,
+    majorSubDirection: profile?.majorSubDirection ?? null,
+    targetDirection: profile?.targetDirection ?? null,
+    targetRole: profile?.targetRole ?? null,
     interests: profile?.interests ?? [],
   };
 
