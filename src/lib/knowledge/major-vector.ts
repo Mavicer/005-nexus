@@ -220,11 +220,14 @@ const NEUTRAL_VECTOR: MajorVector = {
 /**
  * 专业名 → 能力向量（classifyMajor，通用归一，不靠枚举）。
  *
+ * Phase A+ A2：改四向量组合融合（非固定子方向向量）。
  * 流程：
- * 1. 按 DISCIPLINE_KEYWORDS 匹配教育部门类 → 取基准向量
- * 2. 命中门类后，按 SUBTYPE_KEYWORD_ADJUST 微调（同门类关键词 delta 加减）
- * 3. clamp 各轴到 [0, 1]
- * 4. 门类都未命中 → 落中性向量（各轴 0.3），confidence 0.2（不报错不 0 分，给通用推荐）
+ * 1. 按 DISCIPLINE_KEYWORDS 匹配教育部门类 → 取基准向量（向后兼容，无 majorSubDirection 时走原逻辑）
+ * 2. 命中门类后，按 SUBTYPE_KEYWORD_ADJUST 微调
+ * 3. 若有 majorSubDirection → 查 SUB_DIRECTION_VECTORS 覆盖（子方向向量优先于门类基准）
+ * 4. 四向量融合（子方向×w1 + 目标方向×w2 + 能力×w3 + 阶段×w4），缺向量归零不报错
+ * 5. clamp 各轴到 [0, 1]
+ * 6. 门类都未命中 → 落中性向量（各轴 0.3），confidence 0.2
  *
  * confidence：0.8 命中门类+细分 / 0.6 只门类 / 0.2 归一失败
  */
@@ -274,6 +277,220 @@ export function classifyMajor(majorText: string | null): ClassifyResult {
     vector,
     discipline: matchedDiscipline,
     confidence: hasSubtypeMatch ? 0.8 : 0.6,
+  };
+}
+
+// ============================================================
+// Phase A+ A2：四向量组合融合（子方向 + 目标方向 + 能力 + 阶段）
+// ============================================================
+
+import type {
+  MajorSubDirection,
+  TargetDirection,
+  GoalGrade,
+  GpaTier,
+  ResearchLevel,
+  CompetitionCapability,
+  EnglishLevel,
+  InternshipLevel,
+} from "@/db/schema-enums";
+
+/** 四向量融合入参 */
+export interface FusionInput {
+  majorText: string | null;
+  majorSubDirection?: MajorSubDirection | null;
+  targetDirection?: TargetDirection | null;
+  grade?: GoalGrade | null;
+  gpaTier?: GpaTier | null;
+  researchLevel?: ResearchLevel | null;
+  competitionCapability?: CompetitionCapability | null;
+  englishLevel?: EnglishLevel | null;
+  internshipLevel?: InternshipLevel | null;
+}
+
+/** 融合结果 */
+export interface FusionResult extends ClassifyResult {
+  /** 使用的子方向（若有） */
+  subDirection: MajorSubDirection | null;
+  /** 使用的目标方向（若有） */
+  targetDirection: TargetDirection | null;
+  /** 融合来源说明（可追溯） */
+  fusionSource: string;
+}
+
+/** 专业子方向向量（镜像 09-md，覆盖 28 子方向） */
+export const SUB_DIRECTION_VECTORS: Partial<Record<MajorSubDirection, MajorVector>> = {
+  // 自动化类
+  auto_control: { math: 0.7, research: 0.4, clinical: 0, engineering: 0.9, humanities: 0.1, business: 0.2, arts: 0.1 },
+  auto_embedded: { math: 0.6, research: 0.4, clinical: 0, engineering: 1.0, humanities: 0.1, business: 0.2, arts: 0.1 },
+  auto_robotics: { math: 0.7, research: 0.5, clinical: 0, engineering: 0.9, humanities: 0.1, business: 0.2, arts: 0.1 },
+  auto_ai_cross: { math: 0.8, research: 0.6, clinical: 0, engineering: 0.8, humanities: 0.1, business: 0.2, arts: 0.1 },
+  // CS 类
+  cs_frontend: { math: 0.5, research: 0.3, clinical: 0, engineering: 0.9, humanities: 0.2, business: 0.3, arts: 0.4 },
+  cs_backend: { math: 0.6, research: 0.4, clinical: 0, engineering: 1.0, humanities: 0.1, business: 0.2, arts: 0.1 },
+  cs_security: { math: 0.7, research: 0.5, clinical: 0, engineering: 0.9, humanities: 0.1, business: 0.2, arts: 0.1 },
+  cs_data: { math: 0.9, research: 0.6, clinical: 0, engineering: 0.7, humanities: 0.2, business: 0.4, arts: 0.1 },
+  // EE 类
+  ee_signal: { math: 0.8, research: 0.5, clinical: 0, engineering: 0.8, humanities: 0.1, business: 0.2, arts: 0.1 },
+  ee_power: { math: 0.6, research: 0.4, clinical: 0, engineering: 0.9, humanities: 0.1, business: 0.2, arts: 0.1 },
+  ee_comm: { math: 0.7, research: 0.4, clinical: 0, engineering: 0.9, humanities: 0.1, business: 0.2, arts: 0.1 },
+  // AI 细分
+  ai_vision_dev: { math: 0.8, research: 0.8, clinical: 0, engineering: 0.9, humanities: 0.1, business: 0.2, arts: 0.1 },
+  ai_nlp_dev: { math: 0.8, research: 0.8, clinical: 0, engineering: 0.9, humanities: 0.2, business: 0.2, arts: 0.1 },
+  ai_llm_eng: { math: 0.8, research: 0.8, clinical: 0, engineering: 1.0, humanities: 0.1, business: 0.2, arts: 0.1 },
+  // 经管
+  biz_finance: { math: 0.7, research: 0.3, clinical: 0, engineering: 0.2, humanities: 0.2, business: 1.0, arts: 0.1 },
+  biz_marketing: { math: 0.4, research: 0.3, clinical: 0, engineering: 0.2, humanities: 0.4, business: 0.9, arts: 0.3 },
+  biz_ops: { math: 0.4, research: 0.3, clinical: 0, engineering: 0.3, humanities: 0.4, business: 0.9, arts: 0.2 },
+  // 医学类（模型1）
+  med_clinical: { math: 0.4, research: 0.6, clinical: 1.0, engineering: 0.2, humanities: 0.2, business: 0.1, arts: 0.1 },
+  med_research: { math: 0.5, research: 0.9, clinical: 0.6, engineering: 0.2, humanities: 0.2, business: 0.1, arts: 0.1 },
+  med_basic: { math: 0.6, research: 0.8, clinical: 0.5, engineering: 0.3, humanities: 0.2, business: 0.1, arts: 0.1 },
+  // 艺术类（模型3）
+  art_visual: { math: 0.1, research: 0.2, clinical: 0, engineering: 0.3, humanities: 0.4, business: 0.5, arts: 1.0 },
+  art_digital: { math: 0.2, research: 0.3, clinical: 0, engineering: 0.5, humanities: 0.4, business: 0.5, arts: 0.9 },
+  art_product: { math: 0.3, research: 0.4, clinical: 0, engineering: 0.6, humanities: 0.4, business: 0.5, arts: 0.7 },
+  // 文学类（模型5）
+  eng_translation: { math: 0.1, research: 0.3, clinical: 0, engineering: 0.1, humanities: 0.9, business: 0.3, arts: 0.2 },
+  eng_education: { math: 0.2, research: 0.4, clinical: 0, engineering: 0.1, humanities: 0.8, business: 0.4, arts: 0.3 },
+  eng_business: { math: 0.3, research: 0.3, clinical: 0, engineering: 0.2, humanities: 0.7, business: 0.8, arts: 0.2 },
+  eng_literature: { math: 0.1, research: 0.4, clinical: 0, engineering: 0.1, humanities: 0.9, business: 0.2, arts: 0.3 },
+  // other 走 base
+  other: { math: 0.4, research: 0.4, clinical: 0.3, engineering: 0.4, humanities: 0.4, business: 0.4, arts: 0.3 },
+};
+
+/** 目标方向向量（7 值） */
+export const TARGET_DIRECTION_VECTORS: Partial<Record<TargetDirection, MajorVector>> = {
+  tech_research: { math: 0.8, research: 0.9, clinical: 0.2, engineering: 0.7, humanities: 0.2, business: 0.2, arts: 0.1 },
+  tech_engineering: { math: 0.7, research: 0.5, clinical: 0, engineering: 1.0, humanities: 0.1, business: 0.2, arts: 0.1 },
+  product_design: { math: 0.3, research: 0.4, clinical: 0, engineering: 0.5, humanities: 0.6, business: 0.7, arts: 0.8 },
+  business_ops: { math: 0.4, research: 0.3, clinical: 0, engineering: 0.2, humanities: 0.5, business: 1.0, arts: 0.3 },
+  research_academic: { math: 0.7, research: 1.0, clinical: 0.5, engineering: 0.4, humanities: 0.5, business: 0.2, arts: 0.2 },
+  public_service: { math: 0.4, research: 0.4, clinical: 0.3, engineering: 0.3, humanities: 0.6, business: 0.5, arts: 0.2 },
+  exploration: { math: 0.4, research: 0.4, clinical: 0.3, engineering: 0.4, humanities: 0.4, business: 0.4, arts: 0.3 },
+};
+
+/** 年级阶段向量（从 grade 派生） */
+function gradeStageVector(grade: GoalGrade | null): MajorVector {
+  if (grade === "freshman") {
+    return { math: 0.7, research: 0.3, clinical: 0.2, engineering: 0.6, humanities: 0.3, business: 0.3, arts: 0.2 };
+  }
+  if (grade === "sophomore") {
+    return { math: 0.6, research: 0.5, clinical: 0.3, engineering: 0.7, humanities: 0.3, business: 0.4, arts: 0.2 };
+  }
+  if (grade === "junior") {
+    return { math: 0.5, research: 0.7, clinical: 0.5, engineering: 0.6, humanities: 0.3, business: 0.5, arts: 0.2 };
+  }
+  if (grade === "senior") {
+    return { math: 0.3, research: 0.6, clinical: 0.4, engineering: 0.4, humanities: 0.3, business: 0.6, arts: 0.2 };
+  }
+  return { ...NEUTRAL_VECTOR };
+}
+
+/** 用户能力向量（从 5 维能力派生） */
+function capabilityVector(input: FusionInput): MajorVector {
+  const v: MajorVector = { ...NEUTRAL_VECTOR };
+  // gpaTier → math 高
+  if (input.gpaTier === "top5") v.math = 0.8;
+  else if (input.gpaTier === "top20") v.math = 0.7;
+  // researchLevel → research
+  if (input.researchLevel === "paper") v.research = 0.9;
+  else if (input.researchLevel === "project") v.research = 0.6;
+  // competitionCapability → engineering/math
+  if (input.competitionCapability === "national") { v.engineering = 0.7; v.math = Math.max(v.math, 0.6); }
+  else if (input.competitionCapability === "provincial") { v.engineering = 0.5; }
+  // englishLevel → humanities
+  if (input.englishLevel === "ielts_toefl") v.humanities = 0.8;
+  else if (input.englishLevel === "cet") v.humanities = 0.5;
+  // internshipLevel → business/engineering
+  if (input.internshipLevel === "has") { v.business = 0.6; v.engineering = Math.max(v.engineering, 0.5); }
+  return v;
+}
+
+/** 四向量融合权重（可调，缺向量归零不报错） */
+export const FUSION_WEIGHTS = {
+  subDirection: 0.4,
+  targetDirection: 0.25,
+  capability: 0.2,
+  stage: 0.15,
+};
+
+/**
+ * 四向量融合（Phase A+ A2 核心）：子方向 + 目标方向 + 能力 + 阶段。
+ *
+ * 流程：
+ * 1. 基础向量 = classifyMajor(majorText) 或子方向向量（majorSubDirection 优先）
+ * 2. 融合 = base×w_base + subDir×w1 + targetDir×w2 + capability×w3 + stage×w4
+ *    缺向量该权重归零，其余归一，不报错。
+ * 3. clamp 到 [0, 1]
+ *
+ * 模型1 med_clinical → 子方向向量 clinical=1.0 命中（不落 other）。
+ * 模型3 art_visual → arts=1.0 命中。
+ * 模型5 eng_business → humanities=0.7 business=0.8 命中。
+ */
+export function classifyMajorFusion(input: FusionInput): FusionResult {
+  // 1. 基础向量（classifyMajor 门类归一）
+  const base = classifyMajor(input.majorText);
+
+  // 2. 子方向向量（若有，优先于门类基准覆盖 base.vector）
+  let subDirVector: MajorVector | null = null;
+  if (input.majorSubDirection) {
+    subDirVector = SUB_DIRECTION_VECTORS[input.majorSubDirection] ?? null;
+  }
+
+  // 3. 目标方向向量
+  let targetDirVector: MajorVector | null = null;
+  if (input.targetDirection) {
+    targetDirVector = TARGET_DIRECTION_VECTORS[input.targetDirection] ?? null;
+  }
+
+  // 4. 能力向量
+  const capVector = capabilityVector(input);
+
+  // 5. 阶段向量
+  const stageVector = gradeStageVector(input.grade ?? null);
+
+  // 6. 加权融合（缺向量归零，其余归一）
+  // 若有 subDirVector → 用它替代 base.vector 作为"子方向"分量（更精准）
+  const subDirComponent = subDirVector ?? base.vector;
+  const fusionSources: string[] = [];
+  if (subDirVector) fusionSources.push(`subDir:${input.majorSubDirection}`);
+  else fusionSources.push(`majorText:${input.majorText}`);
+
+  // 计算各分量权重（缺向量归零，其余归一到原权重和）
+  const hasTarget = !!targetDirVector;
+  const hasCap = !!(input.gpaTier || input.researchLevel || input.competitionCapability || input.englishLevel || input.internshipLevel);
+  const hasStage = !!input.grade;
+
+  // 归一权重
+  const wSub = FUSION_WEIGHTS.subDirection;
+  const wTarget = hasTarget ? FUSION_WEIGHTS.targetDirection : 0;
+  const wCap = hasCap ? FUSION_WEIGHTS.capability : 0;
+  const wStage = hasStage ? FUSION_WEIGHTS.stage : 0;
+  const totalW = wSub + wTarget + wCap + wStage || 1;
+
+  const fused: MajorVector = { ...NEUTRAL_VECTOR };
+  for (const axis of AXES) {
+    const val =
+      (subDirComponent[axis] * wSub +
+        (targetDirVector ? targetDirVector[axis] * wTarget : 0) +
+        capVector[axis] * wCap +
+        stageVector[axis] * wStage) /
+      totalW;
+    fused[axis] = clamp01(val);
+  }
+
+  if (hasTarget) fusionSources.push(`targetDir:${input.targetDirection}`);
+  if (hasCap) fusionSources.push("capability");
+  if (hasStage) fusionSources.push(`stage:${input.grade}`);
+
+  return {
+    vector: fused,
+    discipline: base.discipline,
+    confidence: subDirVector ? 0.9 : base.confidence,
+    subDirection: input.majorSubDirection ?? null,
+    targetDirection: input.targetDirection ?? null,
+    fusionSource: fusionSources.join("+"),
   };
 }
 
