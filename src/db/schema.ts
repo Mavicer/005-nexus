@@ -145,6 +145,9 @@ export const majorDirectionEnum = pgEnum("major_direction", [
   "cs_general",
   "ee_general",
   "business_general",
+  "medicine",
+  "art",
+  "humanities",
   "other",
 ]);
 
@@ -247,6 +250,8 @@ export const infoItems = pgTable(
     applicableScopeValue: text("applicable_scope_value"),
     status: infoStatusEnum("status").notNull().default("draft"),
     credibilityScore: numeric("credibility_score", { precision: 3, scale: 2 }),
+    // Phase 转型：专业资源库 relatedMajors 标签（按 MajorCategory 过滤资源）
+    relatedMajors: text("related_majors").array(),
     lastVerifiedAt: timestamp("last_verified_at", { withTimezone: true }),
     lastUpdatedAt: timestamp("last_updated_at", { withTimezone: true })
       .notNull()

@@ -28,6 +28,12 @@ export async function Header() {
           >
             探索
           </Link>
+          <Link
+            href="/calendar"
+            className="text-sm text-neutral-600 hover:text-neutral-900"
+          >
+            资源日历
+          </Link>
           {user ? (
             <details className="group relative">
               <summary className="flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded-full bg-neutral-900 text-xs font-medium text-white">
@@ -41,7 +47,7 @@ export async function Header() {
                   href="/dashboard"
                   className="block rounded px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50"
                 >
-                  我的收藏
+                  专业资源库
                 </Link>
                 <form action="/api/auth/logout" method="post">
                   <button

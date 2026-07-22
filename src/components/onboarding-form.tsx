@@ -2,25 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { MajorDirection, GoalGrade } from "@/db/schema-enums";
 
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import type {
-  HardConstraint,
-  GoalGrade,
-  Goal,
-  SchoolTier,
-  MajorDirection,
-  ProgramMode,
-  GpaTier,
-  ResearchLevel,
-  CompetitionCapability,
-  EnglishLevel,
-  InternshipLevel,
-  MajorSubDirection,
-  TargetDirection,
-  TargetRole,
-} from "@/db/schema-enums";
+/**
+ * Onboarding 简化版（专业资源库转型）
+ * 只采集：专业 + 专业方向 + 年级（3 步→1 步单页）
+ * 删除：学校层次/培养模式/能力自评/硬约束/目标方向/岗位/兴趣
+ */
+
+const MAJOR_DIRECTIONS: { value: MajorDirection; label: string; desc: string }[] = [
+  { value: "ai_general", label: "人工智能", desc: "AI / 机器学习 / 深度学习" },
+  { value: "cs_general", label: "计算机 / 软件", desc: "编程 / 系统 / 数据" },
+  { value: "ee_general", label: "电子 / 通信 / 自动化", desc: "EE / 自动化 / 信号" },
+  { value: "business_general", label: "经管 / 商科", desc: "经济 / 管理 / 金融" },
+  { value: "medicine", label: "医学 / 生命科学", desc: "临床 / 康复 / 药学" },
+  { value: "art", label: "艺术 / 设计", desc: "视觉 / 数字媒体 / 设计" },
+  { value: "humanities", label: "人文 / 外语", desc: "文学 / 语言 / 教育" },
+  { value: "other", label: "其他", desc: "未覆盖方向" },
+];
 
 const GRADES: { value: GoalGrade; label: string }[] = [
   { value: "freshman", label: "大一" },
@@ -29,768 +28,103 @@ const GRADES: { value: GoalGrade; label: string }[] = [
   { value: "senior", label: "大四" },
 ];
 
-const GOALS: { value: Goal; label: string; desc: string }[] = [
-  { value: "baoyan", label: "保研", desc: "争取推免读研" },
-  { value: "employment", label: "就业", desc: "毕业直接工作" },
-  { value: "civilService", label: "考公", desc: "公务员/事业编" },
-  { value: "abroad", label: "出国", desc: "海外深造" },
-  { value: "entrepreneurship", label: "创业", desc: "自主创业" },
-];
-
-// Phase A：学校层次（把自由文本 school 归一成可计算的层次，影响学校×机会门槛错配）
-const SCHOOL_TIERS: { value: SchoolTier; label: string; desc: string }[] = [
-  { value: "C9", label: "C9", desc: "清北复交浙科南哈+中科大" },
-  { value: "c985", label: "其他 985", desc: "除 C9 外的 985 高校" },
-  { value: "c211", label: "211", desc: "211 工程高校" },
-  { value: "doubleFirst", label: "双一流", desc: "双一流非 211" },
-  { value: "other", label: "其他", desc: "普通本科/其他" },
-];
-
-// Phase A：专业方向（把自由文本 major 归一成可计算的方向，影响专业×机会价值分流）
-// AI 类先做细分（5 项），其余类占位走通用路线
-const MAJOR_DIRECTIONS: {
-  value: MajorDirection;
-  label: string;
-  desc: string;
-}[] = [
-  { value: "ai_general", label: "人工智能（通用）", desc: "AI 方向，尚未细分" },
-  { value: "ai_cv", label: "AI · 计算机视觉", desc: "图像/视频/CV" },
-  { value: "ai_nlp", label: "AI · 自然语言", desc: "NLP/对话/搜索" },
-  { value: "ai_llm", label: "AI · 大模型", desc: "LLM/预训练" },
-  { value: "ai_robotics", label: "AI · 机器人", desc: "具身/控制" },
-  { value: "cs_general", label: "计算机 / 软件", desc: "非 AI 的 CS 方向" },
-  { value: "ee_general", label: "电子 / 通信", desc: "EE 方向" },
-  { value: "business_general", label: "经管 / 商科", desc: "经济/管理/金融" },
-  { value: "other", label: "其他", desc: "未覆盖方向" },
-];
-
-const INTERESTS = [
-  "AI / 人工智能",
-  "计算机 / 软件",
-  "电子 / 通信",
-  "金融 / 经济",
-  "科研 / 学术",
-  "医学 / 生命科学",
-  "人文 / 社科",
-  "法学",
-  "艺术 / 设计",
-  "教育",
-  "管理 / 商科",
-];
-
-// Phase A 4.5：培养模式（programMode，中外合办4+0 影响出国通道）
-const PROGRAM_MODES: { value: ProgramMode; label: string; desc: string }[] = [
-  { value: "regular", label: "普通", desc: "普通培养" },
-  { value: "sino_foreign", label: "中外合办", desc: "中外合作办学" },
-  { value: "joint", label: "联合培养", desc: "联合培养项目" },
-  { value: "independent", label: "独立学院", desc: "独立学院" },
-];
-
-// Phase A 4.5：能力画像 5 维（经验区间，非固定分数线）
-const GPA_TIERS: { value: GpaTier; label: string }[] = [
-  { value: "top5", label: "前 5%（高绩点）" },
-  { value: "top20", label: "前 20%" },
-  { value: "top50", label: "前 50%" },
-  { value: "below", label: "后 50%" },
-];
-const RESEARCH_LEVELS: { value: ResearchLevel; label: string }[] = [
-  { value: "none", label: "暂无" },
-  { value: "project", label: "有项目经历" },
-  { value: "paper", label: "有论文产出" },
-];
-const COMPETITION_LEVELS: { value: CompetitionCapability; label: string }[] = [
-  { value: "none", label: "暂无" },
-  { value: "provincial", label: "省级奖" },
-  { value: "national", label: "国家级奖" },
-];
-const ENGLISH_LEVELS: { value: EnglishLevel; label: string }[] = [
-  { value: "none", label: "暂无" },
-  { value: "cet", label: "四六级" },
-  { value: "ielts_toefl", label: "雅思/托福" },
-];
-const INTERNSHIP_LEVELS: { value: InternshipLevel; label: string }[] = [
-  { value: "none", label: "暂无" },
-  { value: "has", label: "有实习经历" },
-];
-
-// Phase A+ A1：专业子方向（按 majorDirection 联动，二级下拉）
-const SUB_DIRECTIONS_BY_MAJOR: Record<string, { value: MajorSubDirection; label: string }[]> = {
-  ai_general: [
-    { value: "ai_vision_dev", label: "AI 视觉开发" },
-    { value: "ai_nlp_dev", label: "AI NLP 开发" },
-    { value: "ai_llm_eng", label: "大模型工程" },
-  ],
-  ai_cv: [{ value: "ai_vision_dev", label: "AI 视觉开发" }],
-  ai_nlp: [{ value: "ai_nlp_dev", label: "AI NLP 开发" }],
-  ai_llm: [{ value: "ai_llm_eng", label: "大模型工程" }],
-  ai_robotics: [{ value: "auto_robotics", label: "机器人方向" }],
-  cs_general: [
-    { value: "cs_frontend", label: "前端" },
-    { value: "cs_backend", label: "后端" },
-    { value: "cs_security", label: "安全" },
-    { value: "cs_data", label: "数据" },
-  ],
-  ee_general: [
-    { value: "auto_control", label: "自动化·控制" },
-    { value: "auto_embedded", label: "自动化·嵌入式" },
-    { value: "auto_robotics", label: "自动化·机器人" },
-    { value: "auto_ai_cross", label: "自动化·AI交叉" },
-    { value: "ee_signal", label: "信号处理" },
-    { value: "ee_power", label: "电力" },
-    { value: "ee_comm", label: "通信" },
-  ],
-  business_general: [
-    { value: "biz_finance", label: "金融" },
-    { value: "biz_marketing", label: "市场营销" },
-    { value: "biz_ops", label: "运营" },
-  ],
-  other: [],
-};
-
-// Phase A+ A1：目标方向（1级必填，含 exploration）+ 目标岗位（2级可选）
-const TARGET_DIRECTIONS: { value: TargetDirection; label: string; desc: string }[] = [
-  { value: "tech_research", label: "技术深造", desc: "读研/博士" },
-  { value: "tech_engineering", label: "技术研发工程", desc: "嵌入式/算法/前后端" },
-  { value: "product_design", label: "产品与设计", desc: "产品经理/设计师" },
-  { value: "business_ops", label: "商业运营", desc: "运营/市场" },
-  { value: "research_academic", label: "科研学术", desc: "科研/学术" },
-  { value: "public_service", label: "公共服务", desc: "考公/选调" },
-  { value: "exploration", label: "方向探索", desc: "还没确定方向，先探索" },
-];
-const TARGET_ROLES_BY_DIRECTION: Record<string, { value: TargetRole; label: string }[]> = {
-  tech_engineering: [
-    { value: "embedded_engineer", label: "嵌入式工程师" },
-    { value: "control_engineer", label: "控制工程师" },
-    { value: "algorithm_engineer", label: "算法工程师" },
-    { value: "frontend_engineer", label: "前端工程师" },
-    { value: "backend_engineer", label: "后端工程师" },
-    { value: "data_engineer", label: "数据工程师" },
-  ],
-  product_design: [
-    { value: "product_manager", label: "产品经理" },
-    { value: "designer", label: "设计师" },
-  ],
-  research_academic: [
-    { value: "researcher", label: "科研人员" },
-    { value: "phd_candidate", label: "博士候选人" },
-  ],
-  business_ops: [
-    { value: "operations", label: "运营" },
-    { value: "marketing", label: "市场" },
-  ],
-  tech_research: [{ value: "phd_candidate", label: "博士候选人" }],
-  public_service: [{ value: "undecided", label: "暂不确定" }],
-  exploration: [{ value: "undecided", label: "暂不确定" }],
-};
-
-interface ProfileData {
-  school: string;
-  major: string;
-  schoolTier: SchoolTier | null;
-  majorDirection: MajorDirection | null;
-  programMode: ProgramMode | null;
-  isGoAbroad: boolean | null;
-  gpaTier: GpaTier | null;
-  researchLevel: ResearchLevel | null;
-  competitionCapability: CompetitionCapability | null;
-  englishLevel: EnglishLevel | null;
-  internshipLevel: InternshipLevel | null;
-  grade: GoalGrade | null;
-  goal: Goal | null;
-  goals: Goal[] | null;
-  hardConstraints: HardConstraint[] | null;
-  majorSubDirection: MajorSubDirection | null;
-  targetDirection: TargetDirection | null;
-  targetRole: TargetRole | null;
-  interests: string[];
-}
-
-/**
- * Onboarding 多步表单（client state 分步，单页）
- * 步骤 1/2/3/4，跳过→onboardingCompleted=false，完成→true
- */
 export function OnboardingForm({ next }: { next: string }) {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [data, setData] = useState<ProfileData>({
-    school: "",
-    major: "",
-    schoolTier: null,
-    majorDirection: null,
-    programMode: null,
-    isGoAbroad: null,
-    gpaTier: null,
-    researchLevel: null,
-    competitionCapability: null,
-    englishLevel: null,
-    internshipLevel: null,
-    grade: null,
-    goal: null,
-    goals: null,
-    hardConstraints: null,
-    majorSubDirection: null,
-    targetDirection: null,
-    targetRole: null,
-    interests: [],
-  });
-  const [saving, setSaving] = useState(false);
+  const [major, setMajor] = useState("");
+  const [majorDirection, setMajorDirection] = useState<MajorDirection | null>(null);
+  const [grade, setGrade] = useState<GoalGrade | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function submit(completed: boolean) {
-    setSaving(true);
+  async function submit() {
     setError(null);
+    setLoading(true);
     try {
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          school: data.school || null,
-          major: data.major || null,
-          schoolTier: data.schoolTier,
-          majorDirection: data.majorDirection,
-          programMode: data.programMode,
-          isGoAbroad: data.isGoAbroad,
-          gpaTier: data.gpaTier,
-          researchLevel: data.researchLevel,
-          competitionCapability: data.competitionCapability,
-          englishLevel: data.englishLevel,
-          internshipLevel: data.internshipLevel,
-          grade: data.grade,
-          goal: data.goals?.[0] ?? data.goal,
-          goals: data.goals,
-          majorSubDirection: data.majorSubDirection,
-          targetDirection: data.targetDirection,
-          targetRole: data.targetRole,
-          interests: data.interests,
-          onboardingCompleted: completed,
+          major: major || null,
+          majorDirection,
+          grade,
+          onboardingCompleted: true,
         }),
       });
-      const r = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setError(r.error ?? "保存失败");
+        setError("保存失败，请重试");
         return;
       }
-      router.push(next);
-      router.refresh();
+      router.push(next || "/dashboard");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
 
-  function toggleInterest(i: string) {
-    setData((d) => ({
-      ...d,
-      interests: d.interests.includes(i)
-        ? d.interests.filter((x) => x !== i)
-        : [...d.interests, i],
-    }));
-  }
-
   return (
-    <Card className="p-5">
-      {/* 进度指示 */}
-      <div className="mb-5 flex items-center gap-2">
-        {[1, 2, 3, 4].map((n) => (
-          <div
-            key={n}
-            className={`h-1.5 flex-1 rounded-full ${
-              n <= step ? "bg-neutral-900" : "bg-neutral-200"
-            }`}
-          />
-        ))}
-        <span className="ml-2 text-xs text-neutral-400">{step}/4</span>
+    <div className="space-y-5">
+      <div>
+        <label className="mb-1 block text-xs text-neutral-500">专业名称（可选）</label>
+        <input
+          value={major}
+          onChange={(e) => setMajor(e.target.value)}
+          placeholder="如 人工智能 / 金融学 / 康复医学"
+          className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
+        />
       </div>
 
-      {step === 1 && (
-        <div className="space-y-4">
-          <h2 className="text-base font-medium text-neutral-900">
-            你的学校与专业
-          </h2>
-          <p className="text-xs text-neutral-400">
-            可选，便于推荐更精准的机会
-          </p>
-          <div>
-            <label className="mb-1 block text-xs text-neutral-500">学校</label>
-            <input
-              value={data.school}
-              onChange={(e) => setData({ ...data, school: e.target.value })}
-              placeholder="如 清华大学"
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-neutral-500">
-              学校层次（经验参考，影响机会门槛适配）
-            </label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {SCHOOL_TIERS.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() =>
-                    setData({ ...data, schoolTier: t.value as SchoolTier })
-                  }
-                  className={`rounded-lg border px-3 py-2 text-left transition-colors ${
-                    data.schoolTier === t.value
-                      ? "border-neutral-900 bg-neutral-50"
-                      : "border-neutral-200 hover:border-neutral-300"
-                  }`}
-                >
-                  <p className="text-sm font-medium text-neutral-900">
-                    {t.label}
-                  </p>
-                  <p className="mt-0.5 text-xs text-neutral-400">{t.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-neutral-500">专业</label>
-            <input
-              value={data.major}
-              onChange={(e) => setData({ ...data, major: e.target.value })}
-              placeholder="如 计算机科学与技术"
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-neutral-500">
-              专业方向（决定推荐侧重点，可跳过走通用路线）
-            </label>
-            <select
-              value={data.majorDirection ?? ""}
-              onChange={(e) =>
-                setData({
-                  ...data,
-                  majorDirection: (e.target.value || null) as MajorDirection | null,
-                  majorSubDirection: null, // 切换专业方向重置子方向
-                })
-              }
-              className={inputCls}
-            >
-              <option value="">选择专业方向（可跳过）</option>
-              {MAJOR_DIRECTIONS.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label} — {d.desc}
-                </option>
-              ))}
-            </select>
-          </div>
-          {/* Phase A+ A1：专业子方向（二级联动，选 majorDirection 后显示对应子方向） */}
-          {data.majorDirection && (SUB_DIRECTIONS_BY_MAJOR[data.majorDirection] ?? []).length > 0 && (
-            <div>
-              <label className="mb-1 block text-xs text-neutral-500">
-                专业子方向（细化推荐，可跳过）
-              </label>
-              <select
-                value={data.majorSubDirection ?? ""}
-                onChange={(e) =>
-                  setData({
-                    ...data,
-                    majorSubDirection: (e.target.value || null) as MajorSubDirection | null,
-                  })
-                }
-                className={inputCls}
-              >
-                <option value="">选择子方向（可跳过）</option>
-                {(SUB_DIRECTIONS_BY_MAJOR[data.majorDirection] ?? []).map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          {/* Phase A 4.5：培养模式（programMode）+ isGoAbroad 联动 */}
-          <div>
-            <label className="mb-1 block text-xs text-neutral-500">
-              培养模式（中外合办等影响出国通道，可跳过）
-            </label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {PROGRAM_MODES.map((m) => (
-                <button
-                  key={m.value}
-                  type="button"
-                  onClick={() =>
-                    setData({ ...data, programMode: m.value as ProgramMode })
-                  }
-                  className={`rounded-lg border px-2 py-2 text-sm transition-colors ${
-                    data.programMode === m.value
-                      ? "border-neutral-900 bg-neutral-900 text-white"
-                      : "border-neutral-200 hover:border-neutral-300"
-                  }`}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* 中外合办→显示 4+0 不出国勾选 */}
-          {data.programMode === "sino_foreign" && (
-            <div className="flex items-center gap-2">
-              <input
-                id="isGoAbroad"
-                type="checkbox"
-                checked={data.isGoAbroad === true}
-                onChange={(e) =>
-                  setData({ ...data, isGoAbroad: e.target.checked })
-                }
-                className="h-4 w-4 rounded border-neutral-300"
-              />
-              <label htmlFor="isGoAbroad" className="text-xs text-neutral-600">
-                4+0 不出国（在国内完成全部学业，出国通道权重降低）
-              </label>
-            </div>
-          )}
-          <NavRow
-            onSkip={() => submit(false)}
-            onNext={() => setStep(2)}
-            saving={saving}
-          />
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-4">
-          <h2 className="text-base font-medium text-neutral-900">你的年级</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {GRADES.map((g) => (
-              <button
-                key={g.value}
-                type="button"
-                onClick={() => setData({ ...data, grade: g.value })}
-                className={`rounded-lg border px-3 py-3 text-sm transition-colors ${
-                  data.grade === g.value
-                    ? "border-neutral-900 bg-neutral-900 text-white"
-                    : "border-neutral-200 hover:border-neutral-300"
-                }`}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-          <NavRow
-            onBack={() => setStep(1)}
-            onSkip={() => submit(false)}
-            onNext={() => setStep(3)}
-            saving={saving}
-          />
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="space-y-4">
-          <h2 className="text-base font-medium text-neutral-900">
-            你的主目标
-          </h2>
-          <p className="text-xs text-neutral-400">
-            选 1-2 个目标（主目标权重高，次目标补充），必选至少 1 个才能继续
-          </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {GOALS.map((g) => {
-              const isSelected = data.goals?.includes(g.value) ?? false;
-              const isPrimary = data.goals?.[0] === g.value;
-              return (
-                <button
-                  key={g.value}
-                  type="button"
-                  onClick={() => {
-                    const current = data.goals ?? [];
-                    // 已选→取消；未选→追加（最多2）
-                    if (isSelected) {
-                      setData({ ...data, goals: current.filter((x) => x !== g.value), goal: current[0] ?? data.goal });
-                    } else if (current.length < 2) {
-                      const next = [...current, g.value];
-                      setData({ ...data, goals: next, goal: next[0]! });
-                    }
-                  }}
-                  className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                    isSelected
-                      ? "border-neutral-900 bg-neutral-50"
-                      : "border-neutral-200 hover:border-neutral-300"
-                  }`}
-                >
-                  <p className="text-sm font-medium text-neutral-900">
-                    {g.label}
-                    {isPrimary && <span className="ml-1 text-xs text-neutral-500">（主）</span>}
-                    {isSelected && !isPrimary && <span className="ml-1 text-xs text-neutral-400">（次）</span>}
-                  </p>
-                  <p className="mt-0.5 text-xs text-neutral-500">{g.desc}</p>
-                </button>
-              );
-            })}
-          </div>
-          {/* Phase A+ A1：目标方向（1级必填）+ 目标岗位（2级可选联动） */}
-          <div>
-            <label className="mb-1 block text-xs text-neutral-500">
-              目标方向（成长方向，必选1个）
-            </label>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {TARGET_DIRECTIONS.map((d) => (
-                <button
-                  key={d.value}
-                  type="button"
-                  onClick={() =>
-                    setData({
-                      ...data,
-                      targetDirection: d.value as TargetDirection,
-                      targetRole: d.value === "exploration" ? "undecided" : null,
-                    })
-                  }
-                  className={`rounded-lg border px-3 py-2 text-left transition-colors ${
-                    data.targetDirection === d.value
-                      ? "border-neutral-900 bg-neutral-50"
-                      : "border-neutral-200 hover:border-neutral-300"
-                  }`}
-                >
-                  <p className="text-sm font-medium text-neutral-900">{d.label}</p>
-                  <p className="mt-0.5 text-xs text-neutral-400">{d.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* 目标岗位（2级，选 targetDirection 后联动，可跳过） */}
-          {data.targetDirection &&
-            data.targetDirection !== "exploration" &&
-            (TARGET_ROLES_BY_DIRECTION[data.targetDirection] ?? []).length > 0 && (
-              <div>
-                <label className="mb-1 block text-xs text-neutral-500">
-                  目标岗位（细化推荐，可跳过/暂不确定）
-                </label>
-                <select
-                  value={data.targetRole ?? ""}
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      targetRole: (e.target.value || null) as TargetRole | null,
-                    })
-                  }
-                  className={inputCls}
-                >
-                  <option value="">选择岗位（可跳过）</option>
-                  {(TARGET_ROLES_BY_DIRECTION[data.targetDirection] ?? []).map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          <NavRow
-            onBack={() => setStep(2)}
-            onSkip={() => submit(false)}
-            onNext={() => {
-              // Phase A 4.5：goal 强制选（owner 决策3），不选不能进步骤4
-              const hasGoal = (data.goals && data.goals.length > 0) || data.goal;
-              if (!hasGoal) {
-                setError("请选择至少 1 个主目标，系统据此推荐");
-                return;
-              }
-              // Phase A+ A1：targetDirection 1级必填
-              if (!data.targetDirection) {
-                setError("请选择目标方向（或方向探索）");
-                return;
-              }
-              setError(null);
-              setStep(4);
-            }}
-            saving={saving}
-          />
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-4">
-          <h2 className="text-base font-medium text-neutral-900">
-            兴趣与能力自评
-          </h2>
-          <p className="text-xs text-neutral-400">
-            帮助推荐匹配的机会，能力自评影响门槛适配（经验参考，可跳过）
-          </p>
-          {/* 两栏：左兴趣 chips，右能力自评下拉 */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* 左栏：兴趣 */}
-            <div>
-              <p className="mb-1.5 text-xs text-neutral-500">兴趣方向（多选）</p>
-              <div className="flex flex-wrap gap-1.5">
-                {INTERESTS.map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => toggleInterest(i)}
-                    className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                      data.interests.includes(i)
-                        ? "border-neutral-900 bg-neutral-900 text-white"
-                        : "border-neutral-200 text-neutral-600 hover:border-neutral-300"
-                    }`}
-                  >
-                    {i}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* 右栏：能力自评 5 下拉 */}
-            <div className="space-y-2">
-              <p className="text-xs text-neutral-500">能力自评（可跳过）</p>
-              <CapabilitySelect
-                label="GPA 档位"
-                value={data.gpaTier}
-                options={GPA_TIERS}
-                onChange={(v) =>
-                  setData({ ...data, gpaTier: v as GpaTier | null })
-                }
-              />
-              <CapabilitySelect
-                label="科研经历"
-                value={data.researchLevel}
-                options={RESEARCH_LEVELS}
-                onChange={(v) =>
-                  setData({ ...data, researchLevel: v as ResearchLevel | null })
-                }
-              />
-              <CapabilitySelect
-                label="竞赛水平"
-                value={data.competitionCapability}
-                options={COMPETITION_LEVELS}
-                onChange={(v) =>
-                  setData({
-                    ...data,
-                    competitionCapability: v as CompetitionCapability | null,
-                  })
-                }
-              />
-              <CapabilitySelect
-                label="英语水平"
-                value={data.englishLevel}
-                options={ENGLISH_LEVELS}
-                onChange={(v) =>
-                  setData({ ...data, englishLevel: v as EnglishLevel | null })
-                }
-              />
-              <CapabilitySelect
-                label="实习经历"
-                value={data.internshipLevel}
-                options={INTERNSHIP_LEVELS}
-                onChange={(v) =>
-                  setData({
-                    ...data,
-                    internshipLevel: v as InternshipLevel | null,
-                  })
-                }
-              />
-            </div>
-          </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3 pt-2">
-            <Button
+      <div>
+        <label className="mb-2 block text-xs text-neutral-500">专业方向（选择后展示相关资源）</label>
+        <div className="grid grid-cols-2 gap-2">
+          {MAJOR_DIRECTIONS.map((d) => (
+            <button
+              key={d.value}
               type="button"
-              variant="secondary"
-              onClick={() => setStep(3)}
-              disabled={saving}
+              onClick={() => setMajorDirection(d.value)}
+              className={`rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                majorDirection === d.value
+                  ? "border-neutral-900 bg-neutral-900 text-white"
+                  : "border-neutral-200 hover:border-neutral-300"
+              }`}
             >
-              上一步
-            </Button>
-            <Button
-              type="button"
-              onClick={() => submit(false)}
-              disabled={saving}
-              variant="ghost"
-            >
-              跳过
-            </Button>
-            <Button
-              type="button"
-              onClick={() => submit(true)}
-              disabled={saving}
-            >
-              {saving ? "保存中…" : "完成"}
-            </Button>
-          </div>
+              <p className="text-sm font-medium">{d.label}</p>
+              <p className={`text-xs ${majorDirection === d.value ? "text-neutral-300" : "text-neutral-400"}`}>
+                {d.desc}
+              </p>
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
-      {error && step !== 4 && <p className="text-sm text-red-600">{error}</p>}
-    </Card>
-  );
-}
+      <div>
+        <label className="mb-2 block text-xs text-neutral-500">年级</label>
+        <div className="flex gap-2">
+          {GRADES.map((g) => (
+            <button
+              key={g.value}
+              type="button"
+              onClick={() => setGrade(g.value)}
+              className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                grade === g.value
+                  ? "border-neutral-900 bg-neutral-900 text-white"
+                  : "border-neutral-200 hover:border-neutral-300"
+              }`}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-/** 能力自评下拉（紧凑） */
-function CapabilitySelect<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T | null;
-  options: { value: T; label: string }[];
-  onChange: (v: T | null) => void;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 text-xs text-neutral-500">{label}</span>
-      <select
-        value={value ?? ""}
-        onChange={(e) => onChange((e.target.value || null) as T | null)}
-        className="flex-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 focus:border-neutral-400 focus:outline-none"
+      {error && <p className="text-sm text-red-600">{error}</p>}
+
+      <button
+        type="button"
+        onClick={submit}
+        disabled={loading || !majorDirection}
+        className="inline-flex w-full items-center justify-center rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50"
       >
-        <option value="">未选</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+        {loading ? "保存中…" : "完成，查看资源"}
+      </button>
     </div>
   );
 }
-
-const inputCls =
-  "w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300";
-
-function NavRow({
-  onBack,
-  onSkip,
-  onNext,
-  saving,
-}: {
-  onBack?: () => void;
-  onSkip: () => void;
-  onNext: () => void;
-  saving: boolean;
-}) {
-  return (
-    <div className="flex gap-3 pt-2">
-      {onBack && (
-        <Button type="button" variant="secondary" onClick={onBack} disabled={saving}>
-          上一步
-        </Button>
-      )}
-      <Button type="button" onClick={onSkip} disabled={saving} variant="ghost">
-        跳过
-      </Button>
-      <Button type="button" onClick={onNext} disabled={saving}>
-        下一步
-      </Button>
-    </div>
-  );
-}
-
-export { inputCls };
-export type { ProfileData };
-export {
-  GRADES,
-  GOALS,
-  INTERESTS,
-  SCHOOL_TIERS,
-  MAJOR_DIRECTIONS,
-  PROGRAM_MODES,
-  SUB_DIRECTIONS_BY_MAJOR,
-  TARGET_DIRECTIONS,
-  TARGET_ROLES_BY_DIRECTION,
-  GPA_TIERS,
-  RESEARCH_LEVELS,
-  COMPETITION_LEVELS,
-  ENGLISH_LEVELS,
-  INTERNSHIP_LEVELS,
-};

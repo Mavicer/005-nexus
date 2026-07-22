@@ -3,13 +3,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { listFavorites, groupFavorites, type FavoriteItem } from "@/lib/favorites";
 import { getProfile } from "@/lib/profile";
-import { getRoadmap, isCurrentStage, type RoadmapStage } from "@/lib/growth-roadmap";
-import { searchItems } from "@/lib/search";
-import {
-  getRecommendations,
-  recommendReasonPrefix,
-  type Recommendation,
-} from "@/lib/recommend";
+import { getMajorResources } from "@/lib/major-resources";
+import { matchMajorCategory, type MajorCategory } from "@/lib/knowledge/major-resource-map";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -19,8 +14,7 @@ import { Tag } from "@/components/ui/tag";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FavoriteItemCard } from "@/components/favorite-item-card";
 import { CredibilityBadge } from "@/components/ui/badge";
-import { LEVEL_LABEL } from "@/lib/labels";
-import type { Goal, GoalGrade } from "@/db/schema-enums";
+import type { InfoCategory } from "@/db/schema-enums";
 
 export const dynamic = "force-dynamic";
 
@@ -31,17 +25,28 @@ const GRADE_LABEL: Record<string, string> = {
   senior: "大四",
 };
 
-const GOAL_LABEL: Record<string, string> = {
-  baoyan: "保研",
-  employment: "就业",
-  civilService: "考公",
-  abroad: "出国",
-  entrepreneurship: "创业",
+const CATEGORY_LABELS: Record<string, string> = {
+  competition: "竞赛",
+  research: "科研",
+  internship: "实习",
+  exam: "认证考试",
+  opportunity: "学习平台/项目",
+  baoyan: "夏令营",
+  scholarship: "奖学金",
 };
 
+const CATEGORY_ORDER: InfoCategory[] = [
+  "competition",
+  "research",
+  "internship",
+  "exam",
+  "opportunity",
+  "baoyan",
+];
+
 /**
- * Dashboard（P4-2 升级：用户画像 + 成长路线 + 收藏）
- * 护栏：个人成长空间非后台，路线只读，措辞「经验参考」
+ * 专业资源库（Dashboard 转型版）
+ * 不再计算适配度/因子/成长路线，纯专业分类资源导航。
  */
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -59,43 +64,78 @@ export default async function DashboardPage() {
     );
   }
 
-  // profile 先取（recommendations 依赖 goal），再并发取其余
   const profile = await getProfile(user.userId);
-  const [favorites, userRow, recommendations] = await Promise.all([
+  const [favorites, userRow] = await Promise.all([
     listFavorites(user.userId),
     db
       .select({ createdAt: users.createdAt })
       .from(users)
       .where(eq(users.id, user.userId))
       .limit(1),
-    getRecommendations(profile),
   ]);
   const createdAt = userRow[0]?.createdAt;
-  const goal = profile?.goal ?? null;
   const grade = profile?.grade ?? null;
   const favGroups = groupFavorites(favorites);
+
+  // 从用户专业推断 MajorCategory
+  const majorText = profile?.major ?? null;
+  const majorDirection = profile?.majorDirection ?? null;
+  const majorCategory = matchMajorCategory(majorText, majorDirection as MajorCategory | null);
+
+  // 取该专业分类的资源
+  const majorResources = majorCategory
+    ? await getMajorResources(majorCategory)
+    : null;
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-8">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-          我的成长空间
+          专业资源库
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">{user.email}</p>
+        <p className="mt-1 text-sm text-neutral-500">
+          {majorCategory
+            ? `根据你的专业（${majorCategory.label}），发现相关成长资源`
+            : "完善专业信息后，查看相关成长资源"}
+        </p>
       </header>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-5">
-          {/* 根据你的目标推荐（P4-3 新增） */}
-          {goal ? (
-            <RecommendSection goal={goal} recommendations={recommendations} />
+          {/* 专业资源分类展示 */}
+          {majorResources && majorCategory ? (
+            <>
+              {CATEGORY_ORDER.map((cat) => {
+                const items = majorResources[cat];
+                if (!items || items.length === 0) return null;
+                return (
+                  <ResourceCategorySection
+                    key={cat}
+                    category={cat}
+                    items={items}
+                  />
+                );
+              })}
+
+              {/* 专业技能（静态展示） */}
+              {majorCategory.skills.length > 0 && (
+                <Card className="p-4">
+                  <h2 className="text-sm font-medium text-neutral-900">技能学习</h2>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {majorCategory.skills.map((s) => (
+                      <Tag key={s} variant="neutral">{s}</Tag>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </>
           ) : (
             <Card className="p-5">
               <p className="text-sm font-medium text-neutral-900">
-                根据你的目标推荐
+                选择你的专业方向
               </p>
               <p className="mt-2 text-xs text-neutral-500">
-                完善资料后，获得适合你的机会推荐。
+                选择专业后，系统将展示该领域的竞赛、科研、实习、认证等资源。
               </p>
               <Link href="/onboarding" className="mt-3 inline-block">
                 <Button variant="secondary">完善资料</Button>
@@ -103,25 +143,10 @@ export default async function DashboardPage() {
             </Card>
           )}
 
-          {/* 成长路线（P4-2 + Phase A 4.4：AI 方向 overlay） */}
-          {goal ? (
-            <RoadmapSection goal={goal} grade={grade} majorDirection={profile?.majorDirection ?? null} />
-          ) : (
-            <Card className="p-5">
-              <p className="text-sm font-medium text-neutral-900">你的成长路线</p>
-              <p className="mt-2 text-xs text-neutral-500">
-                设置主目标后，查看为你生成的专属成长路线。
-              </p>
-              <Link href="/settings" className="mt-3 inline-block">
-                <Button variant="secondary">设置目标</Button>
-              </Link>
-            </Card>
-          )}
-
-          {/* 我的机会池（P5 任务3，分组展示，非后台表格） */}
+          {/* 我的收藏（保留） */}
           <Card>
             <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5">
-              <h2 className="text-sm font-medium text-neutral-900">我的机会池</h2>
+              <h2 className="text-sm font-medium text-neutral-900">我的收藏</h2>
               <Link href="/explore">
                 <Button variant="ghost" className="px-2 py-1 text-xs">
                   去探索 →
@@ -166,7 +191,7 @@ export default async function DashboardPage() {
         </div>
 
         <aside className="lg:col-span-1 space-y-3">
-          {/* 个人资料（含画像） */}
+          {/* 个人资料（简化：学校/专业/年级，删目标/能力/硬约束） */}
           <Card className="p-4">
             <p className="text-sm font-medium text-neutral-900">个人资料</p>
             <div className="mt-3 space-y-1.5 text-xs text-neutral-500">
@@ -183,6 +208,11 @@ export default async function DashboardPage() {
                   专业：<span className="text-neutral-700">{profile.major}</span>
                 </p>
               )}
+              {majorCategory && (
+                <p>
+                  专业分类：<span className="text-neutral-700">{majorCategory.label}</span>
+                </p>
+              )}
               {grade && (
                 <p>
                   年级：
@@ -190,23 +220,6 @@ export default async function DashboardPage() {
                     {GRADE_LABEL[grade] ?? grade}
                   </span>
                 </p>
-              )}
-              {goal && (
-                <p>
-                  目标：
-                  <span className="text-neutral-700">
-                    {GOAL_LABEL[goal] ?? goal}
-                  </span>
-                </p>
-              )}
-              {profile?.interests && profile.interests.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {profile.interests.map((i) => (
-                    <Tag key={i} variant="neutral" className="text-[10px]">
-                      {i}
-                    </Tag>
-                  ))}
-                </div>
               )}
               {createdAt && (
                 <p className="pt-1">
@@ -229,24 +242,52 @@ export default async function DashboardPage() {
               </form>
             </div>
           </Card>
-
-          {/* 成长记录占位（P4 仍占位，纯 UI 不查库） */}
-          <Card className="p-4 opacity-60">
-            <p className="text-sm font-medium text-neutral-700">成长记录</p>
-            <p className="mt-1 text-xs text-neutral-400">
-              记录你的参赛经历与成果
-            </p>
-            <span className="mt-3 inline-block rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-400">
-              即将上线
-            </span>
-          </Card>
         </aside>
       </div>
     </main>
   );
 }
 
-/** 机会池分组（P5 任务3，卡片式非后台） */
+/** 资源分类卡片 */
+function ResourceCategorySection({
+  category,
+  items,
+}: {
+  category: string;
+  items: { id: string; title: string; summary: string | null; credibilityScore: string | null }[];
+}) {
+  const label = CATEGORY_LABELS[category] ?? category;
+  return (
+    <Card>
+      <div className="border-b border-neutral-100 px-4 py-2.5">
+        <h2 className="text-sm font-medium text-neutral-900">{label}</h2>
+      </div>
+      <div className="px-4 py-3">
+        <div className="space-y-2">
+          {items.map((item) => (
+            <Link
+              key={item.id}
+              href={`/o/${item.id}`}
+              className="block rounded-md border border-neutral-100 p-3 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium text-neutral-900">{item.title}</p>
+                <CredibilityBadge score={item.credibilityScore} />
+              </div>
+              {item.summary && (
+                <p className="mt-1 line-clamp-2 text-xs text-neutral-500">
+                  {item.summary}
+                </p>
+              )}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/** 机会池分组（保留） */
 function OpportunityGroup({
   title,
   count,
@@ -287,245 +328,3 @@ function OpportunityGroup({
     </div>
   );
 }
-
-/** 成长路线区：Timeline 渲染四阶段，当前年级高亮，挂机会链接 */
-async function RoadmapSection({
-  goal,
-  grade,
-  majorDirection,
-}: {
-  goal: Goal;
-  grade: GoalGrade | null;
-  majorDirection: string | null;
-}) {
-  const roadmap = getRoadmap(goal, majorDirection as Parameters<typeof getRoadmap>[1] ?? undefined);
-
-  // 预取每个阶段 relatedCategories 的机会（复用 searchItems，护栏2）
-  const stageOpps = await Promise.all(
-    roadmap.stages.map(async (stage) => {
-      const cats = [
-        ...new Set(
-          stage.actions.flatMap((a) => a.relatedCategories ?? []),
-        ),
-      ];
-      if (cats.length === 0) return { stageId: stage.grade, links: [] as { id: string; title: string }[] };
-      // 逐 category 取 top 2
-      const results = await Promise.all(
-        cats.map((c) => searchItems({ filters: { category: c }, pageSize: 2 })),
-      );
-      const links = results
-        .flatMap((r) => r.hits)
-        .filter((h, i, arr) => arr.findIndex((x) => x.id === h.id) === i)
-        .slice(0, 3);
-      return { stageId: stage.grade, links: links.map((l) => ({ id: l.id, title: l.title })) };
-    }),
-  );
-
-  return (
-    <Card>
-      <div className="border-b border-neutral-100 px-4 py-2.5">
-        <h2 className="text-sm font-medium text-neutral-900">
-          你的成长路线 · {roadmap.goalLabel}
-        </h2>
-        <p className="mt-0.5 text-xs text-neutral-400">{roadmap.note}</p>
-      </div>
-      <div className="px-4 py-3">
-        <ol className="space-y-4">
-          {roadmap.stages.map((stage, i) => (
-            <RoadmapStageItem
-              key={stage.grade}
-              stage={stage}
-              current={isCurrentStage(stage.grade, grade)}
-              isLast={i === roadmap.stages.length - 1}
-              opps={stageOpps.find((s) => s.stageId === stage.grade)?.links ?? []}
-            />
-          ))}
-        </ol>
-      </div>
-    </Card>
-  );
-}
-
-function RoadmapStageItem({
-  stage,
-  current,
-  isLast,
-  opps,
-}: {
-  stage: RoadmapStage;
-  current: boolean;
-  isLast: boolean;
-  opps: { id: string; title: string }[];
-}) {
-  return (
-    <li className="flex gap-3">
-      <div className="flex flex-col items-center">
-        <span
-          className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-            current ? "bg-neutral-900 ring-2 ring-neutral-200" : "bg-neutral-300"
-          }`}
-        />
-        {!isLast && <span className="mt-1 w-px flex-1 bg-neutral-200" />}
-      </div>
-      <div className={`min-w-0 flex-1 pb-1 ${current ? "" : ""}`}>
-        <p
-          className={`text-sm font-medium ${
-            current ? "text-neutral-900" : "text-neutral-700"
-          }`}
-        >
-          {stage.title}
-          {current && (
-            <span className="ml-2 text-xs font-normal text-neutral-400">
-              当前阶段
-            </span>
-          )}
-        </p>
-        <ul className="mt-1.5 space-y-1">
-          {stage.actions.map((a, idx) => (
-            <li key={idx} className="flex items-start gap-1.5 text-xs">
-              <span
-                className={`mt-0.5 shrink-0 ${
-                  a.priority === "high"
-                    ? "text-neutral-900"
-                    : a.priority === "mid"
-                      ? "text-neutral-500"
-                      : "text-neutral-400"
-                }`}
-              >
-                {a.priority === "high" ? "●" : a.priority === "mid" ? "●" : "○"}
-              </span>
-              <div>
-                <span className="text-neutral-700">{a.title}</span>
-                {a.detail && (
-                  <span className="ml-1 text-neutral-400">· {a.detail}</span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-        {opps.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <span className="text-xs text-neutral-400">关联机会：</span>
-            {opps.map((o) => (
-              <Link
-                key={o.id}
-                href={`/o/${o.id}`}
-                className="rounded border border-neutral-200 px-1.5 py-0.5 text-xs text-neutral-600 hover:border-neutral-300 hover:text-neutral-900"
-              >
-                {o.title}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </li>
-  );
-}
-
-/** 推荐区：按目标价值矩阵推荐，带推荐理由 */
-function RecommendSection({
-  goal,
-  recommendations,
-}: {
-  goal: Goal;
-  recommendations: Recommendation[];
-}) {
-  return (
-    <Card>
-      <div className="border-b border-neutral-100 px-4 py-2.5">
-        <h2 className="text-sm font-medium text-neutral-900">
-          根据你的目标推荐 · {recommendReasonPrefix(goal)}
-        </h2>
-        <p className="mt-0.5 text-xs text-neutral-400">
-          经验参考，因校因专业而异
-        </p>
-      </div>
-      <div className="px-4 py-3">
-        {recommendations.length === 0 ? (
-          <EmptyState title="暂无匹配推荐" description="去探索更多机会" />
-        ) : (
-          <div className="space-y-3">
-            {recommendations.map((r) => (
-              <RecommendItem key={r.id} rec={r} />
-            ))}
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-function RecommendItem({ rec }: { rec: Recommendation }) {
-  return (
-    <Link
-      href={`/o/${rec.id}`}
-      className="block rounded-md border border-neutral-100 p-3 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-neutral-900">{rec.title}</p>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <TierBadge tier={rec.tier} />
-          <span className="text-xs text-neutral-400">适配 {rec.fitScore}</span>
-        </div>
-      </div>
-      {rec.summary && (
-        <p className="mt-1 line-clamp-1 text-xs text-neutral-500">{rec.summary}</p>
-      )}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-neutral-600">{rec.reason}</span>
-      </div>
-      {/* 因子展开（铁律②可解释，默认收起，hover/可点开看全貌） */}
-      {rec.factors && rec.factors.length > 0 && (
-        <details className="mt-2 group">
-          <summary className="cursor-pointer text-xs text-neutral-400 hover:text-neutral-600">
-            为什么推荐（{rec.factors.length} 个因子）
-          </summary>
-          <div className="mt-1.5 space-y-1">
-            {rec.factors.map((f) => (
-              <div
-                key={f.name}
-                className="flex items-start gap-2 rounded bg-neutral-50 px-2 py-1 text-xs"
-              >
-                <span
-                  className={`shrink-0 font-medium ${
-                    f.score > 0
-                      ? "text-green-700"
-                      : f.score < 0
-                        ? "text-red-600"
-                        : "text-neutral-500"
-                  }`}
-                >
-                  {f.score > 0 ? "+" : ""}
-                  {f.score}
-                </span>
-                <span className="text-neutral-600">{f.reason}</span>
-              </div>
-            ))}
-          </div>
-        </details>
-      )}
-      <div className="mt-2 flex items-center gap-2 border-t border-neutral-100 pt-1.5">
-        <CredibilityBadge score={rec.credibilityScore} />
-        <span className="text-xs text-neutral-400">信息可信度评分</span>
-      </div>
-    </Link>
-  );
-}
-
-/** 价值分层徽章（与详情页一致，S 黑/A 蓝/B 灰） */
-function TierBadge({ tier }: { tier: "S" | "A" | "B" }) {
-  const styles: Record<"S" | "A" | "B", string> = {
-    S: "bg-neutral-900 text-white",
-    A: "bg-blue-600 text-white",
-    B: "bg-neutral-100 text-neutral-600",
-  };
-  return (
-    <span
-      className={`rounded px-1.5 py-0.5 text-xs font-medium ${styles[tier]}`}
-    >
-      {tier} 级
-    </span>
-  );
-}
-
-void LEVEL_LABEL; // 预留（profile 未用 level）

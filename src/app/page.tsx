@@ -165,10 +165,9 @@ export default async function HomePage({
               href={user ? "/dashboard" : "/login"}
             />
             <GrowthCard
-              title="成长规划"
-              desc="即将上线"
-              href="#"
-              disabled
+              title="资源日历"
+              desc="掌握大学关键时间节点"
+              href="/calendar"
             />
           </div>
         </div>

@@ -4,12 +4,6 @@ import { notFound } from "next/navigation";
 import { getInfoDetail } from "@/lib/info";
 import { getCurrentUser } from "@/lib/auth";
 import { isFavorited } from "@/lib/favorites";
-import { getProfile } from "@/lib/profile";
-import {
-  getOpportunityValue,
-  getMatchReason,
-  type Tier,
-} from "@/lib/opportunity-value";
 import {
   LEVEL_LABEL,
   RECOGNITION_LABEL,
@@ -23,15 +17,11 @@ import { Card } from "@/components/ui/card";
 import { Tag } from "@/components/ui/tag";
 import { Rating } from "@/components/ui/rating";
 import { Timeline } from "@/components/ui/timeline";
-import type { InfoCategory } from "@/db/schema-enums";
 
 export const dynamic = "force-dynamic";
 
 /**
- * 竞赛详情页（产品化重塑，7 区块）
- * 护栏2：复用 getInfoDetail()，不写 SQL；不改 lib/info
- * 护栏3：可信度措辞「信息可信度评分」，三验证同源
- * 信息密度优先：紧凑 2-3 列网格，非大留白
+ * 资源详情页（专业资源库转型版，删价值分析/匹配说明）
  */
 export default async function CompetitionDetailPage({
   params,
@@ -45,15 +35,6 @@ export default async function CompetitionDetailPage({
   const c = detail.competition;
   const user = await getCurrentUser();
   const favorited = user ? await isFavorited(user.userId, id) : false;
-  // P5 任务2：价值分析 + 匹配说明（复用 VALUE_MATRIX，非 AI）
-  const categoryTyped = detail.category as InfoCategory | null;
-  const opportunityValue = categoryTyped
-    ? getOpportunityValue(categoryTyped)
-    : [];
-  const profile = user ? await getProfile(user.userId) : null;
-  const matchReason = categoryTyped
-    ? getMatchReason(categoryTyped, profile, detail.title)
-    : { matched: false, reason: null };
 
   const deadlineState = detail.expireAt ?? c?.signUpEnd ?? null;
 
@@ -164,86 +145,34 @@ export default async function CompetitionDetailPage({
                 </div>
               </Card>
 
-              {/* 区块 4：价值分析（P5 任务2 升级：价值星级 + 匹配说明） */}
-              <Card>
-                <div className="border-b border-neutral-100 px-4 py-2.5">
-                  <h2 className="text-sm font-medium text-neutral-900">价值分析</h2>
-                  <p className="mt-0.5 text-xs text-neutral-400">
-                    经验参考，因校因专业而异
-                  </p>
-                </div>
-                <div className="space-y-4 px-4 py-3">
-                  {/* 价值分层矩阵（Phase A：tier S/A/B 徽章，退役 stars） */}
-                  {opportunityValue.length > 0 && (
-                    <div>
-                      <p className="mb-2 text-xs text-neutral-500">
-                        对不同目标的价值
-                      </p>
-                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        {opportunityValue
-                          .filter((v) => v.tier !== null)
-                          .map((v) => (
-                            <div
-                              key={v.goal}
-                              className="flex items-center justify-between gap-2 rounded border border-neutral-100 px-2.5 py-1.5"
-                            >
-                              <span className="text-xs text-neutral-600">
-                                {v.goalLabel}
-                              </span>
-                              <TierBadge tier={v.tier} />
-                            </div>
+              {/* 区块 4：价值标签（简化版，删价值矩阵/匹配说明） */}
+              {(c?.helps?.length || c?.valueTags?.length) ? (
+                <Card>
+                  <div className="border-b border-neutral-100 px-4 py-2.5">
+                    <h2 className="text-sm font-medium text-neutral-900">价值标签</h2>
+                  </div>
+                  <div className="space-y-3 px-4 py-3">
+                    {c?.helps && c.helps.length > 0 && (
+                      <FieldRow label="有助于">
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.helps.map((h: string) => (
+                            <Tag key={h} variant="green">{h}</Tag>
                           ))}
-                      </div>
-                      {/* 最高价值说明 */}
-                      {opportunityValue[0] && opportunityValue[0].tier !== null && (
-                        <p className="mt-2 text-xs text-neutral-500">
-                          {opportunityValue[0].goalLabel}：
-                          {opportunityValue[0].reason}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 匹配说明（结合用户画像，非 AI） */}
-                  {matchReason.reason ? (
-                    <div className="rounded-md bg-neutral-50 px-3 py-2">
-                      <p className="text-xs text-neutral-700">
-                        {matchReason.reason}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-md border border-dashed border-neutral-200 px-3 py-2">
-                      <p className="text-xs text-neutral-400">
-                        登录并完善资料，查看是否适合你
-                      </p>
-                    </div>
-                  )}
-
-                  {/* 现有价值标签 */}
-                  {(c.helps?.length || c.valueTags?.length) ? (
-                    <div className="space-y-3 border-t border-neutral-100 pt-3">
-                      {c.helps && c.helps.length > 0 && (
-                        <FieldRow label="有助于">
-                          <div className="flex flex-wrap gap-1.5">
-                            {c.helps.map((h) => (
-                              <Tag key={h} variant="green">{h}</Tag>
-                            ))}
-                          </div>
-                        </FieldRow>
-                      )}
-                      {c.valueTags && c.valueTags.length > 0 && (
-                        <FieldRow label="加分项">
-                          <div className="flex flex-wrap gap-1.5">
-                            {c.valueTags.map((v) => (
-                              <Tag key={v} variant="amber">{v}</Tag>
-                            ))}
-                          </div>
-                        </FieldRow>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-              </Card>
+                        </div>
+                      </FieldRow>
+                    )}
+                    {c?.valueTags && c.valueTags.length > 0 && (
+                      <FieldRow label="加分项">
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.valueTags.map((v: string) => (
+                            <Tag key={v} variant="amber">{v}</Tag>
+                          ))}
+                        </div>
+                      </FieldRow>
+                    )}
+                  </div>
+                </Card>
+              ) : null}
 
               {/* 区块 5：报名流程（rounds Timeline） */}
               {detail.rounds.length > 0 && (
@@ -420,21 +349,4 @@ function FieldRow({
 function fmt(d: Date | null): string | null {
   if (!d) return null;
   return d.toLocaleDateString("zh-CN");
-}
-
-/** 价值分层徽章（Phase A：tier S/A/B，退役 stars） */
-function TierBadge({ tier }: { tier: Tier | null }) {
-  if (!tier) return null;
-  const styles: Record<Tier, string> = {
-    S: "bg-neutral-900 text-white",
-    A: "bg-blue-600 text-white",
-    B: "bg-neutral-100 text-neutral-600",
-  };
-  return (
-    <span
-      className={`rounded px-1.5 py-0.5 text-xs font-medium ${styles[tier]}`}
-    >
-      {tier} 级
-    </span>
-  );
 }

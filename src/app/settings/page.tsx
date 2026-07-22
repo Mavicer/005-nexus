@@ -1,13 +1,9 @@
 import { getCurrentUser } from "@/lib/auth";
 import { getProfile } from "@/lib/profile";
 import { SettingsForm } from "@/components/settings-form";
-import type { ProfileData } from "@/components/onboarding-form";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Settings 页（P4-1，登录守卫，单页预填）
- */
 export default async function SettingsPage() {
   const user = await getCurrentUser();
   if (!user) {
@@ -25,27 +21,6 @@ export default async function SettingsPage() {
   }
 
   const profile = await getProfile(user.userId);
-  const initial: ProfileData = {
-    school: profile?.school ?? "",
-    major: profile?.major ?? "",
-    schoolTier: profile?.schoolTier ?? null,
-    majorDirection: profile?.majorDirection ?? null,
-    programMode: profile?.programMode ?? null,
-    isGoAbroad: profile?.isGoAbroad ?? null,
-    gpaTier: profile?.gpaTier ?? null,
-    researchLevel: profile?.researchLevel ?? null,
-    competitionCapability: profile?.competitionCapability ?? null,
-    englishLevel: profile?.englishLevel ?? null,
-    internshipLevel: profile?.internshipLevel ?? null,
-    grade: profile?.grade ?? null,
-    goal: profile?.goal ?? null,
-    goals: profile?.goals ?? null,
-    hardConstraints: profile?.hardConstraints ?? null,
-    majorSubDirection: profile?.majorSubDirection ?? null,
-    targetDirection: profile?.targetDirection ?? null,
-    targetRole: profile?.targetRole ?? null,
-    interests: profile?.interests ?? [],
-  };
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-8">
@@ -54,10 +29,16 @@ export default async function SettingsPage() {
           个人设置
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          修改你的画像，影响机会推荐
+          修改你的专业信息
         </p>
       </header>
-      <SettingsForm initial={initial} />
+      <SettingsForm
+        initial={{
+          major: profile?.major ?? null,
+          majorDirection: profile?.majorDirection ?? null,
+          grade: profile?.grade ?? null,
+        }}
+      />
     </main>
   );
 }

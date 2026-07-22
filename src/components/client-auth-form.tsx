@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * 登录/注册表单（客户端，调用 auth API）
- * 复用同一表单，切换"登录/注册"模式
+ * 登录/注册表单（简化版）
  */
 export function ClientAuthForm({ next }: { next: string }) {
   const router = useRouter();
@@ -25,16 +24,12 @@ export function ClientAuthForm({ next }: { next: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = (await res.json()) as {
-        error?: string;
-        needsOnboarding?: boolean;
-      };
+      const data = (await res.json()) as { error?: string; needsOnboarding?: boolean };
       if (!res.ok) {
         setError(data.error ?? "操作失败");
         return;
       }
       router.refresh();
-      // P4-1：注册→onboarding（不查库）；登录→按 needsOnboarding 跳转
       if (mode === "register") {
         router.push("/onboarding");
       } else if (data.needsOnboarding) {
@@ -54,9 +49,7 @@ export function ClientAuthForm({ next }: { next: string }) {
           type="button"
           onClick={() => setMode("login")}
           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            mode === "login"
-              ? "bg-neutral-900 text-white"
-              : "text-neutral-500 hover:text-neutral-900"
+            mode === "login" ? "bg-neutral-900 text-white" : "text-neutral-500 hover:text-neutral-900"
           }`}
         >
           登录
@@ -65,9 +58,7 @@ export function ClientAuthForm({ next }: { next: string }) {
           type="button"
           onClick={() => setMode("register")}
           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            mode === "register"
-              ? "bg-neutral-900 text-white"
-              : "text-neutral-500 hover:text-neutral-900"
+            mode === "register" ? "bg-neutral-900 text-white" : "text-neutral-500 hover:text-neutral-900"
           }`}
         >
           注册
@@ -81,7 +72,8 @@ export function ClientAuthForm({ next }: { next: string }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
+          placeholder="your@email.com"
+          className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
         />
       </div>
       <div>
@@ -93,7 +85,7 @@ export function ClientAuthForm({ next }: { next: string }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
+          className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
         />
       </div>
 
@@ -102,10 +94,16 @@ export function ClientAuthForm({ next }: { next: string }) {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50"
       >
         {loading ? "处理中…" : mode === "login" ? "登录" : "注册"}
       </button>
+
+      {mode === "register" && (
+        <p className="text-center text-xs text-neutral-400">
+          注册后选择你的专业方向，即可查看相关资源
+        </p>
+      )}
     </form>
   );
 }
