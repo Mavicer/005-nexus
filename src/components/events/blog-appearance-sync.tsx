@@ -20,7 +20,9 @@ export function BlogAppearanceSync({
   origin: string;
   initial?: AppearanceSnapshot | null;
 }) {
+  const initialKey = JSON.stringify(initial);
   useEffect(() => {
+    const initial = JSON.parse(initialKey) as AppearanceSnapshot | null;
     const root = document.documentElement;
     const bridgeOrigin = new URL(origin).origin;
     const frame = document.createElement("iframe");
@@ -140,6 +142,6 @@ export function BlogAppearanceSync({
       Object.values(urls).forEach((u) => u && URL.revokeObjectURL(u));
       reset();
     };
-  }, [origin, initial]);
+  }, [origin, initialKey]);
   return null;
 }

@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { escapeLike, searchTerms } from "../search";
+import { escapeLike, searchTerms, searchTopic } from "../search";
 it("normalizes case, full-width input and multiple keyword spacing", () => {
   expect(searchTerms("  ＱＯＤＥＲ   线上 \n Qoder  ")).toEqual([
     "qoder",
@@ -9,4 +9,12 @@ it("normalizes case, full-width input and multiple keyword spacing", () => {
 });
 it("treats SQL LIKE wildcards and backslashes as literal search text", () => {
   expect(escapeLike("100%_\\")).toBe("100\\%\\_\\\\");
+});
+
+it("matches topic typos without broadening short or unrelated queries", () => {
+  expect(searchTopic("数字建模")).toBe("math_modeling");
+  expect(searchTopic("数学建膜竞赛")).toBe("math_modeling");
+  expect(searchTopic("hackaton")).toBe("hackathon");
+  expect(searchTopic("数字")).toBeUndefined();
+  expect(searchTopic("摄影比赛")).toBeUndefined();
 });

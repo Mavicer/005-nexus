@@ -37,8 +37,36 @@ const modes: Record<string, string> = {
   hybrid: "hybrid",
 };
 export const searchMode = (term: string) => modes[term];
-export const searchTopic = (term: string) =>
-  topics[term] ?? topics[term.replace(/(?:比赛|竞赛|赛事)$/u, "")];
+// Limit typo tolerance to known topic names; short queries must remain exact.
+function distance(a: string, b: string) {
+  let row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++)
+      next[j] = Math.min(
+        next[j - 1]! + 1,
+        row[j]! + 1,
+        row[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    row = next;
+  }
+  return row[b.length]!;
+}
+export function searchTopic(term: string) {
+  const word = term.replace(/(?:比赛|竞赛|赛事)$/u, "");
+  const exact = topics[term] ?? topics[word];
+  if (exact) return exact;
+  if (word.length < 4 || word.length > 32) return undefined;
+  const matches = new Set(
+    Object.entries(topics)
+      .filter(
+        ([name]) =>
+          Math.abs(name.length - word.length) <= 1 && distance(word, name) <= 1,
+      )
+      .map(([, topic]) => topic),
+  );
+  return matches.size === 1 ? [...matches][0] : undefined;
+}
 export function searchTerms(query: string) {
   return [
     ...new Set(
@@ -61,8 +89,7 @@ export function searchCondition(query: string) {
     and(
       ...searchTerms(query).map((term) => {
         if (modes[term]) return eq(events.mode, modes[term]);
-        const topic =
-          topics[term] ?? topics[term.replace(/(?:比赛|竞赛|赛事)$/u, "")];
+        const topic = searchTopic(term);
         return or(
           sql`${content} ILIKE ${"%" + escapeLike(term) + "%"}`,
           topic ? eq(events.kind, topic) : undefined,
