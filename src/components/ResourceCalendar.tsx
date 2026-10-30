@@ -33,7 +33,10 @@ export function ResourceCalendar({
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const monthEvents = eventsByMonth[selectedMonth] ?? [];
+  const monthEvents = useMemo(
+    () => eventsByMonth[selectedMonth] ?? [],
+    [eventsByMonth, selectedMonth],
+  );
 
   // 生成月历格子 + 跨日期事件处理
   const calendarDays = useMemo(() => {
@@ -353,109 +356,3 @@ export function ResourceCalendar({
   );
 }
 
-/** 三月并排的单月网格组件 */
-function ThreeMonthGrid({
-  year,
-  month,
-  events,
-  todayStr,
-  todayMonth,
-  todayDate,
-  onEventClick,
-}: {
-  year: number;
-  month: number;
-  events: CalendarEvent[];
-  todayStr: string;
-  todayMonth: number;
-  todayDate: number;
-  onEventClick: (event: CalendarEvent) => void;
-}) {
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDay = new Date(year, month, 0);
-  const startWeekday = (firstDay.getDay() + 6) % 7;
-  const daysInMonth = lastDay.getDate();
-
-  const days: ({ day: number; events: CalendarEvent[]; spanning: CalendarEvent[] } | null)[] = [];
-  for (let i = 0; i < startWeekday; i++) days.push(null);
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const dayEvents = events.filter((e) => {
-      const start = e.startDate ?? "";
-      const end = e.endDate ?? start;
-      return dateStr >= start && dateStr <= end;
-    });
-    const singleDay = dayEvents.filter((e) => (e.startDate ?? "") === dateStr);
-    const spanning = dayEvents.filter((e) => (e.startDate ?? "") !== dateStr && (e.startDate ?? "") < dateStr);
-    days.push({ day: d, events: singleDay, spanning });
-  }
-
-  return (
-    <div className="overflow-hidden rounded-lg border border-neutral-100">
-      <div className="border-b border-neutral-100 bg-neutral-50 px-3 py-2 text-center">
-        <span className="text-sm font-medium text-neutral-700">{MONTH_LABELS[month]}</span>
-        {events.length > 0 && (
-          <span className="ml-2 text-xs text-neutral-400">{events.length}项</span>
-        )}
-      </div>
-      <div className="grid grid-cols-7 border-b border-neutral-50">
-        {WEEKDAYS.map((w) => (
-          <div key={w} className="py-1 text-center text-[10px] text-neutral-300">{w}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7">
-        {days.map((dayData, i) => {
-          if (!dayData) {
-            return <div key={i} className="min-h-[48px] border-b border-r border-neutral-50 bg-neutral-50/50" />;
-          }
-          const isToday = month === todayMonth && dayData.day === todayDate;
-          return (
-            <div
-              key={i}
-              className={`min-h-[48px] border-b border-r border-neutral-50 p-0.5 ${isToday ? "bg-blue-50/40" : ""}`}
-            >
-              <span
-                className={`text-[10px] ${
-                  isToday
-                    ? "flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white"
-                    : "text-neutral-400"
-                }`}
-              >
-                {dayData.day}
-              </span>
-              <div className="mt-0.5 space-y-0.5">
-                {dayData.spanning.slice(0, 1).map((event) => {
-                  const colors = CATEGORY_COLORS[event.category] ?? FALLBACK_COLORS;
-                  return (
-                    <div
-                      key={event.id}
-                      className={`truncate rounded px-0.5 py-0.5 text-[8px] ${colors.bg} ${colors.text} opacity-40`}
-                    >
-                      ┄ {event.title.length > 6 ? event.title.slice(0, 6) + "…" : event.title}
-                    </div>
-                  );
-                })}
-                {dayData.events.slice(0, 2).map((event) => {
-                  const colors = CATEGORY_COLORS[event.category] ?? FALLBACK_COLORS;
-                  return (
-                    <button
-                      key={event.id}
-                      onClick={() => onEventClick(event)}
-                      className={`block w-full truncate rounded px-0.5 py-0.5 text-left text-[8px] transition-transform hover:scale-105 ${colors.bg} ${colors.text}`}
-                    >
-                      <span className={`mr-0.5 inline-block h-1 w-1 rounded-full ${colors.dot}`} />
-                      {event.title.length > 6 ? event.title.slice(0, 6) + "…" : event.title}
-                    </button>
-                  );
-                })}
-                {dayData.events.length > 2 && (
-                  <span className="text-[8px] text-neutral-300">+{dayData.events.length - 2}</span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}

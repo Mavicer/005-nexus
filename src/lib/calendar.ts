@@ -3,9 +3,13 @@
  *
  * 从 calendar_events 表按月份/专业查询时间节点。
  * 不计算适配度，纯时间信息展示。
+ *
+ * 第2步正规化：改用 schema 的 calendarEvents 表走 drizzle typed 查询
+ * （原裸 SQL db.execute 已退役，跟 schema 同步、typed）。
  */
 import { db } from "@/db/client";
-import { sql } from "drizzle-orm";
+import { calendarEvents } from "@/db/schema";
+import { and, gte, lte, isNotNull, asc, sql } from "drizzle-orm";
 import type { MajorCategoryInfo } from "@/lib/knowledge/major-resource-map";
 export { CALENDAR_CATEGORY_LABELS, CALENDAR_CATEGORY_COLORS } from "./calendar-constants";
 
@@ -22,8 +26,6 @@ export interface CalendarEvent {
   credibility: string | null;
 }
 
-
-
 /**
  * 查全年日历事件（按月份分组）
  * @param major 可选专业过滤
@@ -37,46 +39,50 @@ export async function getCalendarEvents(
   const yearEnd = `${year}-12-31`;
 
   const conditions = [
-    sql`start_date IS NOT NULL`,
-    sql`start_date >= ${yearStart}`,
-    sql`start_date <= ${yearEnd}`,
+    isNotNull(calendarEvents.startDate),
+    gte(calendarEvents.startDate, yearStart),
+    lte(calendarEvents.startDate, yearEnd),
   ];
 
   if (major) {
-    conditions.push(sql`related_majors @> ARRAY[${major.id}]::text[]`);
+    conditions.push(sql`${calendarEvents.relatedMajors} @> ARRAY[${major.id}]::text[]`);
   }
 
-  const rows = await db.execute(sql`
-    SELECT id, title, category, start_date, end_date, description,
-           related_majors, official_source, source_url, credibility
-    FROM calendar_events
-    WHERE ${sql.join(conditions, sql` AND `)}
-    ORDER BY start_date ASC
-  `);
+  const rows = await db
+    .select({
+      id: calendarEvents.id,
+      title: calendarEvents.title,
+      category: calendarEvents.category,
+      startDate: calendarEvents.startDate,
+      endDate: calendarEvents.endDate,
+      description: calendarEvents.description,
+      relatedMajors: calendarEvents.relatedMajors,
+      officialSource: calendarEvents.officialSource,
+      sourceUrl: calendarEvents.sourceUrl,
+      credibility: calendarEvents.credibility,
+    })
+    .from(calendarEvents)
+    .where(and(...conditions))
+    .orderBy(asc(calendarEvents.startDate));
 
   // 按月份分组
   const byMonth: Record<number, CalendarEvent[]> = {};
-  for (const row of rows.rows as Record<string, unknown>[]) {
-    const startDateRaw = row.start_date as unknown;
-    if (!startDateRaw) continue;
-    // pg date 可能返回 string 或 Date，统一转 string 取月份
-    const startDateStr = typeof startDateRaw === "string" ? startDateRaw : (startDateRaw as Date).toISOString().split("T")[0]!;
+  for (const row of rows) {
+    if (!row.startDate) continue;
+    // drizzle date 列返回 string（YYYY-MM-DD）
+    const startDateStr = row.startDate;
     const month = parseInt(startDateStr.split("-")[1] ?? "1", 10);
     if (!byMonth[month]) byMonth[month] = [];
-    const endDateRaw = row.end_date as unknown;
-    const endDateStr = endDateRaw
-      ? (typeof endDateRaw === "string" ? endDateRaw : (endDateRaw as Date).toISOString().split("T")[0] ?? null)
-      : null;
     byMonth[month].push({
-      id: row.id as string,
-      title: row.title as string,
-      category: row.category as string,
+      id: row.id,
+      title: row.title,
+      category: row.category,
       startDate: startDateStr,
-      endDate: endDateStr,
-      description: (row.description as string | null) ?? null,
-      relatedMajors: (row.related_majors as string[] | null) ?? null,
-      officialSource: (row.official_source as string | null) ?? null,
-      sourceUrl: (row.source_url as string | null) ?? null,
+      endDate: row.endDate ?? null,
+      description: row.description ?? null,
+      relatedMajors: row.relatedMajors ?? null,
+      officialSource: row.officialSource ?? null,
+      sourceUrl: row.sourceUrl ?? null,
       credibility: row.credibility != null ? String(row.credibility) : null,
     });
   }

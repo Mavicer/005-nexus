@@ -22,6 +22,7 @@ import {
   uuid,
   text,
   timestamp,
+  date,
   integer,
   numeric,
   boolean,
@@ -502,6 +503,40 @@ export const userProfiles = pgTable(
   },
 );
 
+// ============================================================
+// 9. calendar_events — 资源日历时间节点（转型期既成事实，owner 追认正规化）
+//    不走 drizzle generated migration，由手写 0008 幂等 SQL 管理（运行 DB 已有表+数据）。
+//    日期区间（start_date ~ end_date）= 该事件备考/活动期语义，无结构化"准备阶段"。
+//    related_majors 按 MajorCategory 过滤（ai/computer/finance/medicine/engineering/business/art/humanities）。
+//    credibility 是评分体系非真值（护栏3），备考期 0.65-0.70 / 官方考试 0.82-0.96。
+// ============================================================
+export const calendarEvents = pgTable(
+  "calendar_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    category: text("category").notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    description: text("description"),
+    relatedMajors: text("related_majors").array(),
+    officialSource: text("official_source"),
+    sourceUrl: text("source_url"),
+    credibility: numeric("credibility", { precision: 3, scale: 2 }).default("0.8"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("calendar_events_category_idx").on(t.category),
+    index("calendar_events_majors_idx").using("gin", t.relatedMajors),
+    index("calendar_events_start_idx").on(t.startDate),
+  ],
+);
+
 // 导出表对象集合
 export const tables = {
   infoItems,
@@ -512,4 +547,5 @@ export const tables = {
   users,
   favorites,
   userProfiles,
+  calendarEvents,
 } as const;

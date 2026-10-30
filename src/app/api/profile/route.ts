@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth";
 import { upsertProfile, type ProfileInput } from "@/lib/profile";
+import { majorDirectionEnum } from "@/db/schema";
 import type {
   MajorSubDirection,
   TargetDirection,
@@ -39,16 +40,9 @@ const VALID_SCHOOL_TIERS: SchoolTier[] = [
   "doubleFirst",
   "other",
 ];
+// 从 majorDirectionEnum 推导，与 schema 枚举一劳永逸同步（修 P0-2：原硬编码数组漏 medicine/art/humanities）
 const VALID_MAJOR_DIRECTIONS: MajorDirection[] = [
-  "ai_general",
-  "ai_cv",
-  "ai_nlp",
-  "ai_llm",
-  "ai_robotics",
-  "cs_general",
-  "ee_general",
-  "business_general",
-  "other",
+  ...majorDirectionEnum.enumValues,
 ];
 const VALID_PROGRAM_MODES: ProgramMode[] = [
   "regular",
