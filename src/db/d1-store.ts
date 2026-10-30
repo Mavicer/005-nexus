@@ -365,6 +365,11 @@ export class D1Store {
     );
   }
   async identity(issuer: string, subject: string, name: string) {
+    const existing = await this.stmt(
+      "SELECT user_id FROM nexus_blog_identities WHERE issuer=? AND subject=?",
+      [issuer, subject],
+    ).first<{ user_id: string }>();
+    if (existing) return existing.user_id;
     // Uniqueness is enforced in D1; concurrent first sign-ins converge on one user.
     const now = new Date().toISOString(),
       id = crypto.randomUUID();

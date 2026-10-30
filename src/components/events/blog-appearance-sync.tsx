@@ -13,7 +13,13 @@ const properties = [
   "--synced-card-opacity",
   "--font-scale",
 ];
-export function BlogAppearanceSync({ origin }: { origin: string }) {
+export function BlogAppearanceSync({
+  origin,
+  initial = null,
+}: {
+  origin: string;
+  initial?: AppearanceSnapshot | null;
+}) {
   useEffect(() => {
     const root = document.documentElement;
     const bridgeOrigin = new URL(origin).origin;
@@ -22,9 +28,9 @@ export function BlogAppearanceSync({ origin }: { origin: string }) {
     frame.tabIndex = -1;
     frame.setAttribute("aria-hidden", "true");
     frame.title = "博客外观同步";
-    frame.src = bridgeOrigin + "/appearance-bridge.html";
+    frame.src = bridgeOrigin + "/appearance-bridge";
     const nonce = crypto.randomUUID();
-    let current: AppearanceSnapshot | null = null;
+    let current: AppearanceSnapshot | null = initial;
     let urls: { light?: string; dark?: string } = {};
     let timer: ReturnType<typeof setTimeout> | undefined;
     let raf = 0;
@@ -103,7 +109,7 @@ export function BlogAppearanceSync({ origin }: { origin: string }) {
       }
       const old = urls;
       urls = {};
-      current = parsed.data;
+      current = !parsed.data.configured && initial ? initial : parsed.data;
       if (current.images?.light)
         urls.light = URL.createObjectURL(current.images.light);
       if (current.images?.dark)
@@ -118,6 +124,7 @@ export function BlogAppearanceSync({ origin }: { origin: string }) {
         if (current?.settings?.scrollBlur) paint();
       });
     }
+    paint();
     window.addEventListener("message", receive);
     window.addEventListener("focus", request);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -133,6 +140,6 @@ export function BlogAppearanceSync({ origin }: { origin: string }) {
       Object.values(urls).forEach((u) => u && URL.revokeObjectURL(u));
       reset();
     };
-  }, [origin]);
+  }, [origin, initial]);
   return null;
 }
