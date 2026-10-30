@@ -1,5 +1,7 @@
 import { FilterSelect } from "@/components/events/filter-select";
 import Link from "next/link";
+import Form from "next/form";
+import { SearchSubmit } from "@/components/events/search-submit";
 import { queryEvents } from "@/modules/events/service";
 import {
   KINDS,
@@ -68,7 +70,7 @@ export default async function Home({
   return (
     <>
       <Intro />
-      <form method="get" className="panel filter-panel">
+      <Form action="/" scroll={false} className="panel filter-panel">
         <div className="search-row">
           <label className="sr-only" htmlFor="q">
             搜索赛事、技术或关键词
@@ -80,7 +82,7 @@ export default async function Home({
             placeholder="搜索赛事名称、开发方向或关键词…"
             maxLength={200}
           />
-          <button className="btn primary">搜索</button>
+          <SearchSubmit />
         </div>
         <div className="filters">
           <FilterSelect
@@ -176,7 +178,7 @@ export default async function Home({
             重置条件
           </Link>
         </div>
-      </form>
+      </Form>
       <div className="result-meta">
         <span>{result.total} 场符合条件的活动</span>
       </div>
