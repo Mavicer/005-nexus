@@ -1,3 +1,4 @@
+import { usingD1, d1Store } from "@/db/cloudflare";
 import { searchCondition } from "./search";
 import { recommendationScore } from "./recommendation";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
@@ -33,6 +34,8 @@ export async function saveDraft(
   id?: string,
   expectedVersion?: number,
 ) {
+  if (usingD1())
+    return (await d1Store()).saveDraft(input, actor, id, expectedVersion);
   const payload = eventSchema.parse(input);
   return db.transaction(async (tx) => {
     let event;
@@ -84,6 +87,14 @@ export async function changePublication(
   actor: string,
   reviewMethod: "human" | "agent" = "human",
 ) {
+  if (usingD1())
+    return (await d1Store()).changePublication(
+      id,
+      version,
+      action,
+      actor,
+      reviewMethod,
+    );
   return db.transaction(async (tx) => {
     const current = requireRow(
       (
@@ -170,6 +181,7 @@ export async function changePublication(
 export async function getPublicEvent(
   idOrSlug: string,
 ): Promise<PublicEvent | null> {
+  if (usingD1()) return (await d1Store()).getPublicEvent(idOrSlug);
   const byId = /^[0-9a-f-]{36}$/i.test(idOrSlug);
   const [row] = await db
     .select()
@@ -185,6 +197,7 @@ export async function getPublicEvent(
 }
 
 export async function queryEvents(raw: unknown, now = new Date()) {
+  if (usingD1()) return (await d1Store()).queryEvents(raw, now);
   const p = listSchema.parse(raw);
   const conditions = [eq(events.status, "published")];
   if (p.state === "open") conditions.push(eq(events.reviewState, "verified"));
@@ -250,14 +263,17 @@ export async function queryEvents(raw: unknown, now = new Date()) {
   };
 }
 export async function getCalendarRows() {
+  if (usingD1()) return (await d1Store()).getCalendarRows();
   return (
     await db.select().from(events).where(eq(events.status, "published"))
   ).filter((r): r is PublicEvent => r.publishedData !== null);
 }
 export async function listAdminEvents() {
+  if (usingD1()) return (await d1Store()).listAdminEvents();
   return db.select().from(events).orderBy(desc(events.updatedAt));
 }
 export async function getAdminEvent(id: string) {
+  if (usingD1()) return (await d1Store()).getAdminEvent(id);
   const event = (
     await db.select().from(events).where(eq(events.id, id)).limit(1)
   )[0];

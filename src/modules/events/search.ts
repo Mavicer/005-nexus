@@ -36,6 +36,9 @@ const modes: Record<string, string> = {
   混合: "hybrid",
   hybrid: "hybrid",
 };
+export const searchMode = (term: string) => modes[term];
+export const searchTopic = (term: string) =>
+  topics[term] ?? topics[term.replace(/(?:比赛|竞赛|赛事)$/u, "")];
 export function searchTerms(query: string) {
   return [
     ...new Set(

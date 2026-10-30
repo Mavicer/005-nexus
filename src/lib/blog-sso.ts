@@ -1,3 +1,4 @@
+import { usingD1, d1Store } from "@/db/cloudflare";
 import { randomBytes, createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
@@ -115,36 +116,38 @@ export async function getBlogUser() {
     return null;
   const { user } = identitySchema.parse(result);
   const issuer = blogOrigin();
-  const local = await db.transaction(async (tx) => {
-    // Serialize first sign-ins for this issuer/subject without matching by email.
-    const { sql, and } = await import("drizzle-orm");
-    await tx.execute(
-      sql`SELECT pg_advisory_xact_lock(hashtextextended(${issuer + ":" + user.id}, 0))`,
-    );
-    const [identity] = await tx
-      .select()
-      .from(blogIdentities)
-      .where(
-        and(
-          eq(blogIdentities.issuer, issuer),
-          eq(blogIdentities.subject, user.id),
-        ),
-      );
-    if (identity) return identity.userId;
-    const [row] = await tx
-      .insert(users)
-      .values({
-        email: `blog-${randomToken()}@identity.invalid`,
-        passwordHash: "!external-blog-only",
-        name: user.display_name,
-        isAdmin: false,
-      })
-      .returning({ id: users.id });
-    await tx
-      .insert(blogIdentities)
-      .values({ issuer, subject: user.id, userId: row!.id });
-    return row!.id;
-  });
+  const local = usingD1()
+    ? await (await d1Store()).identity(issuer, user.id, user.display_name)
+    : await db.transaction(async (tx) => {
+        // Serialize first sign-ins for this issuer/subject without matching by email.
+        const { sql, and } = await import("drizzle-orm");
+        await tx.execute(
+          sql`SELECT pg_advisory_xact_lock(hashtextextended(${issuer + ":" + user.id}, 0))`,
+        );
+        const [identity] = await tx
+          .select()
+          .from(blogIdentities)
+          .where(
+            and(
+              eq(blogIdentities.issuer, issuer),
+              eq(blogIdentities.subject, user.id),
+            ),
+          );
+        if (identity) return identity.userId;
+        const [row] = await tx
+          .insert(users)
+          .values({
+            email: `blog-${randomToken()}@identity.invalid`,
+            passwordHash: "!external-blog-only",
+            name: user.display_name,
+            isAdmin: false,
+          })
+          .returning({ id: users.id });
+        await tx
+          .insert(blogIdentities)
+          .values({ issuer, subject: user.id, userId: row!.id });
+        return row!.id;
+      });
   return {
     userId: local,
     email: user.username,

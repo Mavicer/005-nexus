@@ -1,3 +1,4 @@
+import { usingD1 } from "@/db/cloudflare";
 import { blogSsoEnabled } from "@/lib/blog-sso";
 import { NextResponse, type NextRequest } from "next/server";
 import { sql } from "drizzle-orm";
@@ -10,7 +11,7 @@ import { readBody, sameOrigin, errorResponse } from "@/lib/http";
 export async function POST(req: NextRequest) {
   try {
     sameOrigin(req);
-    if (blogSsoEnabled())
+    if (blogSsoEnabled() || usingD1())
       return NextResponse.json(
         { error: "请使用博客账号登录" },
         { status: 409 },

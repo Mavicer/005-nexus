@@ -1,8 +1,10 @@
+import { usingD1, d1Store } from "@/db/cloudflare";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { bookmarks, events } from "@/db/schema";
 import { DomainError } from "@/modules/events/service";
 export async function addBookmark(userId: string, eventId: string) {
+  if (usingD1()) return (await d1Store()).addBookmark(userId, eventId);
   await db.transaction(async (tx) => {
     const [row] = await tx
       .select({ id: events.id })
@@ -17,11 +19,13 @@ export async function addBookmark(userId: string, eventId: string) {
   });
 }
 export async function removeBookmark(userId: string, eventId: string) {
+  if (usingD1()) return (await d1Store()).removeBookmark(userId, eventId);
   await db
     .delete(bookmarks)
     .where(and(eq(bookmarks.userId, userId), eq(bookmarks.eventId, eventId)));
 }
 export async function hasBookmark(userId: string, eventId: string) {
+  if (usingD1()) return (await d1Store()).hasBookmark(userId, eventId);
   return (
     (
       await db
@@ -35,6 +39,7 @@ export async function hasBookmark(userId: string, eventId: string) {
   );
 }
 export async function listBookmarks(userId: string) {
+  if (usingD1()) return (await d1Store()).listBookmarks(userId);
   const rows = await db
     .select({
       id: events.id,

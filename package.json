@@ -21,7 +21,11 @@
     "legacy:plan": "node --import tsx scripts/data/legacy-plan.ts",
     "legacy:apply": "node --import tsx scripts/data/apply-legacy-map.ts",
     "test:http": "node --import tsx scripts/http-smoke.ts",
-    "test:recommendation": "node --import tsx scripts/recommendation-test.ts"
+    "test:recommendation": "node --import tsx scripts/recommendation-test.ts",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "deploy": "opennextjs-cloudflare deploy",
+    "preview:cloudflare": "opennextjs-cloudflare preview",
+    "cf:typegen": "node scripts/cloudflare-types.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",

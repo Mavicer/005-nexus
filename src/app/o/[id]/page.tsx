@@ -1,3 +1,4 @@
+import { usingD1, d1Store } from "@/db/cloudflare";
 import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
@@ -11,6 +12,11 @@ export default async function OldDetail({
 }) {
   const id = uuidSchema.safeParse((await params).id);
   if (!id.success) notFound();
+  if (usingD1()) {
+    const slug = await (await d1Store()).legacySlug(id.data);
+    if (!slug) notFound();
+    redirect(`/events/${slug}`);
+  }
   const [mapping] = await db
     .select({ eventId: legacyMap.eventId })
     .from(legacyMap)

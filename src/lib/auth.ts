@@ -1,3 +1,4 @@
+import { usingD1 } from "@/db/cloudflare";
 import { cache } from "react";
 import { blogSsoEnabled, getBlogUser } from "./blog-sso";
 import { SignJWT, jwtVerify } from "jose";
@@ -67,6 +68,7 @@ export async function clearSession(): Promise<void> {
 export const getCurrentUser = cache(
   async (): Promise<SessionPayload | null> => {
     if (blogSsoEnabled()) return getBlogUser();
+    if (usingD1()) return null;
     const store = await cookies();
     const token = store.get(COOKIE_NAME)?.value;
     if (!token) return null;

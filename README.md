@@ -50,7 +50,7 @@ npm run dev -- --hostname 127.0.0.1 --port 3040
 | NEXUS_ORIGIN             | https://nexus.mavicer.cc |
 | NEXUS_SSO_SECRET         | 与 BLOG_SSO_SECRET 相同  |
 
-博客端通过现有 D1 binding 新增 SSO 表，不共享原始 Cookie 或复制密码库。域名 DNS、HTTPS、正式部署和生产账号联调尚未执行。当前本地预览保留本地管理员，避免依赖尚未上线的博客接口。
+博客端通过现有 D1 binding 新增 SSO 表，不共享原始 Cookie 或复制密码库。正式运行环境使用 Cloudflare Workers + D1，地址为 https://nexus.mavicer.cc。发布步骤见 [Cloudflare 发布](docs/cloudflare-release.md)。本地 PostgreSQL 预览保留作迁移对照。
 
 ## 数据与旧库
 

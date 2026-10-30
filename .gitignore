@@ -61,3 +61,11 @@ Thumbs.db
 # ========== 杂项 ==========
 *.pem
 *.key
+
+.open-next/
+.wrangler/
+.dev.vars*
+worker-configuration.d.ts
+
+.env.local.preview-backup
+public/_publication.json
