@@ -35,6 +35,7 @@ it("binds callback to the browser and PKCE, exchanges only server-to-server and 
   expect(flow.next).toBe("/saved");
   expect(url.searchParams.get("code_challenge")).toBe(challenge(flow.verifier));
   const fetcher = vi.fn(async (_url: unknown, options: RequestInit) => {
+    expect(options.redirect).toBe("manual");
     expect(options.headers).toMatchObject({
       Authorization: `Bearer ${"b".repeat(40)}`,
     });
@@ -91,4 +92,12 @@ it("rejects callback state mismatch before contacting the blog; silent anonymous
   expect(anonymous.headers.get("location")).toBe("https://nexus.mavicer.cc/");
   expect(jar.has(BLOG_COOKIE)).toBe(false);
   expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("rejects upstream redirects without following them", async () => {
+  const { blogRequest } = await import("@/lib/blog-sso");
+  const fetcher = vi.fn(async () => new Response(null, { status: 302, headers: { Location: "https://evil.test" } }));
+  vi.stubGlobal("fetch", fetcher);
+  await expect(blogRequest("introspect", { token: "x".repeat(43) })).rejects.toThrow();
+  expect(fetcher.mock.calls).toHaveLength(1);
 });
