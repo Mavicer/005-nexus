@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+import { cookies } from "next/headers";
+import { appearanceSnapshot } from "@/modules/events/appearance";
 import { BlogAppearanceSync } from "@/components/events/blog-appearance-sync";
 import { SessionRefresh } from "@/components/events/session-refresh";
 import { blogOrigin, blogSsoEnabled } from "@/lib/blog-sso";
@@ -15,11 +18,21 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
+  let initialAppearance = null;
+  try {
+    const value = (await cookies()).get("MAVICER_APPEARANCE_SHARED")?.value;
+    if (value && value.length < 4096) {
+      const parsed = appearanceSnapshot.safeParse(
+        JSON.parse(decodeURIComponent(value)),
+      );
+      if (parsed.success) initialAppearance = parsed.data;
+    }
+  } catch {}
   return (
     <html lang="zh-CN">
       <body>
         <BlogAppearanceSync
+          initial={initialAppearance}
           origin={process.env.BLOG_APPEARANCE_ORIGIN ?? blogOrigin()}
         />
         {blogSsoEnabled() && <SessionRefresh />}
@@ -34,10 +47,9 @@ export default async function RootLayout({
               <Link href="/calendar">赛事日历</Link>
               <Link href="/saved">我的收藏</Link>
               <Link href="/about">收录说明</Link>
-              {user?.isAdmin && <Link href="/admin/events">管理</Link>}
-              <Link href={user ? "/account" : "/login"}>
-                {user ? "账号" : "登录 ↗"}
-              </Link>
+              <Suspense fallback={<Link href="/account">账号</Link>}>
+                <AccountNavigation />
+              </Suspense>
             </nav>
           </div>
         </header>
@@ -52,5 +64,17 @@ export default async function RootLayout({
         </footer>
       </body>
     </html>
+  );
+}
+
+async function AccountNavigation() {
+  const user = await getCurrentUser();
+  return (
+    <>
+      {user?.isAdmin && <Link href="/admin/events">管理</Link>}
+      <Link href={user ? "/account" : "/login"}>
+        {user ? "账号" : "登录 ↗"}
+      </Link>
+    </>
   );
 }
