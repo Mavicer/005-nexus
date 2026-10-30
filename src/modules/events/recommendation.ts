@@ -7,8 +7,13 @@ export function recommendationScore(now: Date): SQL {
   return sql`(
     CASE
       WHEN ${data}->>'mainlandEligibility' = 'ineligible' THEN -5000
-      WHEN ${events.mode} = 'online' AND ${data}->>'entry' = 'direct' AND ${data}->>'mainlandEligibility' = 'eligible' THEN 1000
-      WHEN ${data}->>'region' = 'domestic' THEN 700
+      WHEN ${data}->>'region' = 'domestic' AND ${events.mode} = 'online' AND ${data}->>'entry' = 'direct' AND ${data}->>'mainlandEligibility' = 'eligible' THEN 1400
+      WHEN ${data}->>'region' = 'domestic' THEN 1200
+      WHEN ${data}->>'region' = 'international' AND ${events.mode} = 'onsite' THEN -800
+      WHEN ${data}->>'region' = 'international' AND ${events.mode} = 'hybrid' THEN -100
+      WHEN ${data}->>'region' = 'international' AND ${events.mode} = 'online' AND ${data}->>'entry' = 'direct' AND ${data}->>'mainlandEligibility' = 'eligible' THEN 600
+      WHEN ${data}->>'region' = 'international' AND ${events.mode} = 'online' THEN 250
+      WHEN ${events.mode} = 'online' AND ${data}->>'entry' = 'direct' AND ${data}->>'mainlandEligibility' = 'eligible' THEN 800
       WHEN ${events.mode} = 'online' THEN 400
       WHEN ${events.mode} = 'hybrid' THEN 200
       ELSE 0 END
