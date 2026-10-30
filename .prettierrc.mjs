@@ -2,7 +2,7 @@
  * Prettier 配置
  * 与 ESLint 配合，保证代码风格一致
  */
-export default {
+const config = {
   semi: true,
   singleQuote: false,
   trailingComma: "all",
@@ -12,3 +12,5 @@ export default {
   plugins: ["prettier-plugin-tailwindcss"],
   tailwindFunctions: ["cn", "clsx", "cva"],
 };
+
+export default config;

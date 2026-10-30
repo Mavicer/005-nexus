@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Anker首届黑客松挑战赛",
+    "officialUrl": "https://career.anker.com.cn/hackathon/",
+    "reason": "官网同时出现9.7–10.17和未开始，缺少可靠年份与当期状态，不放入推荐。",
+    "status": "conflicting_dates"
+  },
+  {
+    "title": "2026XSWCTF暨华南师范大学网络安全新生赛",
+    "officialUrl": "https://ctf.scnu.edu.cn/",
+    "reason": "搜索索引届次、正文不一致且官网当前不可读；校内/校外参赛权限未核定。",
+    "status": "needs_eligibility"
+  }
+]

@@ -1,0 +1,514 @@
+[
+  {
+    "schemaVersion": 1,
+    "slug": "qoder-campus-2026",
+    "title": "2026 Qoder 高校创造力大赛",
+    "officialName": "",
+    "series": "2026 Qoder 高校创造力大赛",
+    "edition": "2026",
+    "kind": "developer_challenge",
+    "mode": "online",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上",
+    "organizer": "Qoder",
+    "summary": "用Qoder制作可公开访问的完整项目，设学习科研、生活娱乐和技术向善三个赛道。",
+    "eligibility": "全国在校本科和硕博学生（含港澳台），不限专业；获奖须完成天池实名和阿里云学生认证。",
+    "eligibilityStatus": "restricted",
+    "team": "1–3人，可单人；可交多份作品但每队只获一项奖。",
+    "deliverables": "Qoder Sites公网项目链接及赛题论坛作品帖，说明用途、操作步骤、Qoder使用过程和成员分工。",
+    "costs": "已认证学生可领一个月Qoder CN使用权益；后续会员、模型和部署资源成本按实际使用与官网规则确认，未据此标成全程免费。",
+    "rules": "不能只交想法或本地文件；技术复杂度不单独计分，重点为完整可用。赛中数据、模型和代码公开需按平台协议核对。",
+    "officialUrl": "https://tianchi.aliyun.com/competition/entrance/532536",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "Qoder",
+      "学生赛事",
+      "产品开发"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://tianchi.aliyun.com/competition/entrance/532536",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "opens",
+        "kind": "registration_open",
+        "label": "报名开始",
+        "precision": "date",
+        "start": "2026-10-29",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "10月29日报名组队开始",
+        "sourceId": "rules"
+      },
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-11-30",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "11月30日18:00报名与组队截止；官方未单列时区，保留日期精度",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "date",
+        "start": "2026-11-30",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "作品帖最晚11月30日18:00发布，时区以官方确认",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "month",
+        "start": "2026-12",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "12月上旬线上路演，具体日期待通知",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registration": "rules",
+      "registrationSteps": "rules",
+      "submissionChecklist": "rules"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "在天池赛页选择赛道，完成报名和1–3人组队。",
+      "所有成员完成天池实名认证与阿里云大学生认证。",
+      "用Qoder开发并在Qoder Sites部署，按官方格式发布赛题论坛作品帖。"
+    ],
+    "submissionChecklist": [
+      "可直接访问的Qoder部署地址。",
+      "标明赛道的论坛帖子：项目用途、五步内使用方法、Qoder开发过程。",
+      "Qoder账号和团队分工信息。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "lanqiao-18-programming-2027",
+    "title": "第十八届蓝桥杯 · 软件赛（程序设计）",
+    "officialName": "",
+    "series": "第十八届蓝桥杯 · 软件赛（程序设计）",
+    "edition": "第十八届 / 2027",
+    "kind": "algorithm",
+    "mode": "onsite",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "paid",
+    "location": "各省指定线下赛点，以准考证为准",
+    "organizer": "蓝桥杯全国大学生软件和信息技术大赛组委会",
+    "summary": "本记录聚焦C/C++、Java和Python程序设计；Web、AI及其他专项不能套用同一科目规则。",
+    "eligibility": "有正式全日制学籍并符合科目和组别要求的学生；研究生、本科及职业院校按各自组别报名。",
+    "eligibilityStatus": "restricted",
+    "team": "程序设计为个人赛；指导教师和院校审核按当届规则办理。",
+    "deliverables": "报名需实名及学籍信息、证件照和所选科目组别；参赛时按赛点环境提交程序。",
+    "costs": "高校组织通知列软件赛300元/人，最终按本届官方费用说明和报名系统确认；差旅食宿自理。",
+    "rules": "不同赛项截止不同；校内审核和缴费可能早于全国截止，本记录不把视觉艺术赛的4月截止套给软件赛。",
+    "officialUrl": "https://dasai.lanqiao.cn/",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "蓝桥杯",
+      "C/C++",
+      "Java",
+      "Python"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://cxcy.szut.edu.cn/info/1027/9297.htm",
+        "title": "组织高校发布的第十八届参赛通知",
+        "locator": "软件赛报名窗口、组别和省赛月份；该校内部12月10日截止不作为全国截止"
+      },
+      {
+        "id": "fees",
+        "role": "official",
+        "url": "https://www.guit.edu.cn/xx/info/1004/4595.htm",
+        "title": "组织高校发布的报名与费用说明",
+        "locator": "实名学籍、院校审核、准考证、软件赛300元/人"
+      },
+      {
+        "id": "guide",
+        "role": "official",
+        "url": "https://dasai.lanqiao.cn/notices/1840",
+        "title": "大赛官方报名指南入口",
+        "locator": "官方报名与身份审核说明；以页面当届更新为准"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-12-18",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "软件赛全国报名截止12月18日14:00；校内流程可能更早，未另列时区",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "month",
+        "start": "2027-04",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "省赛2027年4月，具体科目日期待正式通知",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "fees",
+      "rules": "rules",
+      "officialUrl": "guide",
+      "fee": "fees",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registration": "rules",
+      "registrationSteps": "fees",
+      "submissionChecklist": "fees"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "在蓝桥杯官网注册并完成学生实名、学籍和所属院校信息验证。",
+      "选择程序设计语言和组别，按院校要求完成审核与缴费。",
+      "赛前下载准考证，按上面的地点与时间到指定赛点参加。"
+    ],
+    "submissionChecklist": [
+      "真实学籍与身份信息及合规证件照。",
+      "报名科目、组别和缴费完成状态。",
+      "准考证及按官方要求准备的参赛证件。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "mathorcup-bigdata-2026",
+    "title": "2026 MathorCup 大数据竞赛（第七届）",
+    "officialName": "",
+    "series": "2026 MathorCup 大数据竞赛（第七届）",
+    "edition": "2026",
+    "kind": "math_modeling",
+    "mode": "online",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "paid",
+    "location": "线上",
+    "organizer": "中国优选法统筹法与经济数学研究会",
+    "summary": "线上大数据建模赛。本届初赛报名已结束，复赛只能由初赛晋级队伍参加。",
+    "eligibility": "境内外高校在读研究生、本科及专科生；按队内最高学历分组。",
+    "eligibilityStatus": "restricted",
+    "team": "1–3人，最多1名高校全职指导教师；可跨校、跨年级和跨专业。",
+    "deliverables": "任选A或B题，提交论文、结果数据、计算程序源代码及操作说明。",
+    "costs": "200元/队，个人报名或高校组织缴费按官方系统办理。",
+    "rules": "初赛前10%晋级；源代码须作为支撑材料提交。章程约定作品知识产权由主办方和参赛者共享，报名前需理解条款。",
+    "officialUrl": "https://www.mathorcup.org/detail/2497",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "数学建模",
+      "大数据",
+      "Python / MATLAB"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://files.mathorcup.org/uploads/files/20260903/1788430033944665.pdf",
+        "title": "2026年报名通知及8月修订章程",
+        "locator": "PDF第1页：资格、10月23日12:00报名截止、200元；第2、4–6页：提交与知识产权"
+      },
+      {
+        "id": "tasks",
+        "role": "official",
+        "url": "https://www.mathorcup.org/detail/2497",
+        "title": "2026年初赛赛题发布通知",
+        "locator": "10月23日发布，A/B选题与10月30日20:00提交截止"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-10-23",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "10月23日12:00报名截止，未单列时区",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "date",
+        "start": "2026-10-23",
+        "end": "2026-10-30",
+        "timezone": "Asia/Shanghai",
+        "raw": "初赛10月23日18:00至10月30日20:00，未单列时区",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "date",
+        "start": "2026-10-30",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "初赛论文10月30日20:00截止，官方建议提前30–60分钟提交",
+        "sourceId": "tasks"
+      },
+      {
+        "id": "retest",
+        "kind": "submission",
+        "label": "复赛提交截止（仅晋级队伍）",
+        "precision": "date",
+        "start": "2026-12-11",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "复赛12月4日18:00至12月11日20:00，仅初赛晋级者；未单列时区",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules",
+      "registrationSteps": "rules",
+      "submissionChecklist": "rules"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "由学校组织报名或在官方主页独立报名，按队内最高学历选择组别。",
+      "填写全体成员及指导教师院校全称并完成200元/队缴费。",
+      "报名截止后不能修改队伍信息，复赛需要初赛晋级资格。"
+    ],
+    "submissionChecklist": [
+      "A/B任选一题的电子论文。",
+      "结果数据集与计算程序源代码。",
+      "代码运行操作说明；其他支撑文件按题目和提交规范打包。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "ccf-ccsp-2026",
+    "title": "2026 CCF 大学生计算机系统与程序设计竞赛",
+    "officialName": "",
+    "series": "2026 CCF 大学生计算机系统与程序设计竞赛",
+    "edition": "2026",
+    "kind": "algorithm",
+    "mode": "onsite",
+    "region": "domestic",
+    "entry": "qualification",
+    "mainlandEligibility": "eligible",
+    "fee": "paid",
+    "location": "成都西华大学郫都校区",
+    "organizer": "中国计算机学会（CCF）",
+    "summary": "12小时线下程序与系统能力竞赛。本届已结束；CSP是资格依据，不是本条赛事本身。",
+    "eligibility": "高校在校生；第37–43次CSP认证任一次最好成绩至少200分，按成绩与报名顺序录取。",
+    "eligibilityStatus": "restricted",
+    "team": "个人机考。",
+    "deliverables": "在竞赛环境完成5道题；支持C/C++、Java或Python。",
+    "costs": "10月9日前会员500元/非会员800元，至10月11日分别800/1000元；食宿交通自理。",
+    "rules": "携带资料须遵守2026年9月14日的调整通知；校内推荐线可能高于全国最低资格。",
+    "officialUrl": "https://www.ccf.org.cn/Focus/2026-09-09/931088.shtml",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "系统编程",
+      "CSP资格",
+      "历史赛事"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://www.ccf.org.cn/Focus/2026-09-09/931088.shtml",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-10-11",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "当届主办方通知报名9月9日–10月11日，不能采用系统列表默认显示的比赛日截止",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "date",
+        "start": "2026-10-21",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "10月21日9:00–21:00比赛，次日颁奖，保留日期精度",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules",
+      "registrationSteps": "rules",
+      "submissionChecklist": "rules"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "核对第37–43次CSP成绩是否达到当届最低资格。",
+      "登录CCSP报名系统，选择2026竞赛和西华大学考点，个人或学校团报。",
+      "缴费后等待审核，赛前三个工作日起打印准考证。"
+    ],
+    "submissionChecklist": [
+      "可核验的CSP历史成绩与高校学籍信息。",
+      "审核通过的报名和缴费状态。",
+      "准考证与符合当届通知的可携带资料。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "computer-design-4c-2026",
+    "title": "2026 中国大学生计算机设计大赛 · 开发类",
+    "officialName": "",
+    "series": "2026 中国大学生计算机设计大赛 · 开发类",
+    "edition": "2026",
+    "kind": "developer_challenge",
+    "mode": "hybrid",
+    "region": "domestic",
+    "entry": "qualification",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上报名提交与各承办赛区线下答辩",
+    "organizer": "中国大学生计算机设计大赛组织委员会",
+    "summary": "收录软件应用、物联网、大数据和AI开发相关类别。本届已结束，须经校赛、省赛晋级国赛。",
+    "eligibility": "2026年全国高校在籍本科生；国赛仅接受省赛推荐的本科作品。",
+    "eligibilityStatus": "restricted",
+    "team": "同校2–9人，各小类具体上限以当届提交要求为准；国赛至少2名作者到场答辩。",
+    "deliverables": "原创作品及所属类别要求的文档、程序和展示材料，按2026年11大类提交规范办理。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "作品须在2025年7月1日至2026年6月30日完成，不可跨大类一稿多投，数据来源合规且知识产权归作者。",
+    "officialUrl": "https://jsjds.blcu.edu.cn/info/1078/1718.htm",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "软件开发",
+      "本科生",
+      "校赛晋级"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://jsjds.blcu.edu.cn/info/1078/1718.htm",
+        "title": "组委会2026参赛要求",
+        "locator": "第1–3、7–9项：作品、组队、晋级和国赛信息填报"
+      },
+      {
+        "id": "materials",
+        "role": "official",
+        "url": "https://jsjds.blcu.edu.cn/info/1045/2013.htm",
+        "title": "4C2026作品提交要求（4月17日）",
+        "locator": "11大类当届材料规范入口；不要使用2023旧模板"
+      },
+      {
+        "id": "status",
+        "role": "official",
+        "url": "https://jsjds.blcu.edu.cn/",
+        "title": "官方赛事动态",
+        "locator": "2026年9月获奖公告，确认本届结束"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-05-30",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "已获省赛推荐者的国赛信息填报核查截止5月30日，并非所有校赛统一截止",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "materials",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "registration": "status",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registrationSteps": "rules",
+      "submissionChecklist": "rules"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "通过本校校赛和所属省级赛选拔；国赛不能绕过省赛直接报名。",
+      "取得省赛推荐资格后在当届国赛平台填报并核对作者信息。",
+      "按入围类别当届模板提交作品，参加指定赛区答辩。"
+    ],
+    "submissionChecklist": [
+      "本届时间窗口内完成且拥有完整知识产权的原创作品。",
+      "2026年对应类别规定的材料与文档。",
+      "同校作者身份、排序和省赛推荐资格。"
+    ]
+  }
+]

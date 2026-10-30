@@ -5,8 +5,29 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1784479193297,
-      "tag": "0000_thin_pete_wisdom",
+      "when": 1793343262285,
+      "tag": "0000_woozy_leopardon",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793347200000,
+      "tag": "0001_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793348000000,
+      "tag": "0002_review_method",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793350000000,
+      "tag": "0003_blog_identity",
       "breakpoints": true
     }
   ]

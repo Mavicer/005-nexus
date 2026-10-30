@@ -1,210 +1,232 @@
+import { FilterSelect } from "@/components/events/filter-select";
 import Link from "next/link";
-import { Suspense } from "react";
-
-import { searchItems } from "@/lib/search";
-import { SearchBar } from "@/components/ui/search-bar";
-import { SearchCard } from "@/components/search-card";
-import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { getCurrentUser } from "@/lib/auth";
-
+import { queryEvents } from "@/modules/events/service";
+import {
+  KINDS,
+  KIND_LABELS,
+  MODE_LABELS,
+  ENTRY_LABELS,
+  FEE_LABELS,
+  REGION_LABELS,
+  listSchema,
+} from "@/modules/events/schema";
+import { EventCard } from "@/components/events/card";
 export const dynamic = "force-dynamic";
-
-const SUGGEST_CHIPS = ["数学建模", "挑战杯", "ICPC", "保研政策"];
-
-/**
- * 首页（SSR）
- * 护栏2：只调 searchItems()
- * 两种态：无 query = Hero 落地（Hero+热门+即将截止+成长入口）；
- *        有 query = Hero 收紧 + 搜索结果列表。
- */
-export default async function HomePage({
+export default async function Home({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const sp = await searchParams;
-  const q =
-    typeof sp.q === "string" ? sp.q : undefined;
-
-  const user = await getCurrentUser();
-
-  if (q) {
-    // 搜索结果态
-    const result = await searchItems({ query: q, pageSize: 20 });
+  const raw = Object.fromEntries(
+    Object.entries(await searchParams).filter(
+      ([, v]) => typeof v === "string" && v !== "",
+    ),
+  );
+  const parsed = listSchema.safeParse(raw);
+  if (!parsed.success)
     return (
-      <main className="mx-auto max-w-3xl px-6 py-8">
-        <div className="mb-5">
-          <Suspense>
-            <SearchBar />
-          </Suspense>
-        </div>
-        <p className="mb-4 text-xs text-neutral-400">
-          搜索「{q}」 · 共 {result.total} 条
-        </p>
-        {result.hits.length === 0 ? (
-          <EmptyState
-            title="没有找到相关竞赛"
-            description="试试其他关键词"
-          />
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {result.hits.map((hit) => (
-              <SearchCard key={hit.id} hit={hit} />
-            ))}
-          </div>
-        )}
-      </main>
+      <div className="panel empty">
+        <h1>筛选参数有误</h1>
+        <p>{parsed.error.issues.map((i) => i.message).join("；")}</p>
+        <Link className="btn" href="/">
+          重置筛选
+        </Link>
+      </div>
     );
-  }
-
-  // Hero 落地态
-  const [hot, closing] = await Promise.all([
-    searchItems({ sort: { by: "credibility" }, pageSize: 4 }),
-    searchItems({
-      filters: { closingWithinDays: 30 },
-      sort: { by: "closing" },
-      pageSize: 4,
-    }),
-  ]);
-
-  return (
-    <main>
-      {/* Hero */}
-      <section className="px-6 py-16">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="mb-3 text-3xl font-semibold tracking-tight text-neutral-900">
-            大学生未来四年的成长信息操作系统
-          </h1>
-          <p className="mb-8 text-sm leading-relaxed text-neutral-500">
-            发现机会 · 理解价值 · 制定计划 · 记录成长——降低大学阶段的信息差。
-          </p>
-          <div className="mb-4">
-            <Suspense>
-              <SearchBar />
-            </Suspense>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-neutral-400">热门搜索</span>
-            {SUGGEST_CHIPS.map((chip) => (
-              <Link
-                key={chip}
-                href={`/?q=${encodeURIComponent(chip)}`}
-                className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600 hover:border-neutral-300 hover:text-neutral-900"
-              >
-                {chip}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 热门机会 */}
-      <section className="px-6 py-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-base font-medium text-neutral-900">热门机会</h2>
-            <Link
-              href="/explore?sort=credibility"
-              className="text-xs text-neutral-400 hover:text-neutral-600"
-            >
-              查看全部 →
+  const p = parsed.data;
+  let result;
+  try {
+    result = await queryEvents(p);
+  } catch {
+    return (
+      <>
+        <Intro />
+        <div className="panel empty">
+          <h2>赛事服务暂时不可用</h2>
+          <p>这不是“没有赛事”。请稍后重试，或先到官方来源寻找活动。</p>
+          <div className="actions" style={{ justifyContent: "center" }}>
+            <Link className="btn primary" href="/">
+              重新加载
+            </Link>
+            <Link className="btn" href="/about#sources">
+              查看官方来源
             </Link>
           </div>
-          {hot.hits.length === 0 ? (
-            <EmptyState title="暂无数据" />
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {hot.hits.map((hit) => (
-                <SearchCard key={hit.id} hit={hit} />
-              ))}
-            </div>
-          )}
         </div>
-      </section>
-
-      {/* 即将截止 */}
-      {closing.hits.length > 0 && (
-        <section className="px-6 py-8">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-4 flex items-baseline justify-between">
-              <h2 className="text-base font-medium text-neutral-900">
-                即将截止
-              </h2>
-              <Link
-                href="/explore?sort=closing"
-                className="text-xs text-neutral-400 hover:text-neutral-600"
-              >
-                查看全部 →
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {closing.hits.map((hit) => (
-                <SearchCard key={hit.id} hit={hit} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 成长入口 */}
-      <section className="px-6 py-12">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="mb-4 text-base font-medium text-neutral-900">
-            成长入口
-          </h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <GrowthCard
-              title="探索竞赛"
-              desc="搜索全国通用竞赛，判断适不适合你"
-              href="/explore"
-            />
-            <GrowthCard
-              title="我的收藏"
-              desc="收藏感兴趣的竞赛，随时回看"
-              href={user ? "/dashboard" : "/login"}
-            />
-            <GrowthCard
-              title="资源日历"
-              desc="掌握大学关键时间节点"
-              href="/calendar"
-            />
-          </div>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function GrowthCard({
-  title,
-  desc,
-  href,
-  disabled = false,
-}: {
-  title: string;
-  desc: string;
-  href: string;
-  disabled?: boolean;
-}) {
-  if (disabled) {
-    return (
-      <Card className="p-4 opacity-60">
-        <p className="text-sm font-medium text-neutral-700">{title}</p>
-        <p className="mt-1 text-xs text-neutral-400">{desc}</p>
-        <span className="mt-3 inline-block rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-400">
-          即将上线
-        </span>
-      </Card>
+      </>
     );
   }
+  const pageUrl = (page: number) => {
+    const s = new URLSearchParams(
+      Object.entries(p)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, String(v)]),
+    );
+    s.set("page", String(page));
+    return `/?${s}`;
+  };
   return (
-    <Link href={href}>
-      <Card className="p-4 transition-colors hover:border-neutral-300 hover:bg-neutral-50">
-        <p className="text-sm font-medium text-neutral-900">{title}</p>
-        <p className="mt-1 text-xs text-neutral-500">{desc}</p>
-        <span className="mt-3 inline-block text-xs text-neutral-400">→</span>
-      </Card>
-    </Link>
+    <>
+      <Intro />
+      <form method="get" className="panel filter-panel">
+        <div className="search-row">
+          <label className="sr-only" htmlFor="q">
+            搜索赛事、技术或关键词
+          </label>
+          <input
+            id="q"
+            name="q"
+            defaultValue={p.q}
+            placeholder="搜索赛事名称、开发方向或关键词…"
+            maxLength={200}
+          />
+          <button className="btn primary">搜索</button>
+        </div>
+        <div className="filters">
+          <FilterSelect
+            name="kind"
+            label="赛事类型"
+            value={p.kind ?? ""}
+            options={[
+              { value: "", label: "全部类型" },
+              ...KINDS.map((value) => ({ value, label: KIND_LABELS[value]! })),
+            ]}
+          />
+          <FilterSelect
+            name="mode"
+            label="参与方式"
+            value={p.mode ?? ""}
+            options={[
+              { value: "", label: "全部方式" },
+              ...Object.entries(MODE_LABELS).map(([value, label]) => ({
+                value,
+                label,
+              })),
+            ]}
+          />
+          <FilterSelect
+            name="state"
+            label="报名状态"
+            value={p.state}
+            options={[
+              { value: "open", label: "正在报名" },
+              { value: "upcoming", label: "尚未开启" },
+              { value: "closed", label: "报名已截止" },
+              { value: "unknown", label: "待确认" },
+              { value: "all", label: "全部活动" },
+            ]}
+          />
+          <FilterSelect
+            name="within"
+            label="截止区间"
+            value={p.within ? String(p.within) : ""}
+            options={[
+              { value: "", label: "不限" },
+              { value: "7", label: "未来7天" },
+              { value: "30", label: "未来30天" },
+              { value: "90", label: "未来90天" },
+            ]}
+          />
+          <FilterSelect
+            name="sort"
+            label="排序"
+            value={p.sort}
+            options={[
+              { value: "recommended", label: "推荐排序" },
+              { value: "deadline", label: "报名截止优先" },
+              { value: "updated", label: "最近更新" },
+            ]}
+          />
+        </div>
+        <details
+          className="advanced-filters"
+          open={Boolean(p.region || p.entry || p.fee)}
+        >
+          <summary>
+            更多筛选{p.region || p.entry || p.fee ? " · 已启用" : ""}
+          </summary>
+          <div className="filters">
+            {" "}
+            {(
+              [
+                ["region", "地区", REGION_LABELS],
+                ["entry", "报名方式", ENTRY_LABELS],
+                ["fee", "费用", FEE_LABELS],
+              ] as const
+            ).map(([key, label, options]) => (
+              <FilterSelect
+                key={key}
+                name={key}
+                label={label}
+                value={p[key] ?? ""}
+                options={[
+                  { value: "", label: "不限" },
+                  ...Object.entries(options).map(([value, label]) => ({
+                    value,
+                    label,
+                  })),
+                ]}
+              />
+            ))}
+          </div>
+        </details>
+        <div className="small muted" style={{ marginTop: 16 }}>
+          线上不代表全球开放；参赛资格请查看每项活动的官方规则。　
+          <Link href="/" style={{ color: "var(--accent)" }}>
+            重置条件
+          </Link>
+        </div>
+      </form>
+      <div className="result-meta">
+        <span>{result.total} 场符合条件的活动</span>
+      </div>
+      {result.items.length ? (
+        <div className="events-grid">
+          {result.items.map((e) => (
+            <EventCard key={e.id} event={e} />
+          ))}
+        </div>
+      ) : (
+        <div className="panel empty">
+          <h2>暂时没有符合条件的活动</h2>
+          <p>
+            {p.state === "open"
+              ? "当前仅显示正在报名的活动。"
+              : "试试减少筛选条件。"}
+          </p>
+          <Link
+            className="btn"
+            href={
+              p.q
+                ? `/?${new URLSearchParams({ q: p.q, state: "all" })}`
+                : "/?state=all"
+            }
+          >
+            {p.q ? "包含已截止的相关赛事" : "查看全部活动"}
+          </Link>
+        </div>
+      )}
+      {result.total > p.pageSize && (
+        <div className="pagination">
+          {p.page > 1 && <Link href={pageUrl(p.page - 1)}>← 上一页</Link>}
+          <span>
+            第 {p.page} / {Math.ceil(result.total / p.pageSize)} 页
+          </span>
+          {p.page * p.pageSize < result.total && (
+            <Link href={pageUrl(p.page + 1)}>下一页 →</Link>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+function Intro() {
+  return (
+    <section className="intro">
+      <h1>赛事</h1>
+      <Link className="btn" href="/calendar">
+        查看日历
+      </Link>
+    </section>
   );
 }

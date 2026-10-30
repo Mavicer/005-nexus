@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nexus",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true },
+  "vars": {
+    "APP_ORIGIN": "https://nexus.mavicer.cc",
+    "BLOG_ORIGIN": "https://mavicer.cc",
+    "AUTH_PROVIDER": "blog",
+    "NEXUS_DATABASE": "d1",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nexus",
+      "database_id": "041914af-506a-473e-9254-23bf95ea20f5",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "routes": [{ "pattern": "nexus.mavicer.cc", "custom_domain": true }],
+}

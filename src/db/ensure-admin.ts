@@ -14,7 +14,7 @@
  */
 import { eq } from "drizzle-orm";
 
-import { db, pool } from "@/db/client";
+import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { hashPassword, isEmailValid, isPasswordValid } from "@/lib/password";
 
@@ -62,19 +62,4 @@ export async function ensureAdmin(): Promise<void> {
   const passwordHash = await hashPassword(password);
   await db.insert(users).values({ email, passwordHash, isAdmin: true });
   console.log(`[ensure-admin] ✓ 已创建管理员 ${email}（请尽快修改初始密码）`);
-}
-
-// 作为脚本直接运行时
-async function main() {
-  await ensureAdmin();
-  await pool.end();
-}
-
-// 仅在直接执行时运行（被 seed 导入时不重复跑 main）
-if (require.main === module) {
-  main().catch((err) => {
-    console.error("[ensure-admin] 失败:", err);
-    void pool.end();
-    process.exit(1);
-  });
 }
