@@ -180,17 +180,9 @@ export default async function Home({
           </Link>
         </div>
       </Form>
-      {p.sort === "recommended" && (
+      {(p.sort === "recommended" || p.sort === "directory") && (
         <p className="small muted">
-          综合专业认可度与全国目录，结合具体赛项判断；同组内按报名状态、国内优先排序。{" "}
           <Link href="/about#directory">排序依据 ↗</Link>
-        </p>
-      )}
-      {p.sort === "directory" && (
-        <p className="small muted">
-          按2024版目录：赛事收录 → 所属系列收录 →
-          未确认收录；同组内按报名状态及推荐规则排序。{" "}
-          <Link href="/about#directory">查看依据 ↗</Link>
         </p>
       )}
       <div className="result-meta">

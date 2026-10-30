@@ -134,6 +134,12 @@ it("separates source-backed directory matches from editorial judgement", () => {
   expect(editorialAssessment("atcoder-abc482").level).toBeLessThan(
     editorialAssessment("ccf-ccsp-2026").level,
   );
+  expect(recognitionPriority("robomaster-rmul-2027")).toBeGreaterThan(
+    recognitionPriority("cumcm-2026"),
+  );
+  expect(recognitionPriority("robomaster-rmua-2026")).toBeGreaterThan(
+    recognitionPriority("cumcm-2026"),
+  );
   expect(recognitionPriority("robomaster-rmuc-2027")).toBeGreaterThan(
     recognitionPriority("qoder-campus-2026"),
   );
@@ -177,9 +183,9 @@ it("ranks professional benchmarks ahead of new events and applies explicit direc
       now,
     );
     expect(overall.items.map((event) => event.slug)).toEqual([
+      "robomaster-rmuc-2027",
       "cumcm-2026",
       "comap-mcm-icm-2027",
-      "robomaster-rmuc-2027",
       "embedded-fpga-2026",
       "qoder-campus-2026",
     ]);
@@ -202,7 +208,7 @@ it("ranks professional benchmarks ahead of new events and applies explicit direc
         `SELECT slug FROM nexus_events ORDER BY (${recognitionPrioritySql('"nexus_events"."slug"')}) DESC, slug`,
       )
       .all();
-    expect(pgOrder[0]!.slug).toBe("cumcm-2026");
+    expect(pgOrder[0]!.slug).toBe("robomaster-rmuc-2027");
     const rows = sqlite
       .prepare(
         `SELECT slug, (${directoryRankSql("slug")}) AS rank FROM nexus_events`,

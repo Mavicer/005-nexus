@@ -1,5 +1,4 @@
-import { editorialAssessment } from "@/modules/events/editorial";
-import { directoryLabel, directoryMatch } from "@/modules/events/directory";
+import { eventIntroduction } from "@/modules/events/editorial";
 import Link from "next/link";
 import type { PublicEvent } from "@/modules/events/service";
 import {
@@ -34,21 +33,11 @@ export function EventCard({ event }: { event: PublicEvent }) {
         <br />
         {e.team}
       </div>
-      <div className="tags">
-        <span className="tag" title={editorialAssessment(event.slug).reason}>
-          本站判断 · {editorialAssessment(event.slug).label}
-        </span>
-        {directoryLabel(event.slug) && (
-          <span className="tag" title={directoryMatch(event.slug)?.name}>
-            {directoryLabel(event.slug)}
-          </span>
-        )}
-      </div>
       <div className="event-access">
         <span>{ENTRY_LABELS[e.entry ?? "unknown"]}</span>
         <span>{FEE_LABELS[e.fee ?? "unknown"]}</span>
       </div>
-      <p>{e.summary}</p>
+      <p>{eventIntroduction(event.slug, e.summary)}</p>
       <div className="tags">
         {e.tags.map((tag) => (
           <span className="tag" key={tag}>

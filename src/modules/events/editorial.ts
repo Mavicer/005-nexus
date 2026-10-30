@@ -134,7 +134,33 @@ export function editorialAssessment(slug: string) {
           "适合快速开发与作品实践；暂未按主办方品牌赋予更高的奖项认可度。",
       };
 }
+// RoboMaster is a deliberate site focus, not an official award-grade equivalence.
+const featured: Record<string, number> = {
+  "robomaster-rmuc-2027": 10,
+  "robomaster-rmul-2027": 9,
+  "robomaster-rmua-2026": 8,
+};
+const introductions: Record<string, string> = {
+  "robomaster-rmuc-2027":
+    "机器人综合工程标杆赛事，融合视觉识别、嵌入式控制与机械设计，强调校队长期研发和实机对抗。",
+  "robomaster-rmul-2027":
+    "RoboMaster区域联盟赛，适合新建校队积累机器人研发、视觉识别与电控实战经验。",
+  "robomaster-rmua-2026":
+    "RoboMaster算法专项赛，通过无人机仿真比拼感知、规划和控制，提交Docker镜像参与评测。",
+  "cumcm-2026":
+    "国内本科数学建模标杆赛事，围绕实际问题完成模型、计算验证与论文。",
+  "gmcm-2026":
+    "研究生数学建模代表性赛事，侧重复杂问题分析、建模求解与论文表达。",
+  "comap-mcm-icm-2027":
+    "国际大学生数学建模代表性赛事，选择一道题建立模型、计算验证并提交英文论文。",
+  "ccf-ccsp-2026":
+    "CCF主办的高水平系统与程序设计竞赛，兼顾算法设计、系统能力和代码实现。",
+};
+export function eventIntroduction(slug: string, summary: string): string {
+  return Object.hasOwn(introductions, slug) ? introductions[slug]! : summary;
+}
 export function recognitionPriority(slug: string) {
+  if (Object.hasOwn(featured, slug)) return featured[slug]!;
   return (
     editorialAssessment(slug).level * 2 + (directoryRank(slug) > 0 ? 1 : 0)
   );
