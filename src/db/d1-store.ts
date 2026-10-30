@@ -286,7 +286,15 @@ export class D1Store {
           `(lower(${text}) LIKE ${bind("%" + escapeLike(term) + "%")} ESCAPE '\\'${topic ? ` OR kind=${bind(topic)}` : ""})`,
         );
     }
-    const score = `CASE WHEN ${j("mainlandEligibility")}='ineligible' THEN -5000 WHEN mode='online' AND ${j("entry")}='direct' AND ${j("mainlandEligibility")}='eligible' THEN 1000 WHEN ${j("region")}='domestic' THEN 700 WHEN mode='online' THEN 400 WHEN mode='hybrid' THEN 200 ELSE 0 END
+    const score = `CASE WHEN ${j("mainlandEligibility")}='ineligible' THEN -5000
+      WHEN ${j("region")}='domestic' AND mode='online' AND ${j("entry")}='direct' AND ${j("mainlandEligibility")}='eligible' THEN 1400
+      WHEN ${j("region")}='domestic' THEN 1200
+      WHEN ${j("region")}='international' AND mode='onsite' THEN -800
+      WHEN ${j("region")}='international' AND mode='hybrid' THEN -100
+      WHEN ${j("region")}='international' AND mode='online' AND ${j("entry")}='direct' AND ${j("mainlandEligibility")}='eligible' THEN 600
+      WHEN ${j("region")}='international' AND mode='online' THEN 250
+      WHEN mode='online' AND ${j("entry")}='direct' AND ${j("mainlandEligibility")}='eligible' THEN 800
+      WHEN mode='online' THEN 400 WHEN mode='hybrid' THEN 200 ELSE 0 END
       + CASE kind WHEN 'hackathon' THEN 50 WHEN 'developer_challenge' THEN 40 ELSE 0 END
       + CASE ${j("fee")} WHEN 'free' THEN 20 WHEN 'paid' THEN -20 ELSE 0 END
       + CASE WHEN coalesce(${j("mainlandEligibility")},'unknown')='unknown' THEN -100 ELSE 0 END

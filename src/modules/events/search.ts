@@ -2,6 +2,9 @@ import { and, eq, or, sql } from "drizzle-orm";
 import { events } from "@/db/schema";
 
 const topics: Record<string, string> = {
+  机器人: "robotics_hardware",
+  硬件: "robotics_hardware",
+  嵌入式: "robotics_hardware",
   网络安全: "ctf",
   信息安全: "ctf",
   网安: "ctf",

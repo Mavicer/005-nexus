@@ -8,6 +8,7 @@ export const KINDS = [
   "math_modeling",
   "ctf",
   "algorithm",
+  "robotics_hardware",
 ] as const;
 export const KIND_LABELS: Record<string, string> = {
   hackathon: "黑客松",
@@ -16,6 +17,7 @@ export const KIND_LABELS: Record<string, string> = {
   math_modeling: "数学建模",
   ctf: "CTF",
   algorithm: "算法竞赛",
+  robotics_hardware: "机器人 / 硬件",
 };
 export const MODE_LABELS: Record<string, string> = {
   online: "线上",
@@ -288,7 +290,7 @@ export const listSchema = z.object({
   mode: z.enum(["online", "onsite", "hybrid"]).optional(),
   state: z
     .enum(["open", "upcoming", "closed", "unknown", "all"])
-    .default("open"),
+    .default("all"),
   tag: z.string().max(30).optional(),
   region: z.enum(["domestic", "international", "unknown"]).optional(),
   entry: z

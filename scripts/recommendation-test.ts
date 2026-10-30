@@ -59,8 +59,8 @@ try {
   const result = await queryEvents({ q: stamp, state: "all" }, now);
   const names = result.items.map((e) => e.slug.slice(stamp.length + 1));
   assert.deepEqual(names, [
-    "online-direct",
     "domestic",
+    "online-direct",
     "online-unknown",
     "foreign-onsite",
     "ineligible",
@@ -81,7 +81,7 @@ try {
   );
   assert.equal(deadline.items.length, 6);
   console.log(
-    "PASS recommendation: online direct > domestic > other online > foreign onsite; ineligible lowered, closed last; pagination after ranking; manual sort retained",
+    "PASS recommendation: domestic > foreign online direct > other foreign online > foreign onsite; ineligible lowered, closed last; pagination after ranking; manual sort retained",
   );
 } finally {
   if (ids.length) {
