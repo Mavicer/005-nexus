@@ -134,7 +134,8 @@ export default async function Home({
             label="排序"
             value={p.sort}
             options={[
-              { value: "recommended", label: "推荐排序" },
+              { value: "directory", label: "全国目录收录优先" },
+              { value: "recommended", label: "综合认可度优先" },
               { value: "deadline", label: "报名截止优先" },
               { value: "updated", label: "最近更新" },
             ]}
@@ -179,6 +180,11 @@ export default async function Home({
           </Link>
         </div>
       </Form>
+      {(p.sort === "recommended" || p.sort === "directory") && (
+        <p className="small muted">
+          <Link href="/about#directory">排序依据 ↗</Link>
+        </p>
+      )}
       <div className="result-meta">
         <span>{result.total} 场符合条件的活动</span>
       </div>

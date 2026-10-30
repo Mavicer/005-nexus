@@ -297,7 +297,9 @@ export const listSchema = z.object({
     .enum(["direct", "application", "qualification", "unknown"])
     .optional(),
   fee: z.enum(["free", "paid", "unknown"]).optional(),
-  sort: z.enum(["recommended", "deadline", "updated"]).default("recommended"),
+  sort: z
+    .enum(["directory", "recommended", "deadline", "updated"])
+    .default("recommended"),
   page: z.coerce.number().int().min(1).max(10000).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
   within: z.coerce.number().int().min(1).max(365).optional(),

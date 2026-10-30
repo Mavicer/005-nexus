@@ -1,3 +1,4 @@
+import { eventIntroduction } from "@/modules/events/editorial";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPublicEvent } from "@/modules/events/service";
@@ -36,7 +37,7 @@ export default async function Detail({
         </div>
         <h1>{e.title}</h1>
         {e.officialName && <p className="small muted">{e.officialName}</p>}
-        <p className="muted small">{e.summary}</p>
+        <p className="muted small">{eventIntroduction(row.slug, e.summary)}</p>
         <div className="facts">
           {MODE_LABELS[e.mode]}
           {e.location === MODE_LABELS[e.mode] ? "" : ` · ${e.location}`}　/　
