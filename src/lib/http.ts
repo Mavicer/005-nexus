@@ -67,10 +67,10 @@ export function errorResponse(e: unknown) {
     );
   console.error(
     "[nexus] request failed",
-    e instanceof Error ? e.name : "unknown",
+    e instanceof Error ? `${e.name}: ${e.message}` : "unknown",
   );
   return NextResponse.json(
     { error: "服务暂不可用，请稍后重试" },
-    { status: 503 },
+    { status: 503, headers: { "Content-Type": "application/json; charset=utf-8" } },
   );
 }

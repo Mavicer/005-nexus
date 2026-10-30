@@ -61,7 +61,7 @@ export async function blogRequest(
     },
     body: JSON.stringify(body),
     cache: "no-store",
-    redirect: "error",
+    redirect: "manual",
     signal: AbortSignal.timeout(5000),
   });
   if (!response.ok) throw new Error("博客账号服务暂时不可用，请重试");
