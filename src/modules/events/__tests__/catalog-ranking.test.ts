@@ -7,6 +7,12 @@ import { D1Store } from "@/db/d1-store";
 import { eventSchema, listSchema } from "../schema";
 import { registrationState } from "../time";
 import { recommendationScore } from "../recommendation";
+import { directoryRank, directoryRankSql, directoryMatch } from "../directory";
+import {
+  recognitionPriority,
+  recognitionPrioritySql,
+  editorialAssessment,
+} from "../editorial";
 import { fixture } from "./fixture";
 
 // Exercise the real D1 query in an isolated SQLite database, without production access.
@@ -116,4 +122,94 @@ it("validates the new batch without duplicate identities or pretending closed ev
       now,
     ),
   ).toBe("open");
+});
+
+it("separates source-backed directory matches from editorial judgement", () => {
+  expect(directoryRank("cumcm-2026")).toBe(2);
+  expect(directoryRank("embedded-fpga-2026")).toBe(1);
+  expect(directoryMatch("robomaster-rmuc-2027")?.status).toBe("scope_pending");
+  expect(directoryRank("ccf-ccsp-2026")).toBe(0);
+  expect(directoryRank("comap-mcm-icm-2027")).toBe(0);
+  expect(directoryRank("unknown-national-competition")).toBe(0);
+  expect(editorialAssessment("atcoder-abc482").level).toBeLessThan(
+    editorialAssessment("ccf-ccsp-2026").level,
+  );
+  expect(recognitionPriority("robomaster-rmuc-2027")).toBeGreaterThan(
+    recognitionPriority("qoder-campus-2026"),
+  );
+});
+it("ranks professional benchmarks ahead of new events and applies explicit directory sorting before pagination", async () => {
+  const sqlite = new DatabaseSync(":memory:");
+  try {
+    sqlite.exec(readFileSync("migrations/0001_nexus.sql", "utf8"));
+    sqlite.exec(
+      "INSERT INTO users(id,email,created_at,updated_at) VALUES('test','test@test.invalid','2026-10-31','2026-10-31')",
+    );
+    const slugs = [
+      "qoder-campus-2026",
+      "comap-mcm-icm-2027",
+      "cumcm-2026",
+      "embedded-fpga-2026",
+      "robomaster-rmuc-2027",
+    ];
+    for (const slug of slugs) {
+      const closed = [
+        "cumcm-2026",
+        "robomaster-rmuc-2027",
+        "embedded-fpga-2026",
+      ].includes(slug);
+      const event = eventSchema.parse({
+        ...fixture(),
+        slug,
+        registrationSignal: closed ? "closed" : "open",
+        evidence: { ...fixture().evidence, registration: "rules" },
+      });
+      sqlite
+        .prepare(
+          "INSERT INTO nexus_events(id,slug,title,kind,mode,status,review_state,published_data,updated_at,created_at,created_by) VALUES(?,?,?,?,?,'published','verified',?,'2026-10-30','2026-10-30','test')",
+        )
+        .run(slug, slug, slug, event.kind, event.mode, JSON.stringify(event));
+    }
+    const store = new D1Store(session(sqlite));
+    const now = new Date("2026-10-31T00:00:00Z");
+    const overall = await store.queryEvents(
+      { state: "all", sort: "recommended" },
+      now,
+    );
+    expect(overall.items.map((event) => event.slug)).toEqual([
+      "cumcm-2026",
+      "comap-mcm-icm-2027",
+      "robomaster-rmuc-2027",
+      "embedded-fpga-2026",
+      "qoder-campus-2026",
+    ]);
+    const catalog = await store.queryEvents(
+      { state: "all", sort: "directory", pageSize: 2 },
+      now,
+    );
+    expect(catalog.items.map((event) => event.slug)).toEqual([
+      "cumcm-2026",
+      "embedded-fpga-2026",
+    ]);
+    expect(catalog.total).toBe(5);
+    const open = await store.queryEvents(
+      { state: "open", sort: "directory" },
+      now,
+    );
+    expect(open.items).toHaveLength(2);
+    const pgOrder = sqlite
+      .prepare(
+        `SELECT slug FROM nexus_events ORDER BY (${recognitionPrioritySql('"nexus_events"."slug"')}) DESC, slug`,
+      )
+      .all();
+    expect(pgOrder[0]!.slug).toBe("cumcm-2026");
+    const rows = sqlite
+      .prepare(
+        `SELECT slug, (${directoryRankSql("slug")}) AS rank FROM nexus_events`,
+      )
+      .all();
+    expect(rows.find((row) => row.slug === "comap-mcm-icm-2027")!.rank).toBe(0);
+  } finally {
+    sqlite.close();
+  }
 });

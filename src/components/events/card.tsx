@@ -1,3 +1,5 @@
+import { editorialAssessment } from "@/modules/events/editorial";
+import { directoryLabel, directoryMatch } from "@/modules/events/directory";
 import Link from "next/link";
 import type { PublicEvent } from "@/modules/events/service";
 import {
@@ -31,6 +33,16 @@ export function EventCard({ event }: { event: PublicEvent }) {
         {e.location === MODE_LABELS[e.mode] ? "" : ` · ${e.location}`}
         <br />
         {e.team}
+      </div>
+      <div className="tags">
+        <span className="tag" title={editorialAssessment(event.slug).reason}>
+          本站判断 · {editorialAssessment(event.slug).label}
+        </span>
+        {directoryLabel(event.slug) && (
+          <span className="tag" title={directoryMatch(event.slug)?.name}>
+            {directoryLabel(event.slug)}
+          </span>
+        )}
       </div>
       <div className="event-access">
         <span>{ENTRY_LABELS[e.entry ?? "unknown"]}</span>

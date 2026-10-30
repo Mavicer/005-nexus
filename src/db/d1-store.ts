@@ -1,3 +1,5 @@
+import { recognitionPrioritySql } from "@/modules/events/editorial";
+import { directoryRankSql } from "@/modules/events/directory";
 import type { D1DatabaseSession } from "@cloudflare/workers-types";
 import type { events, revisions } from "./schema";
 import {
@@ -244,7 +246,10 @@ export class D1Store {
       return "?";
     };
     if (p.state === "open") conditions.push("review_state='verified'");
-    if (p.state === "open" && p.sort === "recommended")
+    if (
+      p.state === "open" &&
+      (p.sort === "recommended" || p.sort === "directory")
+    )
       conditions.push(
         `coalesce(${j("mainlandEligibility")},'unknown')!='ineligible'`,
       );
@@ -307,8 +312,8 @@ export class D1Store {
     const cte = `WITH catalog AS (SELECT *, ${state} AS registration_state FROM nexus_events)`;
     const where = conditions.join(" AND ");
     const order =
-      p.sort === "recommended"
-        ? `CASE registration_state WHEN 'open' THEN 0 WHEN 'upcoming' THEN 1 WHEN 'unknown' THEN 2 ELSE 3 END, (${score}) DESC, registration_closes_at ASC NULLS LAST,id ASC`
+      p.sort === "recommended" || p.sort === "directory"
+        ? `${p.sort === "directory" ? `(${directoryRankSql("slug")}) DESC, ` : `(${recognitionPrioritySql("slug")}) DESC, `}CASE registration_state WHEN 'open' THEN 0 WHEN 'upcoming' THEN 1 WHEN 'unknown' THEN 2 ELSE 3 END, (${score}) DESC, registration_closes_at ASC NULLS LAST,id ASC`
         : p.sort === "deadline"
           ? "registration_closes_at ASC NULLS LAST,updated_at DESC,id ASC"
           : "updated_at DESC,id ASC";
@@ -322,7 +327,9 @@ export class D1Store {
         [
           ...args,
           ...filterArgs,
-          ...(p.sort === "recommended" ? scoreArgs : []),
+          ...(p.sort === "recommended" || p.sort === "directory"
+            ? scoreArgs
+            : []),
           p.pageSize,
           (p.page - 1) * p.pageSize,
         ],

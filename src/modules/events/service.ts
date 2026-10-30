@@ -1,3 +1,5 @@
+import { recognitionPrioritySql } from "./editorial";
+import { directoryRankSql } from "./directory";
 import { usingD1, d1Store } from "@/db/cloudflare";
 import { searchCondition } from "./search";
 import { recommendationScore } from "./recommendation";
@@ -201,7 +203,10 @@ export async function queryEvents(raw: unknown, now = new Date()) {
   const p = listSchema.parse(raw);
   const conditions = [eq(events.status, "published")];
   if (p.state === "open") conditions.push(eq(events.reviewState, "verified"));
-  if (p.state === "open" && p.sort === "recommended")
+  if (
+    p.state === "open" &&
+    (p.sort === "recommended" || p.sort === "directory")
+  )
     conditions.push(
       sql`coalesce(${events.publishedData}->>'mainlandEligibility','unknown') != 'ineligible'`,
     );
@@ -238,8 +243,19 @@ export async function queryEvents(raw: unknown, now = new Date()) {
       .from(events)
       .where(where)
       .orderBy(
-        ...(p.sort === "recommended"
+        ...(p.sort === "recommended" || p.sort === "directory"
           ? [
+              ...(p.sort === "directory"
+                ? [
+                    sql.raw(
+                      `(${directoryRankSql('"nexus_events"."slug"')}) DESC`,
+                    ),
+                  ]
+                : [
+                    sql.raw(
+                      `(${recognitionPrioritySql('"nexus_events"."slug"')}) DESC`,
+                    ),
+                  ]),
               sql`CASE ${state} WHEN 'open' THEN 0 WHEN 'upcoming' THEN 1 WHEN 'unknown' THEN 2 ELSE 3 END ASC`,
               desc(recommendationScore(now)),
               sql`${events.registrationClosesAt} ASC NULLS LAST`,
