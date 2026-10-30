@@ -16,8 +16,10 @@ export const pool =
   new Pool({
     connectionString:
       process.env.DATABASE_URL ??
-      "postgresql://postgres:postgres@localhost:5432/daxuexi",
+      "postgresql://nexus@127.0.0.1:55438/nexus_dev",
     max: Number(process.env.DATABASE_POOL_MAX ?? 10),
+    connectionTimeoutMillis: 3000,
+    idleTimeoutMillis: 10000,
   });
 
 if (process.env.NODE_ENV !== "production") {

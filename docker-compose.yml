@@ -1,63 +1,37 @@
-# ============================================================
-# 大学学习通网站 — Docker Compose
-# R8 部署基线：单 VM 起步 = app + postgres
-# 后续 P3 可追加 meilisearch 服务（已注释预留）
-#
-# 国内适配（R4）：postgres 镜像需支持 pg_jieba 扩展
-#   注意：官方 postgres 镜像不含 pg_jieba。schema migration 阶段
-#   若 pg_jieba 装不上，按 Agent B 指示降级 pg_trgm 并上报。
-#   届时会改用自建 pg_jieba 镜像或退回 pg_trgm。
-# ============================================================
-
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: daxuexi-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: daxuexi
-      TZ: Asia/Shanghai
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: nexus
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
-      # 扩展初始化脚本挂载点（pgcrypto 等），待 migration 阶段填充
-      - ./docker/postgres-init:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d daxuexi"]
-      interval: 10s
+      test: [CMD-SHELL, "pg_isready -U nexus -d nexus"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://nexus:${POSTGRES_PASSWORD}@postgres:5432/nexus
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
+      AUTH_PROVIDER: blog
+      BLOG_ORIGIN: https://mavicer.cc
+      BLOG_SSO_SECRET: ${BLOG_SSO_SECRET:?set shared server-side SSO secret}
+      APP_ORIGIN: ${APP_ORIGIN:?set public origin, e.g. https://nexus.example.org}
+    ports:
+      - 127.0.0.1:3000:3000
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
       timeout: 5s
-      retries: 5
-
-  # app 服务在 schema migration 完成后启用
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: daxuexi-app
-  #   restart: unless-stopped
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   environment:
-  #     NODE_ENV: production
-  #     DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/daxuexi
-  #   ports:
-  #     - "3000:3000"
-
-  # P3 预留：Meilisearch 搜索引擎
-  # meilisearch:
-  #   image: getmeili/meilisearch:v1.12
-  #   container_name: daxuexi-meili
-  #   restart: unless-stopped
-  #   environment:
-  #     MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-changeme}
-  #   ports:
-  #     - "7700:7700"
-  #   volumes:
-  #     - ./docker-data/meili:/meili_data
-
+      retries: 3
 volumes:
   postgres-data:

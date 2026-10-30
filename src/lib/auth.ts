@@ -1,20 +1,5 @@
-/**
- * 会话与认证（护栏：会话库只用 jose，不引 Passport/next-auth）
- *
- * 会话方案选型（Agent B 第 8 条指令，要求写明理由）：
- *   JWT + httpOnly cookie，而非 server session store。理由：
- *   1. MVP 无 Redis，server session store 需要额外存储依赖；JWT 无状态最简。
- *   2. httpOnly cookie 防 XSS 窃取（JS 读不到 token）。
- *   3. jose 轻量纯 JS 无 native 依赖，契合"不引重框架"。
- *
- * cookie：httpOnly + secure(生产) + sameSite=lax + 过期 7 天滑动。
- * 不做 refresh token（MVP 简化）；登出清 cookie。
- *
- * 安全（Agent B 第 9 条必改）：
- *   生产环境 AUTH_SECRET 缺失或 <32 字节 → 拒绝启动（抛错）。
- *   否则应用会用公开已知密钥运行，任何人可伪造 JWT 绕过认证。
- *   dev 才允许兜底密钥。
- */
+import { cache } from "react";
+import { blogSsoEnabled, getBlogUser } from "./blog-sso";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
@@ -37,7 +22,6 @@ function getSecret(): Uint8Array {
   const isProd = process.env.NODE_ENV === "production";
 
   if (isProd) {
-    // 生产：AUTH_SECRET 必填且 ≥32 字节，否则拒绝启动
     if (!secret) {
       throw new Error(
         "[auth] 生产环境必须设置 AUTH_SECRET 环境变量（≥32 字节随机串）",
@@ -50,12 +34,9 @@ function getSecret(): Uint8Array {
     }
     return new TextEncoder().encode(secret);
   }
-
-  // dev：允许兜底密钥（仅本地开发）
   return new TextEncoder().encode(secret ?? DEV_SECRET);
 }
 
-/** 签发 JWT 并写入 httpOnly cookie（7 天滑动过期） */
 export async function createSession(payload: SessionPayload): Promise<void> {
   const token = await new SignJWT({
     userId: payload.userId,
@@ -78,42 +59,41 @@ export async function createSession(payload: SessionPayload): Promise<void> {
   });
 }
 
-/** 清除会话 cookie（登出） */
 export async function clearSession(): Promise<void> {
   const store = await cookies();
   store.delete(COOKIE_NAME);
 }
 
-/** 从请求 cookie 解出当前用户；无效或无 token 返回 null */
-export async function getCurrentUser(): Promise<SessionPayload | null> {
-  const store = await cookies();
-  const token = store.get(COOKIE_NAME)?.value;
-  if (!token) return null;
+export const getCurrentUser = cache(
+  async (): Promise<SessionPayload | null> => {
+    if (blogSsoEnabled()) return getBlogUser();
+    const store = await cookies();
+    const token = store.get(COOKIE_NAME)?.value;
+    if (!token) return null;
 
-  try {
-    const { payload } = await jwtVerify(token, getSecret());
-    if (!payload.userId || !payload.email) return null;
-    return {
-      userId: String(payload.userId),
-      email: String(payload.email),
-      isAdmin: Boolean(payload.isAdmin),
-    };
-  } catch {
-    return null;
-  }
-}
+    let userId: string;
+    try {
+      const { payload } = await jwtVerify(token, getSecret(), {
+        algorithms: ["HS256"],
+      });
+      if (
+        typeof payload.sub !== "string" ||
+        !/^[0-9a-f-]{36}$/i.test(payload.sub)
+      )
+        return null;
+      userId = payload.sub;
+    } catch {
+      return null;
+    }
+    const [user] = await db
+      .select({ userId: users.id, email: users.email, isAdmin: users.isAdmin })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return user ?? null;
+  },
+);
 
-/** 取数据库中的最新 isAdmin（防止 JWT 内旧权限被滥用） */
-async function fetchIsAdmin(userId: string): Promise<boolean> {
-  const [row] = await db
-    .select({ isAdmin: users.isAdmin })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  return row?.isAdmin ?? false;
-}
-
-/** 要求登录，否则抛 UNAUTHORIZED（供 API 路由用） */
 export async function requireUser(): Promise<SessionPayload> {
   const user = await getCurrentUser();
   if (!user) {
@@ -122,35 +102,20 @@ export async function requireUser(): Promise<SessionPayload> {
   return user;
 }
 
-/**
- * 要求管理员，否则抛 UNAUTHORIZED(未登录) / FORBIDDEN(非管理员)
- * isAdmin 以数据库实时值为准（JWT 内的 isAdmin 仅作快路径，实际校验查库）
- */
 export async function requireAdmin(): Promise<SessionPayload> {
   const user = await getCurrentUser();
   if (!user) {
     throw new Error("UNAUTHORIZED");
   }
-  const isAdmin = await fetchIsAdmin(user.userId);
-  if (!isAdmin) {
+  if (!user.isAdmin) {
     throw new Error("FORBIDDEN");
   }
   return { ...user, isAdmin: true };
 }
 
-/**
- * 管理员页面守卫（必改1，Agent B 第 10 条）：
- * server component 入口用此函数，查 DB 实时 isAdmin（不信任 JWT 内 isAdmin）。
- * 返回当前管理员用户；未登录或非管理员返回 null（页面自行渲染 notFound/重定向）。
- *
- * 之前 admin 页面用 getCurrentUser().isAdmin（信 JWT），存在安全不一致：
- * 管理员被撤销 admin（DB is_admin=false）但 JWT 未过期（最长 7 天）时，
- * 用户仍能访问 admin 页面并执行 lib 操作。现统一查 DB。
- */
 export async function requireAdminPage(): Promise<SessionPayload | null> {
   const user = await getCurrentUser();
   if (!user) return null;
-  const isAdmin = await fetchIsAdmin(user.userId);
-  if (!isAdmin) return null;
+  if (!user.isAdmin) return null;
   return { ...user, isAdmin: true };
 }

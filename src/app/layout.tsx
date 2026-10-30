@@ -1,35 +1,55 @@
+import { BlogAppearanceSync } from "@/components/events/blog-appearance-sync";
+import { SessionRefresh } from "@/components/events/session-refresh";
+import { blogOrigin, blogSsoEnabled } from "@/lib/blog-sso";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-
 export const metadata: Metadata = {
-  title: "Nexus | 大学资源探索平台",
+  title: { default: "Nexus · 计算机赛事", template: "%s · Nexus" },
   description:
-    "Nexus — 整合竞赛、科研、保研、实习等大学阶段机会信息，建立可靠、高效的资源检索与时间管理系统，降低信息差。",
-  keywords: [
-    "大学生",
-    "竞赛",
-    "保研",
-    "科研",
-    "考试",
-    "实习",
-    "资源日历",
-    "信息平台",
-  ],
+    "计算机专业赛事目录，提供参赛条件、报名时间、提交要求与官方来源。",
 };
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const user = await getCurrentUser();
   return (
     <html lang="zh-CN">
-      <body className="flex min-h-screen flex-col bg-neutral-50 text-neutral-900 antialiased">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+      <body>
+        <BlogAppearanceSync
+          origin={process.env.BLOG_APPEARANCE_ORIGIN ?? blogOrigin()}
+        />
+        {blogSsoEnabled() && <SessionRefresh />}
+        <header className="topbar">
+          <div className="shell">
+            <Link className="brand" href="/">
+              <span className="brand-mark">N</span>Nexus
+            </Link>
+            <nav className="nav" aria-label="主导航">
+              <Link href="/">发现赛事</Link>
+              <a href={blogOrigin()}>博客</a>
+              <Link href="/calendar">赛事日历</Link>
+              <Link href="/saved">我的收藏</Link>
+              <Link href="/about">收录说明</Link>
+              {user?.isAdmin && <Link href="/admin/events">管理</Link>}
+              <Link href={user ? "/account" : "/login"}>
+                {user ? "账号" : "登录 ↗"}
+              </Link>
+            </nav>
+          </div>
+        </header>
+        <main className="shell page">{children}</main>
+        <footer className="footer">
+          <div className="shell">
+            <span>Nexus · 计算机赛事目录</span>
+            <span>
+              <Link href="/about#sources">来源与核验</Link>
+            </span>
+          </div>
+        </footer>
       </body>
     </html>
   );

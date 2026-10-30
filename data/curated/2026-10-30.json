@@ -1,0 +1,407 @@
+[
+  {
+    "schemaVersion": 1,
+    "kind": "hackathon",
+    "mode": "online",
+    "series": "腾讯音乐高校 AI Hackathon",
+    "officialName": "",
+    "edition": "2026",
+    "location": "线上",
+    "eligibilityStatus": "restricted",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "cancellation": null,
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "registration": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules"
+    },
+    "slug": "tme-build-with-ai-2026",
+    "title": "腾讯音乐首届高校 AI Hackathon",
+    "organizer": "腾讯音乐娱乐集团（TME）",
+    "summary": "围绕音乐互动体验开发原型。初次报名已结束，决赛入围团队仍有独立作品提交节点。",
+    "eligibility": "全日制高校或海外同等学历在校学生；投稿时须保有在校身份。地区、国籍的其他限制请查看完整规则。",
+    "team": "单人或 1–2 人团队，每人仅参加一支队伍。",
+    "deliverables": "初赛为产品方案和 Demo；决赛需已部署的完整产品方案与路演材料。",
+    "costs": "官网未单列报名费用或设备成本，需向主办方确认。",
+    "rules": "作品须原创并披露第三方素材。获奖作品财产权归属有特别约定，参赛前务必阅读官方完整知识产权条款。",
+    "officialUrl": "https://join.tencentmusic.com/h5/ai-hackathon/index.html",
+    "tags": [
+      "AI 应用",
+      "音乐科技",
+      "原型开发"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "title": "TME 官方赛事页面",
+        "url": "https://join.tencentmusic.com/h5/ai-hackathon/index.html",
+        "locator": "赛程安排、详细规则 / 参赛资格、作品要求、知识产权说明"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "registration",
+        "kind": "registration_close",
+        "label": "首次报名截止",
+        "precision": "date",
+        "start": "2026-10-09",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "2026年10月9日23:59；官网未单列时区，保留日期精度",
+        "sourceId": "rules"
+      },
+      {
+        "id": "final",
+        "kind": "submission",
+        "label": "决赛作品提交截止",
+        "precision": "date",
+        "start": "2026-11-02",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "2026年11月2日23:59；仅适用于入围团队，官网未单列时区",
+        "sourceId": "rules"
+      },
+      {
+        "id": "final-event",
+        "kind": "event",
+        "label": "决赛路演",
+        "precision": "month",
+        "start": "2026-11",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "11月初，具体日期待公布",
+        "sourceId": "rules"
+      }
+    ],
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown"
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "hackathon",
+    "mode": "online",
+    "series": "Global AI Builder’s Challenge",
+    "officialName": "Global AI Builder’s Challenge",
+    "edition": "2026",
+    "location": "线上",
+    "eligibilityStatus": "restricted",
+    "registration": "unknown",
+    "registrationSignal": "unknown",
+    "cancellation": null,
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "registration": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "fee": "rules"
+    },
+    "slug": "global-ai-builders-challenge-2026",
+    "title": "Global AI Builder’s Challenge",
+    "organizer": "Refactor The World",
+    "summary": "面向学生的线上开发挑战，围绕学习、创作或日常任务制作可用项目，允许披露后改进已有作品。",
+    "eligibility": "学生，至少13岁；适用 Devpost 标准地区例外与账号、监护人同意要求。官方列有受限地区，中国学生仍应逐项核对自己的居住地与资格。",
+    "team": "单人或最多 6 人；全部成员必须列入项目。",
+    "deliverables": "公开 GitHub 仓库、2–4分钟演示视频、项目说明、队伍名单及既有工作与 AI 使用披露。",
+    "costs": "免费参加；硬件、算力与服务成本自理，赞助奖励未确认部分不保证。",
+    "rules": "允许新项目及有明确增量的旧项目；AI 非强制。须真实展示功能，标明模拟或未完成部分并遵守第三方许可。",
+    "officialUrl": "https://global-ai-builders-challenge.devpost.com/",
+    "tags": [
+      "AI 应用",
+      "开发者工具",
+      "学生赛事"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "title": "主办方发布的 Devpost 活动规则",
+        "url": "https://global-ai-builders-challenge.devpost.com/rules",
+        "locator": "Event rules / eligibility, schedule and submission requirements"
+      },
+      {
+        "id": "overview",
+        "role": "official",
+        "title": "官方活动介绍",
+        "url": "https://global-ai-builders-challenge.devpost.com/",
+        "locator": "About the challenge / Requirements / Who can participate"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "项目开发窗口",
+        "precision": "instant",
+        "start": "2026-11-21T00:00:00-08:00",
+        "end": "2026-11-28T15:00:00-08:00",
+        "timezone": "America/Los_Angeles",
+        "raw": "Nov 21 00:00 PST – Nov 28 15:00 PST",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submission",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "instant",
+        "start": "2026-11-28T15:00:00-08:00",
+        "end": null,
+        "timezone": "America/Los_Angeles",
+        "raw": "November 28, 2026 at 3:00 p.m. PST",
+        "sourceId": "rules"
+      }
+    ],
+    "region": "international",
+    "entry": "direct",
+    "mainlandEligibility": "unknown",
+    "fee": "free"
+  },
+  {
+    "schemaVersion": 1,
+    "officialName": "",
+    "series": "",
+    "edition": "2026",
+    "kind": "hackathon",
+    "mode": "onsite",
+    "location": "英国伦敦 UCL，具体场地以录取通知为准",
+    "eligibilityStatus": "unknown",
+    "registration": "window",
+    "registrationSignal": "unknown",
+    "tags": [
+      "AI 应用",
+      "机器人",
+      "学生赛事"
+    ],
+    "cancellation": null,
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "registration": "rules",
+      "region": "rules",
+      "entry": "rules"
+    },
+    "slug": "ucl-agentverse-2026",
+    "title": "AgentVerse 2026",
+    "organizer": "UCL AI Society",
+    "summary": "UCL AI Society 举办的 AI 黑客松，技术赛道包括 Finance、Biotech 和 Robotics，申请通过后到场参加。",
+    "eligibility": "面向学生并设社团会员预留名额。官网未完整列出学校、年龄与地区条件；外校或国际学生申请前须向主办方核对。",
+    "team": "3–5人；可在现场参加组队活动。",
+    "costs": "官网说明提供活动餐食；报名费用、交通和住宿安排未完整公布。",
+    "deliverables": "具体赛题在现场公布；官网未完整列明仓库、演示或提交材料要求。",
+    "rules": "可申请多个赛道，须按个人背景选择。AI使用、已有代码与作品权利条款待主办方进一步确认。",
+    "officialUrl": "https://agentverse.uclai.co.uk/",
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "title": "主办方官方活动说明",
+        "url": "https://agentverse.uclai.co.uk/",
+        "locator": "Timeline（All times are London time）/ FAQs / Applications"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "opens",
+        "kind": "registration_open",
+        "label": "申请开启",
+        "precision": "instant",
+        "start": "2026-10-19T00:00:00+01:00",
+        "end": null,
+        "timezone": "Europe/London",
+        "raw": "19 October 2026 00:00, London time",
+        "sourceId": "rules"
+      },
+      {
+        "id": "closes",
+        "kind": "registration_close",
+        "label": "申请截止",
+        "precision": "instant",
+        "start": "2026-10-30T23:59:00+00:00",
+        "end": null,
+        "timezone": "Europe/London",
+        "raw": "30 October 2026 23:59, London time",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "现场开发",
+        "precision": "instant",
+        "start": "2026-11-07T09:00:00+00:00",
+        "end": "2026-11-08T18:00:00+00:00",
+        "timezone": "Europe/London",
+        "raw": "7 Nov 09:00 – 8 Nov 18:00, London time",
+        "sourceId": "rules"
+      }
+    ],
+    "region": "international",
+    "entry": "application",
+    "mainlandEligibility": "unknown",
+    "fee": "unknown"
+  },
+  {
+    "schemaVersion": 1,
+    "officialName": "",
+    "series": "",
+    "edition": "2026",
+    "kind": "hackathon",
+    "mode": "online",
+    "location": "线上",
+    "eligibilityStatus": "unknown",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "AI Agent",
+      "开源",
+      "开发者工具"
+    ],
+    "cancellation": null,
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "registration": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "fee": "rules",
+      "submissionChecklist": "rules"
+    },
+    "slug": "agentware-2026",
+    "title": "Agentware AI Agent Hackathon",
+    "organizer": "Hackathon Raptors",
+    "summary": "线上软件开发赛，开发可以连续执行任务的 AI Agent，并通过运行记录、演示及测试说明可靠性。",
+    "eligibility": "官网允许单人或团队参加；地区、年龄和学生资格的细则尚未明确，报名时须向主办方确认。",
+    "team": "单人或1–4人团队。",
+    "costs": "免费参加；自行准备工具和必要服务额度，官网要求验证成本保持可控。",
+    "deliverables": "可运行的软件 Agent、运行记录、演示及可复现的 README；具体完整赛题后续公布。",
+    "rules": "项目代码须在72小时开发窗口内完成，采用OSI认可开源许可，保留项目所有权；可使用既有框架和AI工具，不得仅改名旧项目。",
+    "officialUrl": "https://agentwarehack.com/",
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "title": "主办方官方活动说明",
+        "url": "https://agentwarehack.com/",
+        "locator": "Key facts / Timeline / Rules / FAQ"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "开发窗口",
+        "precision": "instant",
+        "start": "2026-11-27T18:00:00+00:00",
+        "end": "2026-11-30T18:00:00+00:00",
+        "timezone": "Etc/UTC",
+        "raw": "November 27 18:00 UTC – November 30 18:00 UTC",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "代码与作品截止",
+        "precision": "instant",
+        "start": "2026-11-30T18:00:00+00:00",
+        "end": null,
+        "timezone": "Etc/UTC",
+        "raw": "November 30, 2026, 18:00 UTC: Code freeze, submissions due",
+        "sourceId": "rules"
+      }
+    ],
+    "region": "international",
+    "entry": "direct",
+    "mainlandEligibility": "unknown",
+    "fee": "free",
+    "registrationSteps": [],
+    "submissionChecklist": [
+      "可运行的AI Agent及演示。",
+      "运行记录和验证可靠性的测试说明。",
+      "按官网规则整理项目代码及开源许可。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "officialName": "",
+    "series": "",
+    "edition": "2026",
+    "kind": "hackathon",
+    "mode": "onsite",
+    "location": "芬兰 Turku：EduCity、BioCity、Joki",
+    "eligibilityStatus": "confirmed",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "AI 应用",
+      "工程开发",
+      "线下"
+    ],
+    "cancellation": null,
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "registration": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules"
+    },
+    "slug": "since-ai-2026",
+    "title": "Since AI Hackathon 2026",
+    "organizer": "Since AI",
+    "summary": "围绕主办方合作企业的 AI 挑战开发可工作的产品；现场组成队伍并选择赛题。",
+    "eligibility": "官方面向全球学生和专业开发者开放，活动使用英语；需要到芬兰现场参加，旅行与入境要求自行核对。",
+    "team": "可个人申请并现场组队；具体队伍人数请查看官方 Field Guide。",
+    "costs": "报名免费；交通与住宿安排须自行向主办方确认，部分计算资源仅供符合条件的预注册者。",
+    "deliverables": "在官方 sinceai.app 提交项目信息、提交链接以及仓库或演示链接；视频和路演材料为可选。",
+    "rules": "允许 AI 辅助开发，须披露工具与既有工作；各企业赛题可能有单独数据或IP条款，需要逐项接受并核查。",
+    "officialUrl": "https://sinceai.ai/hackathon",
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "title": "主办方官方活动说明",
+        "url": "https://sinceai.ai/hackathon",
+        "locator": "Registration is open / At a glance / FAQ / submission requirements"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "现场活动",
+        "precision": "date",
+        "start": "2026-11-06",
+        "end": "2026-11-08",
+        "timezone": "Europe/Helsinki",
+        "raw": "November 6–8, 2026, Turku；精确当地赛程请见官方指南",
+        "sourceId": "rules"
+      }
+    ],
+    "region": "international",
+    "entry": "application",
+    "mainlandEligibility": "eligible",
+    "fee": "free"
+  }
+]

@@ -1,0 +1,1150 @@
+[
+  {
+    "schemaVersion": 1,
+    "slug": "comap-mcm-icm-2027",
+    "title": "2027 美国大学生数学建模竞赛 MCM/ICM",
+    "officialName": "",
+    "series": "2027 美国大学生数学建模竞赛 MCM/ICM",
+    "edition": "2027",
+    "kind": "math_modeling",
+    "mode": "online",
+    "region": "international",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "paid",
+    "location": "线上",
+    "organizer": "COMAP",
+    "summary": "国际线上数学建模赛，选择一道题建立模型、计算验证并提交英文论文。",
+    "eligibility": "同校1–3名本科或以下在校学生；须由本校指导人员注册队伍。",
+    "eligibilityStatus": "restricted",
+    "team": "1–3人，同校；每人仅一队。",
+    "deliverables": "英文 PDF 解答报告；正文含摘要、参考文献和附录总计不超过25页；AI使用另按官方政策披露。",
+    "costs": "每队100美元，官方注明不退款；以结算页面为准。",
+    "rules": "独立完成，不得与队外人员讨论解题；阅读当届AI政策与学术诚信规则。",
+    "officialUrl": "https://contest.comap.com/undergraduate/contests/mcm/instructions.php",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "数学建模",
+      "英文论文",
+      "本科生"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://contest.comap.com/undergraduate/contests/mcm/instructions.php",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "instant",
+        "start": "2027-01-28T15:00:00-05:00",
+        "end": null,
+        "timezone": "America/New_York",
+        "raw": "2027-01-28 15:00 EST",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "instant",
+        "start": "2027-01-28T17:00:00-05:00",
+        "end": "2027-02-01T20:00:00-05:00",
+        "timezone": "America/New_York",
+        "raw": "1月28日17:00至2月1日20:00 EST",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "instant",
+        "start": "2027-02-01T21:00:00-05:00",
+        "end": null,
+        "timezone": "America/New_York",
+        "raw": "2月1日21:00 EST",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules",
+      "registrationSteps": "rules",
+      "submissionChecklist": "rules"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "由本校指导人员注册团队并支付注册费。",
+      "在开赛前确定同校1–3名成员及队伍控制编号。",
+      "从六道题中选一道，在官方截止前提交解答报告。"
+    ],
+    "submissionChecklist": [
+      "英文PDF解答报告，按当届25页限制整理摘要、正文、参考文献与附录。",
+      "按COMAP当届政策披露AI工具使用情况。",
+      "队伍控制编号、指导人员信息与提交确认。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "cumcm-2026",
+    "title": "2026 高教社杯全国大学生数学建模竞赛",
+    "officialName": "",
+    "series": "2026 高教社杯全国大学生数学建模竞赛",
+    "edition": "2026",
+    "kind": "math_modeling",
+    "mode": "online",
+    "region": "domestic",
+    "entry": "application",
+    "mainlandEligibility": "eligible",
+    "fee": "paid",
+    "location": "线上",
+    "organizer": "中国工业与应用数学学会",
+    "summary": "本届报名和比赛已结束，保留规则与赛程供备赛参考，不代表2027年安排。",
+    "eligibility": "同校大学生；分本科组与高职高专组，由学校统一组织报名。",
+    "eligibilityStatus": "restricted",
+    "team": "同校1–3人。",
+    "deliverables": "数学模型、计算验证与论文；通过竞赛信息管理系统提交。",
+    "costs": "全国组委会向赛区按50元/队收取；学校向赛区缴费标准另定，通知规定由学校承担，不能等同学生统一缴费50元。",
+    "rules": "遵守当届参赛规则及2026年AI工具使用规定；校内选拔与报名截止可能早于全国截止。",
+    "officialUrl": "https://www.mcm.edu.cn/",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "数学建模",
+      "国赛",
+      "历史赛事"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://www.mcm.edu.cn/upload_cn/node/782/6LeA7Pbz13203f19d06fa9dd0bf10bf2b7fb911c.pdf",
+        "title": "2026年第1期CUMCM通讯",
+        "locator": "PDF第43–44页（印刷页42–43）：2026年竞赛通知"
+      },
+      {
+        "id": "home",
+        "role": "official",
+        "url": "https://www.mcm.edu.cn/",
+        "title": "竞赛官网",
+        "locator": "报名、论文提交入口及2026年AI工具使用规定"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-09-07",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "全国报名9月7日20时；校内截止另定，未独立注明时区，保留日期",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "date",
+        "start": "2026-09-10",
+        "end": "2026-09-13",
+        "timezone": "Asia/Shanghai",
+        "raw": "9月10日18时至9月13日20时，保留日期精度",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "gmcm-2026",
+    "title": "2026 华为杯中国研究生数学建模竞赛",
+    "officialName": "",
+    "series": "2026 华为杯中国研究生数学建模竞赛",
+    "edition": "2026",
+    "kind": "math_modeling",
+    "mode": "online",
+    "region": "domestic",
+    "entry": "application",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上",
+    "organizer": "中国研究生数学建模竞赛组委会（官方管理平台发布）",
+    "summary": "研究生数学建模赛。本届报名已截止，本科未取得研究生入学资格者不应直接报名。",
+    "eligibility": "在读硕士、博士，或2026年秋季入学研究生；官网亦接受国外研究生和国内在读国际学生。",
+    "eligibilityStatus": "restricted",
+    "team": "3人；除2026级外不可跨校、跨单位组队。",
+    "deliverables": "按照当届赛题要求提交模型、计算结果及论文；格式以官网提交提醒为准。",
+    "costs": "官网列有缴费阶段，具体金额须查邀请函及单位通知，本记录不猜测。",
+    "rules": "须经单位资格审查和缴费；跨校例外仅适用于官网规定的2026级研究生。",
+    "officialUrl": "https://cpipc.acge.org.cn/cw/hp/4",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "数学建模",
+      "研究生",
+      "历史赛事"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://cpipc.acge.org.cn/cw/hp/4",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-09-19",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "9月19日17点报名截止；官网未单列时区，保留日期",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "shuwei-autumn-2026",
+    "title": "2026 数维杯数学建模挑战赛（秋季）",
+    "officialName": "",
+    "series": "2026 数维杯数学建模挑战赛（秋季）",
+    "edition": "2026",
+    "kind": "math_modeling",
+    "mode": "online",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "paid",
+    "location": "线上",
+    "organizer": "中国仿真学会、辽宁科技大学",
+    "summary": "线上数学建模赛，分专科、本科和研究生组，最终提交英文论文。",
+    "eligibility": "全国普通高校全日制在校生；允许跨校组队，不得重复组队。",
+    "eligibilityStatus": "restricted",
+    "team": "1–3人，可设1名指导教师。",
+    "deliverables": "限选一道题，提交英文PDF论文及按规则命名的承诺书、支撑材料。",
+    "costs": "200元/队；个人及学校集体缴费按官网办理。",
+    "rules": "引用须标注；论文公开展示授权、相似度和AIGC审查阈值见当届规则，不保证学校认可或加分。",
+    "officialUrl": "https://www.nmmcm.org.cn/News/212.html",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "数学建模",
+      "英文论文",
+      "跨校组队"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://www.nmmcm.org.cn/News/212.html",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "instant",
+        "start": "2026-11-20T06:00:00+08:00",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "2026年11月20日06:00，北京时间；规则提交段注明北京时间",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "instant",
+        "start": "2026-11-20T09:00:00+08:00",
+        "end": "2026-11-24T09:00:00+08:00",
+        "timezone": "Asia/Shanghai",
+        "raw": "11月20日09:00至11月24日09:00，北京时间",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "instant",
+        "start": "2026-11-24T10:00:00+08:00",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "11月24日10:00北京时间",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules",
+      "registrationSteps": "rules",
+      "submissionChecklist": "rules"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "在官方报名系统按学籍和队伍信息注册，选择专科、本科或研究生组。",
+      "个人在线缴纳200元/队，或由学校按集体报名流程办理。",
+      "报名截止前确定成员，开赛后从A–D中选一题。"
+    ],
+    "submissionChecklist": [
+      "英文PDF论文，按题号和队伍编号命名。",
+      "承诺书以及按提交规范整理的可选支撑材料。",
+      "引用与原创性声明；提交前核对系统最终保留的文件。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "moonbit-hackathon-2026-october",
+    "title": "2026 MoonBit 黑客松 · 十月赛",
+    "officialName": "",
+    "series": "2026 MoonBit 黑客松 · 十月赛",
+    "edition": "2026",
+    "kind": "hackathon",
+    "mode": "online",
+    "region": "domestic",
+    "entry": "application",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上",
+    "organizer": "中国计算机学会、IDEA研究院、MoonBit",
+    "summary": "用MoonBit完成开源软件项目；已有项目需要可追踪的实质新增工作。",
+    "eligibility": "面向开发者，不限学生或在职；申报需审核并加入赛事群。",
+    "eligibilityStatus": "restricted",
+    "team": "不超过3人。",
+    "deliverables": "公开仓库、项目说明、README、测试与可复现演示。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "采用认可的开源许可证并标明移植来源；AI辅助允许但需能解释技术选择。",
+    "officialUrl": "https://moonbitlang.github.io/Hackathon2026/",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "MoonBit",
+      "开源",
+      "开发者工具"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://moonbitlang.github.io/Hackathon2026/",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-10-31",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "报名与验收均于10月31日截止，未给具体时刻",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "date",
+        "start": "2026-10-31",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "本期验收截止10月31日",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registration": "rules",
+      "registrationSteps": "rules",
+      "submissionChecklist": "rules"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "通过官网飞书表单提交公开仓库与项目说明，接受滚动审核。",
+      "加入官方赛事群并将群昵称设为GitHub ID。",
+      "10月31日前完成可运行项目及验收材料，保留实质新增贡献记录。"
+    ],
+    "submissionChecklist": [
+      "公开代码仓库与连续提交记录。",
+      "README、可运行示例、测试和可复现演示。",
+      "开源许可证，以及移植、第三方依赖和AI辅助说明。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "payathon-2026",
+    "title": "支付宝 AI付 PAYATHON 2026",
+    "officialName": "",
+    "series": "支付宝 AI付 PAYATHON 2026",
+    "edition": "2026",
+    "kind": "hackathon",
+    "mode": "hybrid",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "unknown",
+    "fee": "unknown",
+    "location": "线上开发与提交；决赛线下安排待参赛中心核对",
+    "organizer": "支付宝AI付，观猹等联合办赛方",
+    "summary": "为AI应用、Skill或Agent接入支付并验证完整交付链路；报名与作品审核在线进行。",
+    "eligibility": "个人开发者或团队；实名、支付产品准入与地区条件需阅读报名中心完整规则。",
+    "eligibilityStatus": "restricted",
+    "team": "个人或2–5人。",
+    "deliverables": "AI产品或Agent、支付集成说明和演示材料；逐赛道材料以参赛中心为准。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "先使用支付沙箱验证；正式收款涉及产品开通、实名与合规要求，不应将报名视为支付资质获批。",
+    "officialUrl": "https://aipay.alipay.com/community/events/payathon-2026",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "AI Agent",
+      "支付集成",
+      "产品开发"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://aipay.alipay.com/developers/Changelog",
+        "title": "支付宝AI付官方更新日志",
+        "locator": "2026-09-22：PAYATHON参赛中心上线；10-09：参赛权益更新"
+      },
+      {
+        "id": "partner",
+        "role": "official",
+        "url": "https://watcha.cn/discuss/15553",
+        "title": "联合主办方观猹发布页",
+        "locator": "赛事主办关系、Vibe Pay赛道及支付沙箱要求"
+      }
+    ],
+    "milestones": [],
+    "evidence": {
+      "organizer": "partner",
+      "eligibility": "rules",
+      "deliverables": "partner",
+      "rules": "partner",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "huairou-afs-hackathon-2026",
+    "title": "2026 怀柔科学城 AI for Science 黑客松",
+    "officialName": "",
+    "series": "2026 怀柔科学城 AI for Science 黑客松",
+    "edition": "2026",
+    "kind": "hackathon",
+    "mode": "onsite",
+    "region": "domestic",
+    "entry": "application",
+    "mainlandEligibility": "eligible",
+    "fee": "free",
+    "location": "北京怀柔科学城，具体场地以入围通知为准",
+    "organizer": "北京怀柔科学城发展集团有限公司等联合主办单位",
+    "summary": "在怀柔科学城现场完成48小时AI原型开发，报名后等待审核通知。",
+    "eligibility": "AI开发者、极客团队和高校学生；未满18岁不可参加黑客松赛道。",
+    "eligibilityStatus": "restricted",
+    "team": "个人或不超过5人。",
+    "deliverables": "报名提交团队和技术方向；现场命题、原型开发、演示评审。",
+    "costs": "不收报名费，现场提供场地和餐饮等基本保障；差旅按个人安排确认。",
+    "rules": "必须原创且无知识产权纠纷；赛题现场公布；揭榜挂帅与黑客松为不同赛道。",
+    "officialUrl": "https://opc.book2048.com/",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "AI应用",
+      "科研工具",
+      "线下开发"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://opc.book2048.com/",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-11-10",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "黑客松报名11月10日截止，具体时刻未公布",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "date",
+        "start": "2026-11-15",
+        "end": "2026-11-16",
+        "timezone": "Asia/Shanghai",
+        "raw": "11月15–16日现场48小时开发，具体时刻未公布",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "sciencepal-ai4science-2026",
+    "title": "全球 AI4Science Hackathon 2026（SciencePal）",
+    "officialName": "",
+    "series": "全球 AI4Science Hackathon 2026（SciencePal）",
+    "edition": "2026",
+    "kind": "hackathon",
+    "mode": "hybrid",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "unknown",
+    "fee": "unknown",
+    "location": "线上开发提交，香港城市大学线下决赛",
+    "organizer": "SciencePal（赛事官网发布）",
+    "summary": "开发可运行的科研Agent、工具或工作流。官方已说明报名结束，提交窗口不等于新报名开放。",
+    "eligibility": "全球开放；年龄、学籍和具体地区例外须查完整规则。",
+    "eligibilityStatus": "restricted",
+    "team": "1–3人。",
+    "deliverables": "可运行项目、3–5分钟视频、不超过5页说明及原创性和资源声明。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "至少一个核心环节实质使用SciencePal；仅用于文案或PPT不满足要求。",
+    "officialUrl": "https://sciencepal.ai/hackathon",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "AI for Science",
+      "科研Agent",
+      "报名已结束"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://sciencepal.ai/hackathon",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "instant",
+        "start": "2026-10-31T23:59:00+08:00",
+        "end": null,
+        "timezone": "Asia/Hong_Kong",
+        "raw": "10月31日23:59香港时间UTC+8",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "atcoder-abc482",
+    "title": "AtCoder Beginner Contest 482",
+    "officialName": "",
+    "series": "AtCoder Beginner Contest 482",
+    "edition": "2026",
+    "kind": "algorithm",
+    "mode": "online",
+    "region": "international",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上",
+    "organizer": "AtCoder",
+    "summary": "100分钟线上个人算法赛，适合参与编程练习和评级。",
+    "eligibility": "全部用户可参加；0–1999评级区间影响计分资格，并非报名资格。",
+    "eligibilityStatus": "confirmed",
+    "team": "个人赛。",
+    "deliverables": "在比赛窗口内提交程序，由平台自动评测。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "比赛期间禁止使用生成式AI，包括非评级参与者；不得提前公开或交换解法。",
+    "officialUrl": "https://atcoder.jp/contests/abc482",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "算法",
+      "个人赛",
+      "禁用生成式AI"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://atcoder.jp/contests/abc482",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "instant",
+        "start": "2026-10-31T21:00:00+09:00",
+        "end": "2026-10-31T22:40:00+09:00",
+        "timezone": "Asia/Tokyo",
+        "raw": "10月31日21:00–22:40 JST",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "atcoder-ahc074-2026",
+    "title": "HACK TO THE FUTURE 2027 · AHC 074",
+    "officialName": "",
+    "series": "HACK TO THE FUTURE 2027 · AHC 074",
+    "edition": "2026",
+    "kind": "algorithm",
+    "mode": "online",
+    "region": "international",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上",
+    "organizer": "Future Corporation、AtCoder",
+    "summary": "十天线上启发式算法预赛，设Human Only和With AI两组；日本现场决赛另有资格限制。",
+    "eligibility": "线上预赛全部用户可参加；日本现场决赛和部分奖励要求日本居住等条件。",
+    "eligibilityStatus": "restricted",
+    "team": "个人赛，禁止多人协作解题。",
+    "deliverables": "提交优化算法源程序，最终系统测试采用最后一个有效提交。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "两次提交至少间隔30分钟；AI使用按分组规则；不得公开赛中解法。",
+    "officialUrl": "https://atcoder.jp/contests/ahc074",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "启发式优化",
+      "个人赛",
+      "AI分组规则"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://atcoder.jp/contests/ahc074",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "instant",
+        "start": "2026-10-30T19:00:00+09:00",
+        "end": "2026-11-09T19:00:00+09:00",
+        "timezone": "Asia/Tokyo",
+        "raw": "10月30日19:00至11月9日19:00 JST；本记录仅收录线上预赛",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "hkcert-ctf-2026",
+    "title": "2026 香港网安夺旗赛（HKCERT CTF）",
+    "officialName": "",
+    "series": "2026 香港网安夺旗赛（HKCERT CTF）",
+    "edition": "2026",
+    "kind": "ctf",
+    "mode": "hybrid",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上初赛；香港现场决赛",
+    "organizer": "数字政策办公室、香港生产力促进局、HKCERT",
+    "summary": "线上初赛、香港现场决赛；内地学生应核对国际组资格，而非直接选择香港大专组。",
+    "eligibility": "国际组面向非香港居民或无有效香港工作/留学签证人士，报名截止时须年满18岁。",
+    "eligibilityStatus": "restricted",
+    "team": "1–4人，每人仅参加一个组别。",
+    "deliverables": "在线解题提交Flag；晋级队伍还须按要求提交指定题解并通过身份核对。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "不得攻击比赛平台、分享Flag或进行社工；国际组初赛前5队经审核晋级。",
+    "officialUrl": "https://ctf.hkcert.org/zh",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "CTF",
+      "国际组",
+      "18岁以上"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://ctf.hkcert.org/zh",
+        "title": "官方赛事页",
+        "locator": "主办、立即报名与赛制"
+      },
+      {
+        "id": "eligibility",
+        "role": "official",
+        "url": "https://ctf.hkcert.org/zh/eligibility",
+        "title": "官方参赛资格",
+        "locator": "国际组年龄、地区和人数要求"
+      },
+      {
+        "id": "policy",
+        "role": "official",
+        "url": "https://ctf.hkcert.org/zh/rules",
+        "title": "官方比赛规则",
+        "locator": "晋级审查、题解、平台与Flag规则"
+      },
+      {
+        "id": "schedule",
+        "role": "official",
+        "url": "https://ctf.hkcert.org/zh/important-dates",
+        "title": "官方日程",
+        "locator": "初赛与决赛时间"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "instant",
+        "start": "2026-11-06T18:00:00+08:00",
+        "end": "2026-11-07T18:00:00+08:00",
+        "timezone": "Asia/Hong_Kong",
+        "raw": "11月6日18:00至7日18:00香港时间",
+        "sourceId": "schedule"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "eligibility",
+      "deliverables": "policy",
+      "rules": "policy",
+      "officialUrl": "rules",
+      "mainlandEligibility": "eligibility",
+      "region": "rules",
+      "entry": "rules",
+      "registration": "rules",
+      "registrationSteps": "eligibility",
+      "submissionChecklist": "policy"
+    },
+    "cancellation": null,
+    "registrationSteps": [
+      "按居住、签证与学籍情况选择组别；内地学生核对国际组18岁限制。",
+      "在官方报名表登记1–4名队员，每人只能参加一个组别。",
+      "按主办方赛前邮件获取平台账号；晋级后接受身份与题解审查。"
+    ],
+    "submissionChecklist": [
+      "初赛期间通过比赛平台提交Flag。",
+      "晋级审查时提交主办方指定的三题题解。",
+      "按所报组别准备身份与年龄核验材料。"
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "tryhackme-cyber-trials-2026",
+    "title": "TryHackMe The Cyber Trials 2026",
+    "officialName": "",
+    "series": "TryHackMe The Cyber Trials 2026",
+    "edition": "2026",
+    "kind": "ctf",
+    "mode": "online",
+    "region": "international",
+    "entry": "application",
+    "mainlandEligibility": "eligible",
+    "fee": "free",
+    "location": "线上",
+    "organizer": "TryHackMe",
+    "summary": "三小时线上高校队伍CTF，必须由教师注册院校，学生不能直接报名。",
+    "eligibility": "任何国家的高等教育机构，每校一队；须由教授、讲师或教师注册并经核验。",
+    "eligibilityStatus": "restricted",
+    "team": "每队6–8名学生，每校一队。",
+    "deliverables": "在统一竞赛平台解题并提交Flag。",
+    "costs": "官方明确免费参赛；院校须完成注册和身份验证。",
+    "rules": "教师选拔代表队；具体挑战、账户和评分细则以组织方赛前通知为准。",
+    "officialUrl": "https://tryhackme.com/the-cyber-trials",
+    "registration": "unknown",
+    "registrationSignal": "open",
+    "tags": [
+      "CTF",
+      "高校代表队",
+      "教师报名"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://tryhackme.com/the-cyber-trials",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "instant",
+        "start": "2026-11-13T17:00:00+00:00",
+        "end": "2026-11-13T20:00:00+00:00",
+        "timezone": "Europe/London",
+        "raw": "11月13日17:00 GMT，比赛3小时",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "picoctf-2026",
+    "title": "picoCTF 2026",
+    "officialName": "",
+    "series": "picoCTF 2026",
+    "edition": "2026",
+    "kind": "ctf",
+    "mode": "online",
+    "region": "international",
+    "entry": "unknown",
+    "mainlandEligibility": "unknown",
+    "fee": "free",
+    "location": "线上",
+    "organizer": "卡内基梅隆大学CyLab及picoCTF团队",
+    "summary": "2026年春季线上CTF已结束。保留官方规则入口，练习平台不等同下一届比赛报名。",
+    "eligibility": "面向学生的全球线上赛事；正式获奖与地区资格须查2026规则，不默认中国学生可领取所有奖项。",
+    "eligibilityStatus": "restricted",
+    "team": "队伍人数以2026比赛规则为准，尚未从可访问官方稿件核定。",
+    "deliverables": "按官方平台题目提交Flag并计分。",
+    "costs": "官方CyLab稿件明确2026年比赛免费报名。",
+    "rules": "2026正式细则本次读取受限；队伍与获奖资格待核对，不把练习平台或历史公告当作下一届报名。",
+    "officialUrl": "https://picoctf.org/",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "CTF",
+      "历史赛事",
+      "入门"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://www.cylab.cmu.edu/news/2026/02/26-picoctf.html",
+        "title": "CMU CyLab官方赛事公告",
+        "locator": "2026年2月26日稿件：3月9日开始、持续10天、免费及目标人群"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "date",
+        "start": "2026-03-09",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "官方公告：3月9日开始，持续10天；未精确核定结束时刻，故不填推算值",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "fee": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "tcei-embodied-challenge-2026",
+    "title": "2026 CICC 无人系统具身智能算法挑战赛",
+    "officialName": "",
+    "series": "2026 CICC 无人系统具身智能算法挑战赛",
+    "edition": "2026",
+    "kind": "ai_data",
+    "mode": "hybrid",
+    "region": "domestic",
+    "entry": "direct",
+    "mainlandEligibility": "eligible",
+    "fee": "free",
+    "location": "线上仿真，深圳实机决赛",
+    "organizer": "中国指挥与控制学会及TCEI赛事组织单位",
+    "summary": "线上仿真预赛加深圳实体机器人决赛。本届报名已经结束，不能因决赛尚未举办而视为仍可报名。",
+    "eligibility": "国内外高校、科研院所全日制本科、硕士或博士在校生。",
+    "eligibilityStatus": "restricted",
+    "team": "不超过10人，最多2名指导教师；允许跨校跨学科。",
+    "deliverables": "仿真平台算法代码；入围后使用指定或认证机器人完成实机任务。",
+    "costs": "参赛免费；决赛差旅食宿自理，硬件可自备或按规则申请。",
+    "rules": "禁止多队挂靠和抄袭；硬件需认证，现场须遵守安全规定。",
+    "officialUrl": "https://tcei.c2.org.cn/competition/intro",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "具身智能",
+      "机器人",
+      "仿真"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://tcei.c2.org.cn/competition/intro",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-09-30",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "4月16日至9月30日报名",
+        "sourceId": "rules"
+      },
+      {
+        "id": "event",
+        "kind": "event",
+        "label": "比赛时间",
+        "precision": "date",
+        "start": "2026-12-05",
+        "end": "2026-12-06",
+        "timezone": "Asia/Shanghai",
+        "raw": "12月5日至6日深圳实机决赛",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "fee": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  },
+  {
+    "schemaVersion": 1,
+    "slug": "moonbit-software-synthesis-2026",
+    "title": "2026 MoonBit 软件合成挑战赛",
+    "officialName": "",
+    "series": "2026 MoonBit 软件合成挑战赛",
+    "edition": "2026",
+    "kind": "developer_challenge",
+    "mode": "hybrid",
+    "region": "domestic",
+    "entry": "application",
+    "mainlandEligibility": "eligible",
+    "fee": "unknown",
+    "location": "线上申报开发；深圳线下答辩",
+    "organizer": "MoonBit、IDEA研究院",
+    "summary": "开发系统软件并提供可复现工程成果。本届申报截止于3月，十月黑客松是另一项活动。",
+    "eligibility": "个人开发者，不限在校或在职；项目须通过材料审核和线上预答辩。",
+    "eligibilityStatus": "restricted",
+    "team": "仅个人参赛。",
+    "deliverables": "开源仓库、完整开发历史、README、测试、构建说明和开发历程文章。",
+    "costs": "官方未明确列出报名费用；按报名页面及主办方答复确认。",
+    "rules": "采用OSI认可开源许可并遵守第三方协议；不得将资助条件视为获奖保证。",
+    "officialUrl": "https://www.moonbitlang.cn/2026-scc/",
+    "registration": "unknown",
+    "registrationSignal": "closed",
+    "tags": [
+      "MoonBit",
+      "系统软件",
+      "开源"
+    ],
+    "sources": [
+      {
+        "id": "rules",
+        "role": "official",
+        "url": "https://www.moonbitlang.cn/2026-scc/",
+        "title": "官方规则与赛程",
+        "locator": "赛事介绍、参赛资格、提交要求和赛程"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "reg",
+        "kind": "registration_close",
+        "label": "报名截止",
+        "precision": "date",
+        "start": "2026-03-20",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "2026年3月20日申报截止",
+        "sourceId": "rules"
+      },
+      {
+        "id": "submit",
+        "kind": "submission",
+        "label": "作品提交截止",
+        "precision": "date",
+        "start": "2026-04-21",
+        "end": null,
+        "timezone": "Asia/Shanghai",
+        "raw": "4月21日评选截至；线下答辩4月27日为原计划暂定",
+        "sourceId": "rules"
+      }
+    ],
+    "evidence": {
+      "organizer": "rules",
+      "eligibility": "rules",
+      "deliverables": "rules",
+      "rules": "rules",
+      "officialUrl": "rules",
+      "region": "rules",
+      "entry": "rules",
+      "mainlandEligibility": "rules",
+      "registration": "rules"
+    },
+    "cancellation": null
+  }
+]
