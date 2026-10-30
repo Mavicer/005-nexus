@@ -1,6 +1,11 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { appearanceSnapshot } from "@/modules/events/appearance";
+import type { CSSProperties } from "react";
+import {
+  appearanceSnapshot,
+  appearanceStyle,
+  effectiveTheme,
+} from "@/modules/events/appearance";
 import { BlogAppearanceSync } from "@/components/events/blog-appearance-sync";
 import { SessionRefresh } from "@/components/events/session-refresh";
 import { blogOrigin, blogSsoEnabled } from "@/lib/blog-sso";
@@ -28,8 +33,20 @@ export default async function RootLayout({
       if (parsed.success) initialAppearance = parsed.data;
     }
   } catch {}
+  const appearanceOrigin = process.env.BLOG_APPEARANCE_ORIGIN ?? blogOrigin();
+  const style = appearanceStyle(initialAppearance, appearanceOrigin);
   return (
-    <html lang="zh-CN">
+    <html
+      lang="zh-CN"
+      style={style as CSSProperties}
+      data-blog-appearance={style ? "synced" : undefined}
+      data-blog-theme={
+        style && initialAppearance
+          ? effectiveTheme(initialAppearance.theme)
+          : undefined
+      }
+      suppressHydrationWarning
+    >
       <body>
         <BlogAppearanceSync
           initial={initialAppearance}
@@ -43,13 +60,15 @@ export default async function RootLayout({
             </Link>
             <nav className="nav" aria-label="主导航">
               <Link href="/">发现赛事</Link>
-              <a href={blogOrigin()}>博客</a>
               <Link href="/calendar">赛事日历</Link>
               <Link href="/saved">我的收藏</Link>
               <Link href="/about">收录说明</Link>
               <Suspense fallback={<Link href="/account">账号</Link>}>
                 <AccountNavigation />
               </Suspense>
+              <a href={blogOrigin()}>
+                返回博客 <span aria-hidden="true">↗</span>
+              </a>
             </nav>
           </div>
         </header>

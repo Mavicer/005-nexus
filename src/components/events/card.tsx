@@ -22,7 +22,9 @@ export function EventCard({ event }: { event: PublicEvent }) {
         <span className={`status ${state}`}>{STATE_LABELS[state]}</span>
       </div>
       <h2>
-        <Link href={`/events/${event.slug}`}>{e.title}</Link>
+        <Link prefetch={true} href={`/events/${event.slug}`}>
+          {e.title}
+        </Link>
       </h2>
       <div className="facts">
         {MODE_LABELS[e.mode]}
@@ -56,7 +58,9 @@ export function EventCard({ event }: { event: PublicEvent }) {
             ? "规则待复核"
             : `核验于 ${event.verifiedAt?.toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }) ?? "—"}`}
         </span>
-        <Link href={`/events/${event.slug}`}>查看详情 ↗</Link>
+        <Link prefetch={true} href={`/events/${event.slug}`}>
+          查看详情 ↗
+        </Link>
       </div>
     </article>
   );

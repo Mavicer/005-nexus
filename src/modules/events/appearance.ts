@@ -51,3 +51,24 @@ export function effectiveTheme(
       : "dark"
     : theme;
 }
+
+// Cookie snapshots contain preferences only; render their known background before hydration.
+export function appearanceStyle(
+  snapshot: AppearanceSnapshot | null,
+  origin: string,
+) {
+  if (!snapshot?.configured || !snapshot.settings) return undefined;
+  const settings = snapshot.settings;
+  const mode = effectiveTheme(snapshot.theme);
+  const preset =
+    presetPaths[
+      settings.background === "custom" ? "default" : settings.background
+    ];
+  return {
+    "--synced-wallpaper": `url("${new URL(preset[mode], origin).href}")`,
+    "--synced-brightness": String(settings.brightness / 100),
+    "--synced-blur": settings.blur + "px",
+    "--synced-card-opacity": String(settings.cardOpacity / 100),
+    "--font-scale": String(settings.fontSize / 16),
+  };
+}
