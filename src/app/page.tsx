@@ -178,12 +178,6 @@ export default async function Home({
             ))}
           </div>
         </details>
-        <div className="small muted" style={{ marginTop: 16 }}>
-          线上不代表全球开放；参赛资格请查看每项活动的官方规则。　
-          <Link href="/" style={{ color: "var(--accent)" }}>
-            重置条件
-          </Link>
-        </div>
       </Form>
       {(p.sort === "recommended" || p.sort === "directory") && (
         <p className="small muted">
