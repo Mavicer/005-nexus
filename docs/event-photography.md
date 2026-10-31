@@ -15,4 +15,18 @@ Local WebP derivatives preserve the originals' aspect ratios. No generative enha
 
 Artwork is an absolute decorative layer; its dimensions do not depend on image decoding. Desktop artwork fades softly from a line running from one third of the header width at its top to one half at its bottom. The SVG mask uses normalised coordinates so those anchors remain stable across desktop aspect ratios. Mobile artwork has a reserved 230 px area above the text with a diagonal fade along its lower edge. Native eager/high-priority loading is used on detail pages. Pointer hover, keyboard focus and touch on discovery links prewarm the corresponding image; repeated requests are deduplicated, and speculative failures can retry. Existing route prefetch remains enabled. Images are kept out of catalog cards.
 
-The remaining catalog entries have no accepted image yet. Earlier search candidates are intentionally excluded; continue the same quality threshold when suitable originals become available.
+Other catalog entries remain without artwork unless a suitable image is accepted. Earlier rejected candidates are intentionally excluded; keep the same quality threshold when suitable originals become available.
+
+## Second selection — 2026-10-31
+
+Added three visuals after checking the rendered crop, not only the source image:
+
+- **Smart car:** a 2025 national-final trackside preparation photograph from [潮新闻](https://cs.zjol.com.cn/kzl/202508/t20250821_31184961.shtml). The car and competitor remain visible; do not describe it as the 2026 final.
+- **Embedded application track:** a 2024 competition robot/embedded-board close-up from [电子科技大学](https://news.uestc.edu.cn/info/1004/2777.htm). Kept separate from the FPGA track. The vehicle, circuitry and blue lighting carry the image; a group photograph is not substituted.
+- **Tencent Music AI Hackathon:** the organiser's vivid 1920 × 1180 AI/music key visual from the [official event page](https://join.tencentmusic.com/h5/ai-hackathon/index.html). This is publicity artwork, never labelled as a competition photograph.
+
+Exact original URLs, dimensions and historical scope are recorded in `data/event-visual-sources.json`. No candidate has been upscaled or generatively enhanced. Local WebP payloads are approximately 213 KB, 293 KB and 84 KB respectively. These three files together add approximately 590 KiB; only the selected event image is loaded on a detail visit.
+
+Reviewed and omitted in this round: CCSP classroom wide shots/award boards, Blue Bridge notices/logos, Renesas award and conference slides, Intel award groups, TI analog posters and weak booth snapshots, computer-design lecture-room shots and certificates, and software-cup ranking screenshots. None meets the accepted visual bar for an engaging header.
+
+Mobile fades begin near the bottom edge so low-placed vehicles and circuit boards stay visible above the title. Desktop masks and absence of overlay captions follow the user-approved RoboMaster treatment.
