@@ -406,7 +406,7 @@ textarea:focus {
 .detail-heading-illustrated .detail-heading-copy {
   position: relative;
   z-index: 1;
-  width: 58%;
+  width: 46%;
 }
 .detail-heading-illustrated .card-top {
   justify-content: flex-start;
@@ -420,13 +420,17 @@ textarea:focus {
 .detail-artwork {
   position: absolute;
   inset: 0 0 0 auto;
-  width: 56%;
+  width: 100%;
   pointer-events: none;
-  mask-image: linear-gradient(112deg, transparent 18%, #000 68%);
+  mask-image: url("/images/events/detail-photo-mask.svg");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
 }
 .detail-artwork img {
   display: block;
-  width: 100%;
+  position: absolute;
+  right: 0;
+  width: 70%;
   height: 100%;
   object-fit: cover;
 }
@@ -442,6 +446,9 @@ textarea:focus {
     width: 100%;
     height: 230px;
     mask-image: linear-gradient(170deg, #000 55%, transparent 98%);
+  }
+  .detail-artwork img {
+    width: 100%;
   }
 }
 .actions {

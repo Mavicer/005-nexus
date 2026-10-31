@@ -13,6 +13,6 @@ Local WebP derivatives preserve the originals' aspect ratios. No generative enha
 
 ## Layout and loading
 
-Artwork is an absolute decorative layer; its dimensions do not depend on image decoding. Desktop artwork uses a soft diagonal fade from the right. Mobile artwork has a reserved 230 px area above the text with a diagonal fade along its lower edge. Native eager/high-priority loading is used on detail pages. Pointer hover, keyboard focus and touch on discovery links prewarm the corresponding image; repeated requests are deduplicated, and speculative failures can retry. Existing route prefetch remains enabled. Images are kept out of catalog cards.
+Artwork is an absolute decorative layer; its dimensions do not depend on image decoding. Desktop artwork fades softly from a line running from one third of the header width at its top to one half at its bottom. The SVG mask uses normalised coordinates so those anchors remain stable across desktop aspect ratios. Mobile artwork has a reserved 230 px area above the text with a diagonal fade along its lower edge. Native eager/high-priority loading is used on detail pages. Pointer hover, keyboard focus and touch on discovery links prewarm the corresponding image; repeated requests are deduplicated, and speculative failures can retry. Existing route prefetch remains enabled. Images are kept out of catalog cards.
 
 The remaining catalog entries have no accepted image yet. Earlier search candidates are intentionally excluded; continue the same quality threshold when suitable originals become available.
