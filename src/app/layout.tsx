@@ -1,3 +1,4 @@
+import { SiteHeader } from "@/components/events/site-header";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import type { CSSProperties } from "react";
@@ -53,25 +54,18 @@ export default async function RootLayout({
           origin={process.env.BLOG_APPEARANCE_ORIGIN ?? blogOrigin()}
         />
         {blogSsoEnabled() && <SessionRefresh />}
-        <header className="topbar">
-          <div className="shell">
-            <Link className="brand" href="/">
-              <span className="brand-mark">N</span>Nexus
-            </Link>
-            <nav className="nav" aria-label="主导航">
-              <Link href="/">发现赛事</Link>
-              <Link href="/calendar">赛事日历</Link>
-              <Link href="/saved">我的收藏</Link>
-              <Link href="/database">数据库</Link>
-              <Suspense fallback={<Link href="/account">账号</Link>}>
-                <AccountNavigation />
-              </Suspense>
-              <a href={blogOrigin()}>
-                返回博客 <span aria-hidden="true">↗</span>
-              </a>
-            </nav>
-          </div>
-        </header>
+        <SiteHeader>
+          <Link href="/">发现赛事</Link>
+          <Link href="/calendar">赛事日历</Link>
+          <Link href="/saved">我的收藏</Link>
+          <Link href="/database">数据库</Link>
+          <Suspense fallback={<Link href="/account">账号</Link>}>
+            <AccountNavigation />
+          </Suspense>
+          <a href={blogOrigin()}>
+            返回博客 <span aria-hidden="true">↗</span>
+          </a>
+        </SiteHeader>
         <main className="shell page">{children}</main>
         <footer className="footer">
           <div className="shell">

@@ -114,6 +114,10 @@ textarea {
 .nav a:hover {
   color: var(--accent);
 }
+.mobile-nav-toggle,
+.mobile-nav-dismiss {
+  display: none;
+}
 .page {
   padding-top: 42px;
   padding-bottom: 64px;
@@ -601,29 +605,78 @@ code {
     padding-inline: 18px;
   }
   .topbar {
-    width: calc(100% - 24px);
-    top: 8px;
-    margin-top: 10px;
-    border-radius: 18px;
-    height: auto;
-    min-height: 72px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    border-width: 0 0 1px;
+    height: calc(64px + env(safe-area-inset-top, 0px));
+    min-height: 0;
+    padding-top: env(safe-area-inset-top, 0px);
   }
   .topbar .shell {
-    flex-wrap: wrap;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    gap: 15px;
+    flex-wrap: nowrap;
+    padding-top: 0;
+    padding-bottom: 0;
+    gap: 16px;
   }
   .brand {
     font-size: calc(22px * var(--font-scale, 1));
   }
-  .nav {
-    gap: 17px;
-    font-size: calc(12px * var(--font-scale, 1));
-    flex-wrap: wrap;
+  .mobile-nav-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .topbar .nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: calc(100dvh - 64px - env(safe-area-inset-top, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 12px 24px #00000014;
+    font-size: calc(16px * var(--font-scale, 1));
+  }
+  .topbar.menu-open .nav {
+    display: grid;
+  }
+  .topbar .nav a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .nav a:last-child {
+    border-bottom: 0;
+  }
+  .mobile-nav-dismiss {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    border: 0;
+    border-radius: 0;
+    background: #00000033;
   }
   .page {
-    padding-top: 28px;
+    padding-top: calc(92px + env(safe-area-inset-top, 0px));
   }
   h1 {
     font-size: calc(26px * var(--font-scale, 1));
