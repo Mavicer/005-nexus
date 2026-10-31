@@ -638,7 +638,15 @@ code {
     cursor: pointer;
   }
   .topbar .nav {
-    display: none;
+    display: grid;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease,
+      visibility 0s linear 180ms;
     position: absolute;
     top: 100%;
     left: 0;
@@ -654,7 +662,11 @@ code {
     font-size: calc(16px * var(--font-scale, 1));
   }
   .topbar.menu-open .nav {
-    display: grid;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0s;
   }
   .topbar .nav a {
     display: flex;
@@ -674,6 +686,18 @@ code {
     border: 0;
     border-radius: 0;
     background: #00000033;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 180ms ease,
+      visibility 0s linear 180ms;
+  }
+  .mobile-nav-dismiss.is-open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0s;
   }
   .page {
     padding-top: calc(92px + env(safe-area-inset-top, 0px));
@@ -1066,5 +1090,12 @@ html[data-blog-theme="dark"] .notice.warn {
 @media (max-width: 760px) {
   .resource-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar .nav,
+  .mobile-nav-dismiss {
+    transition: none;
   }
 }

@@ -75,15 +75,13 @@ export function SiteHeader({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      {open && (
-        <button
-          type="button"
-          className="mobile-nav-dismiss"
-          aria-label="关闭导航遮罩"
-          tabIndex={-1}
-          onClick={() => setOpen(false)}
-        />
-      )}
+      <button
+        type="button"
+        className={open ? "mobile-nav-dismiss is-open" : "mobile-nav-dismiss"}
+        aria-label="关闭导航遮罩"
+        tabIndex={-1}
+        onClick={() => setOpen(false)}
+      />
     </>
   );
 }
