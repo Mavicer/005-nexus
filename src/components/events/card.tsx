@@ -1,5 +1,6 @@
 import { eventIntroduction } from "@/modules/events/editorial";
-import Link from "next/link";
+import { DetailLink } from "./detail-link";
+import { eventVisual } from "@/modules/events/visuals";
 import type { PublicEvent } from "@/modules/events/service";
 import {
   KIND_LABELS,
@@ -23,9 +24,9 @@ export function EventCard({ event }: { event: PublicEvent }) {
         <span className={`status ${state}`}>{STATE_LABELS[state]}</span>
       </div>
       <h2>
-        <Link prefetch={true} href={`/events/${event.slug}`}>
+        <DetailLink slug={event.slug} imageSrc={eventVisual(event.slug)?.src}>
           {e.title}
-        </Link>
+        </DetailLink>
       </h2>
       <div className="facts">
         {MODE_LABELS[e.mode]}
@@ -59,9 +60,9 @@ export function EventCard({ event }: { event: PublicEvent }) {
             ? "规则待复核"
             : `核验于 ${event.verifiedAt?.toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }) ?? "—"}`}
         </span>
-        <Link prefetch={true} href={`/events/${event.slug}`}>
+        <DetailLink slug={event.slug} imageSrc={eventVisual(event.slug)?.src}>
           查看详情 ↗
-        </Link>
+        </DetailLink>
       </div>
     </article>
   );

@@ -11,6 +11,7 @@ import {
   STATE_LABELS,
 } from "@/modules/events/time";
 import { BookmarkButton } from "@/components/events/bookmark-button";
+import { DetailHeading } from "@/components/events/detail-heading";
 export const dynamic = "force-dynamic";
 export default async function Detail({
   params,
@@ -28,7 +29,7 @@ export default async function Detail({
       <Link className="small muted" href="/">
         ← 返回赛事发现
       </Link>
-      <header className="panel detail-heading" style={{ marginTop: 20 }}>
+      <DetailHeading slug={row.slug}>
         <div className="card-top">
           <span className="type">
             {KIND_LABELS[e.kind]} · {e.edition}
@@ -36,7 +37,9 @@ export default async function Detail({
           <span className={`status ${state}`}>{STATE_LABELS[state]}</span>
         </div>
         <h1>{e.title}</h1>
-        {e.officialName && <p className="small muted">{e.officialName}</p>}
+        {e.officialName && e.officialName !== e.title && (
+          <p className="small muted">{e.officialName}</p>
+        )}
         <p className="muted small">{eventIntroduction(row.slug, e.summary)}</p>
         <div className="facts">
           {MODE_LABELS[e.mode]}
@@ -59,7 +62,7 @@ export default async function Detail({
             导出日历 ↓
           </a>
         </div>
-      </header>
+      </DetailHeading>
       {row.reviewState === "needs_review" && (
         <div className="notice warn">
           此活动规则待复核，下面保留上次核验内容。行动前请先向官方确认。

@@ -397,6 +397,68 @@ textarea:focus {
 .detail-heading .facts {
   margin-top: 12px;
 }
+.detail-heading-illustrated {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 370px;
+}
+.detail-heading-illustrated .detail-heading-copy {
+  position: relative;
+  z-index: 1;
+  width: 58%;
+}
+.detail-heading-illustrated .card-top {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.detail-heading-illustrated h1 {
+  line-height: 1.35;
+  text-wrap: balance;
+}
+.detail-artwork {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 56%;
+  pointer-events: none;
+  mask-image: linear-gradient(to right, transparent 20%, #000 64%);
+}
+.detail-artwork img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.detail-artwork-caption {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #1018209c;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+@media (max-width: 720px) {
+  .detail-heading.detail-heading-illustrated {
+    padding-top: 232px;
+  }
+  .detail-heading-illustrated .detail-heading-copy {
+    width: 100%;
+  }
+  .detail-artwork {
+    inset: 0 0 auto;
+    width: 100%;
+    height: 230px;
+    mask-image: linear-gradient(to bottom, #000 65%, transparent);
+  }
+  .detail-artwork-caption {
+    top: 12px;
+    bottom: auto;
+  }
+}
 .actions {
   display: flex;
   flex-wrap: wrap;
