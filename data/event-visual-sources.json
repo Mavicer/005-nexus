@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "smartcar-21-2026",
+    "asset": "/images/events/smartcar-track-75e0977ca8.webp",
+    "sourcePage": "https://cs.zjol.com.cn/kzl/202508/t20250821_31184961.shtml",
+    "sourceImage": "https://meizi-zjol-1577-pub.zjol.com.cn/kzl/202508/1958420501101293576_1280px.jpg",
+    "originalWidth": 1280,
+    "originalHeight": 853,
+    "year": 2025,
+    "scope": "Trackside preparation during the 20th national smart-car final; historical competition photograph, not a 2026 final photograph."
+  },
+  {
+    "slug": "embedded-soc-application-2026",
+    "asset": "/images/events/embedded-robot-d79afdd5ef.webp",
+    "sourcePage": "https://news.uestc.edu.cn/info/1004/2777.htm",
+    "sourceImage": "https://news.uestc.edu.cn/__local/4/4F/EB/A627EC4977EAA5A4D06D6F5B10B_685E1135_1AE49F.png?e=.png",
+    "originalWidth": 1192,
+    "originalHeight": 894,
+    "year": 2024,
+    "scope": "Loongson industrial safety monitoring system and wheeled sensor platforms from the application-track national final; not the FPGA track."
+  },
+  {
+    "slug": "tme-build-with-ai-2026",
+    "asset": "/images/events/tme-ai-hackathon-ea76873201.webp",
+    "sourcePage": "https://join.tencentmusic.com/h5/ai-hackathon/index.html",
+    "sourceImage": "Organizer page-specific bundled inline JPEG artwork (not a photograph)",
+    "originalWidth": 1920,
+    "originalHeight": 1180,
+    "year": 2026,
+    "scope": "Official AI/music hackathon key visual, used because no suitable event photograph was found."
+  }
+]
