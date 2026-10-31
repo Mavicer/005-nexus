@@ -422,24 +422,13 @@ textarea:focus {
   inset: 0 0 0 auto;
   width: 56%;
   pointer-events: none;
-  mask-image: linear-gradient(to right, transparent 20%, #000 64%);
+  mask-image: linear-gradient(112deg, transparent 18%, #000 68%);
 }
 .detail-artwork img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.detail-artwork-caption {
-  position: absolute;
-  right: 16px;
-  bottom: 14px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: #1018209c;
-  color: #fff;
-  font-size: 10px;
-  letter-spacing: 0.03em;
 }
 @media (max-width: 720px) {
   .detail-heading.detail-heading-illustrated {
@@ -452,11 +441,7 @@ textarea:focus {
     inset: 0 0 auto;
     width: 100%;
     height: 230px;
-    mask-image: linear-gradient(to bottom, #000 65%, transparent);
-  }
-  .detail-artwork-caption {
-    top: 12px;
-    bottom: auto;
+    mask-image: linear-gradient(170deg, #000 55%, transparent 98%);
   }
 }
 .actions {

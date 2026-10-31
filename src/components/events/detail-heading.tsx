@@ -33,9 +33,6 @@ export function DetailHeading({
         </div>
       )}
       <div className="detail-heading-copy">{children}</div>
-      {visual && (
-        <span className="detail-artwork-caption">{visual.caption}</span>
-      )}
     </header>
   );
 }

@@ -3,7 +3,6 @@ export type EventVisual = {
   width: number;
   height: number;
   position: string;
-  caption: string;
   sourceUrl?: string;
 };
 
@@ -14,7 +13,6 @@ const robomaster: EventVisual = {
   width: 1920,
   height: 1280,
   position: "56% 52%",
-  caption: "RoboMaster · 往届赛照",
 };
 
 const visuals: Record<string, EventVisual> = {
@@ -25,7 +23,6 @@ const visuals: Record<string, EventVisual> = {
     width: 1600,
     height: 1067,
     position: "60% 58%",
-    caption: "华为 ICT 大赛 · 往届赛场",
     sourceUrl: "https://tech.ifeng.com/c/8tnQIycTR6o",
   },
 };
