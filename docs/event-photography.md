@@ -30,3 +30,12 @@ Exact original URLs, dimensions and historical scope are recorded in `data/event
 Reviewed and omitted in this round: CCSP classroom wide shots/award boards, Blue Bridge notices/logos, Renesas award and conference slides, Intel award groups, TI analog posters and weak booth snapshots, computer-design lecture-room shots and certificates, and software-cup ranking screenshots. None meets the accepted visual bar for an engaging header.
 
 Mobile fades begin near the bottom edge so low-placed vehicles and circuit boards stay visible above the title. Desktop masks and absence of overlay captions follow the user-approved RoboMaster treatment.
+
+## Third selection — 2026-10-31
+
+- **Computer design / development category:** a 4000 × 2666 robot-course photograph from [Tongji University's report of the 19th competition](https://eelab.tongji.edu.cn/d1/dc/c16335a381404/page.htm). It depicts the AI terrain-crossing challenge within this competition. The 1920 × 1280 derivative is displayed in a narrower right-hand area so the mobile robot and rail-mounted device both remain visible, rather than fading the left robot into the text.
+- **TI analog special contest:** a 1600 × 1067 close-up of the 2024 second-prize “signal detection and display device” from [Hunan Institute of Science and Technology's official report](https://news.hnist.cn/info/1008/38756.htm). The circuit board, test wiring, actuator and display are the subjects. This is explicitly a historical project image in source metadata, never attributed to 2026.
+
+Reviewed and omitted: FPGA group/award photographs, distant evaluations with hidden hardware, software-cup ceremonies, a Since AI venue building and a SciencePal flower/logo. No unrelated FPT international event photograph is substituted for the domestic FPGA track. No new UI captions are added.
+
+The two additional local WebP files total approximately 454 KiB. Type checking and eight light/dark desktop/mobile rendering combinations passed, including image-failure height stability, horizontal-overflow checks and reserved mobile image-area checks. Preview pages reuse the actual heading component and curated event text; they are local visual fixtures, not production screenshots.

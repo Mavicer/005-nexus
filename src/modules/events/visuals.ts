@@ -51,6 +51,22 @@ const visuals: Record<string, EventVisual> = {
     desktopWidth: "64%",
     sourceUrl: "https://join.tencentmusic.com/h5/ai-hackathon/index.html",
   },
+  "computer-design-4c-2026": {
+    src: "/images/events/computer-design-robot-26a3c2df46.webp",
+    width: 1920,
+    height: 1280,
+    position: "0% 65%",
+    desktopWidth: "52%",
+    sourceUrl: "https://eelab.tongji.edu.cn/d1/dc/c16335a381404/page.htm",
+  },
+  "nuedc-ti-analog-2026": {
+    src: "/images/events/ti-analog-circuit-9426907bc3.webp",
+    width: 1600,
+    height: 1067,
+    position: "50% 50%",
+    desktopWidth: "56%",
+    sourceUrl: "https://news.hnist.cn/info/1008/38756.htm",
+  },
 };
 
 export function eventVisual(slug: string): EventVisual | undefined {
