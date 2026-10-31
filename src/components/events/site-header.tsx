@@ -32,7 +32,7 @@ export function SiteHeader({ children }: { children: ReactNode }) {
   }, [open]);
   return (
     <>
-      <header className={`topbar${open ? "menu-open" : ""}`}>
+      <header className={open ? "topbar menu-open" : "topbar"}>
         <div className="shell">
           <Link className="brand" href="/" onClick={() => setOpen(false)}>
             <span className="brand-mark">N</span>Nexus
