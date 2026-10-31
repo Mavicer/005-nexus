@@ -1,5 +1,5 @@
 import { eventIntroduction } from "@/modules/events/editorial";
-import { preload } from "react-dom";
+import { ImagePreloadHint } from "./image-preload-hint";
 import { DetailLink } from "./detail-link";
 import { eventVisual } from "@/modules/events/visuals";
 import type { PublicEvent } from "@/modules/events/service";
@@ -23,60 +23,58 @@ export function EventCard({
 }) {
   const e = event.publishedData;
   const imageSrc = eventVisual(event.slug)?.src;
-  // Hint the first row during SSR, before hydration or pointer interaction.
-  // React deduplicates RMUC/RMUL because they use the same original asset URL.
-  if (preloadImage && imageSrc) {
-    preload(imageSrc, { as: "image", fetchPriority: "low" });
-  }
   const state = registrationState(e);
   const deadline = e.milestones.find((m) => m.kind === "registration_close");
   return (
-    <article className="panel event-card">
-      <div className="card-top">
-        <span className="type">{KIND_LABELS[e.kind]}</span>
-        <span className={`status ${state}`}>{STATE_LABELS[state]}</span>
-      </div>
-      <h2>
-        <DetailLink slug={event.slug} imageSrc={imageSrc}>
-          {e.title}
-        </DetailLink>
-      </h2>
-      <div className="facts">
-        {MODE_LABELS[e.mode]}
-        {e.location === MODE_LABELS[e.mode] ? "" : ` · ${e.location}`}
-        <br />
-        {e.team}
-      </div>
-      <div className="event-access">
-        <span>{ENTRY_LABELS[e.entry ?? "unknown"]}</span>
-        <span>{FEE_LABELS[e.fee ?? "unknown"]}</span>
-      </div>
-      <p>{eventIntroduction(event.slug, e.summary)}</p>
-      <div className="tags">
-        {e.tags.map((tag) => (
-          <span className="tag" key={tag}>
-            {tag}
+    <>
+      {preloadImage && imageSrc && <ImagePreloadHint src={imageSrc} />}
+      <article className="panel event-card">
+        <div className="card-top">
+          <span className="type">{KIND_LABELS[e.kind]}</span>
+          <span className={`status ${state}`}>{STATE_LABELS[state]}</span>
+        </div>
+        <h2>
+          <DetailLink slug={event.slug} imageSrc={imageSrc}>
+            {e.title}
+          </DetailLink>
+        </h2>
+        <div className="facts">
+          {MODE_LABELS[e.mode]}
+          {e.location === MODE_LABELS[e.mode] ? "" : ` · ${e.location}`}
+          <br />
+          {e.team}
+        </div>
+        <div className="event-access">
+          <span>{ENTRY_LABELS[e.entry ?? "unknown"]}</span>
+          <span>{FEE_LABELS[e.fee ?? "unknown"]}</span>
+        </div>
+        <p>{eventIntroduction(event.slug, e.summary)}</p>
+        <div className="tags">
+          {e.tags.map((tag) => (
+            <span className="tag" key={tag}>
+              {tag}
+            </span>
+          ))}
+        </div>
+        <div className="facts">
+          <strong>报名截止</strong>　
+          {deadline
+            ? displayTime(deadline)
+            : e.registration === "rolling"
+              ? "滚动报名，查看官方要求"
+              : "待官方公布"}
+        </div>
+        <div className="card-bottom">
+          <span className="verified">
+            {event.reviewState === "needs_review"
+              ? "规则待复核"
+              : `核验于 ${event.verifiedAt?.toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }) ?? "—"}`}
           </span>
-        ))}
-      </div>
-      <div className="facts">
-        <strong>报名截止</strong>　
-        {deadline
-          ? displayTime(deadline)
-          : e.registration === "rolling"
-            ? "滚动报名，查看官方要求"
-            : "待官方公布"}
-      </div>
-      <div className="card-bottom">
-        <span className="verified">
-          {event.reviewState === "needs_review"
-            ? "规则待复核"
-            : `核验于 ${event.verifiedAt?.toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }) ?? "—"}`}
-        </span>
-        <DetailLink slug={event.slug} imageSrc={imageSrc}>
-          查看详情 ↗
-        </DetailLink>
-      </div>
-    </article>
+          <DetailLink slug={event.slug} imageSrc={imageSrc}>
+            查看详情 ↗
+          </DetailLink>
+        </div>
+      </article>
+    </>
   );
 }
