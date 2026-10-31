@@ -1,4 +1,5 @@
 import { eventIntroduction } from "@/modules/events/editorial";
+import { preload } from "react-dom";
 import { DetailLink } from "./detail-link";
 import { eventVisual } from "@/modules/events/visuals";
 import type { PublicEvent } from "@/modules/events/service";
@@ -13,8 +14,20 @@ import {
   registrationState,
   STATE_LABELS,
 } from "@/modules/events/time";
-export function EventCard({ event }: { event: PublicEvent }) {
+export function EventCard({
+  event,
+  preloadImage = false,
+}: {
+  event: PublicEvent;
+  preloadImage?: boolean;
+}) {
   const e = event.publishedData;
+  const imageSrc = eventVisual(event.slug)?.src;
+  // Hint the first row during SSR, before hydration or pointer interaction.
+  // React deduplicates RMUC/RMUL because they use the same original asset URL.
+  if (preloadImage && imageSrc) {
+    preload(imageSrc, { as: "image", fetchPriority: "low" });
+  }
   const state = registrationState(e);
   const deadline = e.milestones.find((m) => m.kind === "registration_close");
   return (
@@ -24,7 +37,7 @@ export function EventCard({ event }: { event: PublicEvent }) {
         <span className={`status ${state}`}>{STATE_LABELS[state]}</span>
       </div>
       <h2>
-        <DetailLink slug={event.slug} imageSrc={eventVisual(event.slug)?.src}>
+        <DetailLink slug={event.slug} imageSrc={imageSrc}>
           {e.title}
         </DetailLink>
       </h2>
@@ -60,7 +73,7 @@ export function EventCard({ event }: { event: PublicEvent }) {
             ? "规则待复核"
             : `核验于 ${event.verifiedAt?.toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }) ?? "—"}`}
         </span>
-        <DetailLink slug={event.slug} imageSrc={eventVisual(event.slug)?.src}>
+        <DetailLink slug={event.slug} imageSrc={imageSrc}>
           查看详情 ↗
         </DetailLink>
       </div>

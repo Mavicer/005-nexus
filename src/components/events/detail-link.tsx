@@ -1,17 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
-
-const warmed = new Set<string>();
-function warmImage(src?: string) {
-  if (!src || warmed.has(src)) return;
-  warmed.add(src);
-  const image = new window.Image();
-  image.src = src;
-  // Keep decoding off the navigation path; retry if the speculative request fails.
-  void image.decode().catch(() => warmed.delete(src));
-}
+import { useEffect, useRef, type ReactNode } from "react";
+import { observeEventImage, warmEventImage } from "./image-preload";
 
 export function DetailLink({
   slug,
@@ -22,13 +13,23 @@ export function DetailLink({
   imageSrc?: string;
   children: ReactNode;
 }) {
+  const link = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    if (!imageSrc || !link.current) return;
+    return observeEventImage(
+      link.current.closest(".event-card") ?? link.current,
+      imageSrc,
+    );
+  }, [imageSrc]);
   return (
     <Link
+      ref={link}
       prefetch={true}
       href={`/events/${slug}`}
-      onPointerEnter={() => warmImage(imageSrc)}
-      onFocus={() => warmImage(imageSrc)}
-      onTouchStart={() => warmImage(imageSrc)}
+      onPointerEnter={() => warmEventImage(imageSrc, true)}
+      onPointerDown={() => warmEventImage(imageSrc, true)}
+      onFocus={() => warmEventImage(imageSrc, true)}
+      onTouchStart={() => warmEventImage(imageSrc, true)}
     >
       {children}
     </Link>

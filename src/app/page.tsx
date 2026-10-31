@@ -1,6 +1,7 @@
 import { FilterSelect } from "@/components/events/filter-select";
 import Link from "next/link";
 import Form from "next/form";
+import { headers } from "next/headers";
 import { SearchSubmit } from "@/components/events/search-submit";
 import { queryEvents } from "@/modules/events/service";
 import {
@@ -19,6 +20,10 @@ export default async function Home({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const requestHeaders = await headers();
+  const speculateImages =
+    requestHeaders.get("save-data") !== "on" &&
+    !["slow-2g", "2g"].includes(requestHeaders.get("ect") ?? "");
   const raw = Object.fromEntries(
     Object.entries(await searchParams).filter(
       ([, v]) => typeof v === "string" && v !== "",
@@ -190,8 +195,12 @@ export default async function Home({
       </div>
       {result.items.length ? (
         <div className="events-grid">
-          {result.items.map((e) => (
-            <EventCard key={e.id} event={e} />
+          {result.items.map((e, index) => (
+            <EventCard
+              key={e.id}
+              event={e}
+              preloadImage={speculateImages && index < 2}
+            />
           ))}
         </div>
       ) : (
