@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { eventVisual } from "@/modules/events/visuals";
 
 export function DetailHeading({
@@ -19,7 +19,13 @@ export function DetailHeading({
       style={{ marginTop: 20 }}
     >
       {visual && (
-        <div className="detail-artwork" aria-hidden="true">
+        <div
+          className="detail-artwork"
+          aria-hidden="true"
+          style={
+            { "--event-photo-width": visual.desktopWidth } as CSSProperties
+          }
+        >
           <Image
             src={visual.src}
             alt=""

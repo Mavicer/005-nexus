@@ -3,6 +3,7 @@ export type EventVisual = {
   width: number;
   height: number;
   position: string;
+  desktopWidth?: string;
   sourceUrl?: string;
 };
 
@@ -12,7 +13,8 @@ const robomaster: EventVisual = {
   src: "/images/events/robomaster-pit-29be18e8e7.webp",
   width: 1920,
   height: 1280,
-  position: "56% 52%",
+  position: "56% 100%",
+  desktopWidth: "58%",
 };
 
 const visuals: Record<string, EventVisual> = {

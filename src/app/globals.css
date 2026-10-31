@@ -430,9 +430,10 @@ textarea:focus {
   display: block;
   position: absolute;
   right: 0;
-  width: 70%;
+  width: var(--event-photo-width, 70%);
   height: 100%;
   object-fit: cover;
+  mask-image: linear-gradient(to right, transparent, #000 16%);
 }
 @media (max-width: 720px) {
   .detail-heading.detail-heading-illustrated {
@@ -449,6 +450,7 @@ textarea:focus {
   }
   .detail-artwork img {
     width: 100%;
+    mask-image: none;
   }
 }
 .actions {
