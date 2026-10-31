@@ -28,25 +28,5 @@
     "originalHeight": 1180,
     "year": 2026,
     "scope": "Official AI/music hackathon key visual, used because no suitable event photograph was found."
-  },
-  {
-    "slug": "computer-design-4c-2026",
-    "asset": "/images/events/computer-design-robot-26a3c2df46.webp",
-    "sourcePage": "https://eelab.tongji.edu.cn/d1/dc/c16335a381404/page.htm",
-    "sourceImage": "https://eelab.tongji.edu.cn/_upload/article/images/d2/05/aa7991c140b4acf206050808bbaf/bac807f5-2026-439c-b9be-f1b75e68c2b7.jpg",
-    "originalWidth": 4000,
-    "originalHeight": 2666,
-    "year": 2026,
-    "scope": "Actual 19th competition AI challenge / terrain-crossing robot field, published by Tongji University. Illustrates one development-category event, not every category."
-  },
-  {
-    "slug": "nuedc-ti-analog-2026",
-    "asset": "/images/events/ti-analog-circuit-9426907bc3.webp",
-    "sourcePage": "https://news.hnist.cn/info/1008/38756.htm",
-    "sourceImage": "https://news.hnist.cn/__local/A/A3/10/9507FBE550B1B922E10CE06DD9C_97B06716_66E0F.jpg",
-    "originalWidth": 1600,
-    "originalHeight": 1067,
-    "year": 2024,
-    "scope": "Signal detection and display device awarded second prize at the 2024 TI analog special contest. Historical project photograph, not a 2026 project or a generic electronics stock image."
   }
 ]
