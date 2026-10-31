@@ -62,7 +62,7 @@ export default async function RootLayout({
               <Link href="/">发现赛事</Link>
               <Link href="/calendar">赛事日历</Link>
               <Link href="/saved">我的收藏</Link>
-              <Link href="/about">收录说明</Link>
+              <Link href="/database">数据库</Link>
               <Suspense fallback={<Link href="/account">账号</Link>}>
                 <AccountNavigation />
               </Suspense>
@@ -77,7 +77,7 @@ export default async function RootLayout({
           <div className="shell">
             <span>Nexus · 计算机赛事目录</span>
             <span>
-              <Link href="/about#sources">来源与核验</Link>
+              <Link href="/database">竞赛资料库</Link>
             </span>
           </div>
         </footer>

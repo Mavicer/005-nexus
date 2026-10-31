@@ -55,8 +55,8 @@ export default async function Home({
             <Link className="btn primary" href="/">
               重新加载
             </Link>
-            <Link className="btn" href="/about#sources">
-              查看官方来源
+            <Link className="btn" href="/database">
+              查看竞赛资料
             </Link>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default async function Home({
       </Form>
       {(p.sort === "recommended" || p.sort === "directory") && (
         <p className="small muted">
-          <Link href="/about#directory">排序依据 ↗</Link>
+          <Link href="/ranking">排序依据 ↗</Link>
         </p>
       )}
       <div className="result-meta">

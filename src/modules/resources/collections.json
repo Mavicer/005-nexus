@@ -1,0 +1,224 @@
+[
+  {
+    "slug": "robomaster-rmuc-2027",
+    "name": "RoboMaster 超级对抗赛",
+    "shortName": "RMUC",
+    "resources": [
+      {
+        "kind": "rules",
+        "title": "2027 比赛规则与机器人制作规范",
+        "year": "2027",
+        "description": "官方规则、制作规范、通信协议及技术评审资料。",
+        "url": "https://bbs.robomaster.com/wiki/20204847",
+        "source": "RoboMaster 组委会",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "tools",
+        "title": "2027 场地图纸与可移动道具",
+        "year": "2027",
+        "description": "组委会发布的场地模型与道具图纸。",
+        "url": "https://bbs.robomaster.com/article/1970956?source=11",
+        "source": "RoboMaster 高校赛务",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "works",
+        "title": "青岛大学未来战队：哨兵导航与感知系统",
+        "year": "2025",
+        "description": "战队公开的建图、状态估计、规划与避障代码。",
+        "url": "https://github.com/QDU-VRobot/rm_navigation",
+        "source": "青岛大学未来战队",
+        "format": "代码",
+        "checkedAt": "2026-10-31"
+      }
+    ]
+  },
+  {
+    "slug": "robomaster-rmul-2027",
+    "name": "RoboMaster 高校联盟赛",
+    "shortName": "RMUL",
+    "resources": [
+      {
+        "kind": "rules",
+        "title": "2027 联盟赛规则与参赛手册",
+        "year": "2027",
+        "description": "在比赛规则栏目中选择 RMUL 2027，查看规则与参赛文件。",
+        "url": "https://bbs.robomaster.com/wiki/20204847",
+        "source": "RoboMaster 组委会",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "tools",
+        "title": "2027 联盟赛场地与道具图纸",
+        "year": "2027",
+        "description": "RMUC / RMUL 共用的官方场地模型发布页。",
+        "url": "https://bbs.robomaster.com/article/1970956?source=11",
+        "source": "RoboMaster 高校赛务",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "works",
+        "title": "中南大学 FYT：哨兵定位与导航算法",
+        "year": "2023—2024",
+        "description": "战队发布的 ROS 2 / Nav2 导航方案，附代码仓库。",
+        "url": "https://bbs.robomaster.com/article/9492",
+        "source": "中南大学 FYT 战队",
+        "format": "代码 / 说明",
+        "checkedAt": "2026-10-31"
+      }
+    ]
+  },
+  {
+    "slug": "robomaster-rmua-2026",
+    "name": "RoboMaster 高校人工智能挑战赛",
+    "shortName": "RMUA",
+    "resources": [
+      {
+        "kind": "rules",
+        "title": "2026 比赛规则及配套资料",
+        "year": "2026",
+        "description": "官方规则手册、模拟器及参赛文件。",
+        "url": "https://bbs.robomaster.com/wiki/20204847/809873",
+        "source": "RoboMaster 组委会",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "tools",
+        "title": "2026 官方无人机仿真器",
+        "year": "2026",
+        "description": "赛季分支 RMUA2026-01，包含启动、传感器接口与 Docker 使用说明。",
+        "url": "https://github.com/RoboMaster/IntelligentUAVChampionshipSimulator/tree/RMUA2026-01",
+        "source": "RoboMaster",
+        "format": "代码 / 文档",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "tools",
+        "title": "2026 官方算法开发示例",
+        "year": "2026",
+        "description": "赛季分支 RMUA2026，作为算法开发与通信接口参考。",
+        "url": "https://github.com/RoboMaster/IntelligentUAVChampionshipBase/tree/RMUA2026",
+        "source": "RoboMaster",
+        "format": "代码",
+        "checkedAt": "2026-10-31"
+      }
+    ]
+  },
+  {
+    "slug": "nuedc-renesas-frontier-2026",
+    "name": "电赛 · 信息科技前沿专题赛",
+    "shortName": "瑞萨杯",
+    "resources": [
+      {
+        "kind": "rules",
+        "title": "2026 参赛通知与制作要求",
+        "year": "2026",
+        "description": "参赛资格、主题、初选与决赛形式、硬件平台要求。",
+        "url": "https://res.nuedc-training.com.cn/s/pdf/2025/11/26/file202511262295.pdf",
+        "source": "全国大学生电子设计竞赛组委会",
+        "format": "PDF",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "problems",
+        "title": "2026 决赛主题与开发平台",
+        "year": "2026",
+        "description": "瑞萨官方介绍本届决赛任务方向及 RA8P1 平台。",
+        "url": "https://www.renesas.cn/zh/about/newsroom/2026-renesas-cup-finals-opening",
+        "source": "瑞萨电子",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "works",
+        "title": "最高奖作品：64 通道声学成像与边缘 AI 异常检测",
+        "year": "2026",
+        "description": "青岛大学获奖作品介绍，了解作品方向与技术应用。",
+        "url": "https://www.renesas.com/en/about/newsroom/2026-renesas-cup-awards-ceremony",
+        "source": "瑞萨电子",
+        "format": "作品介绍",
+        "checkedAt": "2026-10-31"
+      }
+    ]
+  },
+  {
+    "slug": "nuedc-ti-analog-2026",
+    "name": "电赛 · 模拟电子系统设计专题赛",
+    "shortName": "TI 杯",
+    "resources": [
+      {
+        "kind": "rules",
+        "title": "2026 专题赛第一次通知",
+        "year": "2026",
+        "description": "赛制、参赛组织与竞赛安排。",
+        "url": "https://www.nuedc-training.com.cn/index/news/details/new_id/345",
+        "source": "全国大学生电子设计竞赛培训网",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "problems",
+        "title": "2026 初赛赛题公示",
+        "year": "2026",
+        "description": "赛区赛暨 TI 杯模拟电子系统设计专题赛初赛题目。",
+        "url": "https://res.nuedc-training.com.cn/topic/2026/topic_from_31.html",
+        "source": "全国大学生电子设计竞赛培训网",
+        "format": "赛题 / 附件",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "works",
+        "title": "2025 电赛作品 Vlog 分享",
+        "year": "2025",
+        "description": "往届参赛作品演示与制作过程，作为备赛参考。",
+        "url": "https://www.nuedc-training.com.cn/index/huodong/vlog_2025",
+        "source": "全国大学生电子设计竞赛培训网",
+        "format": "视频",
+        "checkedAt": "2026-10-31"
+      }
+    ]
+  },
+  {
+    "slug": "nuedc-intel-embedded-ai-2026",
+    "name": "电赛 · 嵌入式 AI 专题赛",
+    "shortName": "英特尔杯",
+    "resources": [
+      {
+        "kind": "rules",
+        "title": "2026 三项专题赛组织通知",
+        "year": "2026",
+        "description": "包含嵌入式 AI 专题赛的参赛形式与组织办法。",
+        "url": "https://res.nuedc-training.com.cn/s/pdf/2025/12/04/file202512048402.pdf",
+        "source": "全国大学生电子设计竞赛组委会",
+        "format": "PDF",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "rules",
+        "title": "2026 作品报告提交要求",
+        "year": "2026",
+        "description": "作品报告与提交材料的具体要求。",
+        "url": "https://nuedc.sjtu.edu.cn/CN/show.aspx?flag=1&info_id=1335&info_lb=1",
+        "source": "嵌入式 AI 专题赛组委会",
+        "format": "网页",
+        "checkedAt": "2026-10-31"
+      },
+      {
+        "kind": "works",
+        "title": "全国一等奖作品：居家老人异常监测机器人",
+        "year": "2026",
+        "description": "湖南大学“知微老伴”项目，融合语音、视觉、毫米波雷达与边缘 AI。",
+        "url": "https://news.hnu.edu.cn/info/1003/39970.htm",
+        "source": "湖南大学",
+        "format": "作品介绍",
+        "checkedAt": "2026-10-31"
+      }
+    ]
+  }
+]

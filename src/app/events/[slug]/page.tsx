@@ -1,3 +1,4 @@
+import { resourceCollections } from "@/modules/resources/catalog";
 import { eventIntroduction } from "@/modules/events/editorial";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -57,6 +58,13 @@ export default async function Detail({
               ? "前往官方报名 ↗"
               : "查看官方规则 ↗"}
           </a>
+          {resourceCollections.some(
+            (collection) => collection.slug === row.slug,
+          ) && (
+            <Link className="btn" href={`/database?competition=${row.slug}`}>
+              竞赛资料库 ↗
+            </Link>
+          )}
           <BookmarkButton id={row.id} slug={row.slug} initial={saved} />
           <a className="btn" href={`/api/events/${row.id}/calendar`}>
             导出日历 ↓
